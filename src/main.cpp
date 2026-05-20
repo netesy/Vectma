@@ -1,5 +1,10 @@
+#ifdef VECTMA_USE_OPENGL
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+#endif
+
 #include "core/WorkspaceStage.hpp"
 #include "core/SceneGraph.hpp"
 #include "core/RectNode.hpp"
@@ -7,14 +12,14 @@
 #include "renderer/RenderPipeline.hpp"
 #include "ui/EditorUI.hpp"
 #include <imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
 #include <iostream>
 #include <memory>
 
+#ifdef VECTMA_USE_OPENGL
 static void glfw_error_callback(int error, const char* description) {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
+#endif
 
 // Seed the scene with some nodes for the screenshot
 void seed_scene(std::shared_ptr<vectma::SceneGraph> scene) {
@@ -23,6 +28,7 @@ void seed_scene(std::shared_ptr<vectma::SceneGraph> scene) {
 }
 
 int main() {
+#ifdef VECTMA_USE_OPENGL
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit()) return 1;
 
@@ -44,6 +50,10 @@ int main() {
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
+#else
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+#endif
 
     // Initialize core components
     auto workspace = std::make_unique<vectma::WorkspaceStage>();
@@ -55,6 +65,7 @@ int main() {
     auto renderer = std::make_unique<vectma::BaselineRenderer>();
     auto ui = std::make_unique<vectma::EditorUI>(*workspace, *renderer);
 
+#ifdef VECTMA_USE_OPENGL
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
@@ -77,6 +88,11 @@ int main() {
 
     glfwDestroyWindow(window);
     glfwTerminate();
+#else
+    std::cout << "OpenGL disabled. Running headless core logic." << std::endl;
+    ui->render();
+    ImGui::DestroyContext();
+#endif
 
     return 0;
 }

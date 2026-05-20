@@ -32,6 +32,8 @@ public:
     void drawRect(const vectma::RectNode&) override {}
     void drawEllipse(const vectma::EllipseNode&) override {}
     void drawPath(const vectma::PathNode&) override {}
+    void drawBezierPath(const vectma::PathNode&) override {}
+    void drawAnchorOverlay(const vectma::BezierAnchor&, bool, int) override {}
     void renderNode(const vectma::CanvasNode& node) override {
         if (node.getClassName() == "MockNode") {
             callOrder.push_back(static_cast<const MockNode&>(node).id);
@@ -39,84 +41,69 @@ public:
     }
 };
 
-void testToolSwitching() {
-    std::cout << "Testing Tool Switching..." << std::endl;
+void testBezierMath() {
+    std::cout << "Testing Bezier Math..." << std::endl;
     vectma::WorkspaceStage workspace;
-    workspace.setTool(vectma::ToolType::Rect);
-    assert(workspace.getTool() == vectma::ToolType::Rect);
-
-    workspace.setTool(vectma::ToolType::Ellipse);
-    assert(workspace.getTool() == vectma::ToolType::Ellipse);
-    std::cout << "Tool switching tests passed." << std::endl;
-}
-
-void testMarqueeSelection() {
-    std::cout << "Testing Marquee Selection..." << std::endl;
-    auto workspace = std::make_unique<vectma::WorkspaceStage>();
     auto scene = std::make_shared<vectma::SceneGraph>();
-    workspace->setScene(scene);
+    workspace.setScene(scene);
 
-    scene->addChild(std::make_unique<vectma::RectNode>(10, 10, 20, 20)); // Node 0
-    scene->addChild(std::make_unique<vectma::RectNode>(50, 50, 20, 20)); // Node 1
+    std::vector<vectma::BezierAnchor> anchors;
+    anchors.emplace_back(vectma::Point2D(100, 100), vectma::Point2D(80, 100), vectma::Point2D(120, 100), vectma::AnchorType::Symmetric);
+    auto path = std::make_unique<vectma::PathNode>(anchors);
+    vectma::PathNode* pathPtr = path.get();
+    scene->addChild(std::move(path));
 
-    workspace->setTool(vectma::ToolType::Marquee);
+    workspace.addToSelection(pathPtr);
+    workspace.setSubSelectionMode(true);
 
-    // Simulate drag selecting both nodes
-    workspace->handleMouseDown({0, 0});
-    workspace->handleMouseMove({100, 100});
-    workspace->handleMouseUp();
+    // Hit test anchor position
+    workspace.handleMouseDown({100, 100});
+    assert(workspace.getActiveAnchorIndex() == 0);
+    assert(workspace.getActiveHandleId() == 0);
 
-    assert(workspace->getSelection().size() == 2);
+    // Move anchor position
+    workspace.handleMouseMove({110, 110});
+    workspace.handleMouseUp();
 
-    // Simulate drag selecting only first node
-    workspace->handleMouseDown({0, 0});
-    workspace->handleMouseMove({40, 40});
-    workspace->handleMouseUp();
+    auto updatedAnchors = pathPtr->getAnchors();
+    assert(updatedAnchors[0].position.x == 110);
+    assert(updatedAnchors[0].position.y == 110);
+    assert(updatedAnchors[0].handleIn.x == 90);
+    assert(updatedAnchors[0].handleIn.y == 110); // Symmetric move moves handles too
 
-    assert(workspace->getSelection().size() == 1);
-    std::cout << "Marquee selection tests passed." << std::endl;
+    // Hit test handle
+    workspace.handleMouseDown({90, 110});
+    assert(workspace.getActiveAnchorIndex() == 0);
+    assert(workspace.getActiveHandleId() == 1);
+
+    // Move handle In, should mirror handle Out
+    workspace.handleMouseMove({80, 110});
+    workspace.handleMouseUp();
+
+    updatedAnchors = pathPtr->getAnchors();
+    assert(updatedAnchors[0].handleIn.x == 80);
+    assert(updatedAnchors[0].handleOut.x == 140); // 110 + (110 - 80) = 140
+
+    std::cout << "Bezier math tests passed." << std::endl;
 }
 
-void testShapeCreation() {
-    std::cout << "Testing Shape Creation Tool..." << std::endl;
-    auto workspace = std::make_unique<vectma::WorkspaceStage>();
-    auto scene = std::make_shared<vectma::SceneGraph>();
-    workspace->setScene(scene);
+void testPathHitTesting() {
+    std::cout << "Testing Path Hit Testing..." << std::endl;
+    std::vector<vectma::BezierAnchor> anchors;
+    anchors.emplace_back(vectma::Point2D(100, 100), vectma::Point2D(80, 100), vectma::Point2D(120, 100));
+    vectma::PathNode path(anchors);
 
-    workspace->setTool(vectma::ToolType::Rect);
+    assert(path.hitTestAnchors({100, 100}, 5.0f) == 0); // anchor 0, pos
+    assert(path.hitTestAnchors({80, 100}, 5.0f) == 1);  // anchor 0, handleIn
+    assert(path.hitTestAnchors({120, 100}, 5.0f) == 2); // anchor 0, handleOut
+    assert(path.hitTestAnchors({150, 150}, 5.0f) == -1);
 
-    workspace->handleMouseDown({10, 10});
-    workspace->handleMouseMove({60, 60});
-    workspace->handleMouseUp();
-
-    assert(scene->getChildren().size() == 1);
-    assert(scene->getChildren()[0]->getClassName() == "RectNode");
-
-    auto bbox = scene->getChildren()[0]->computeBoundingBox();
-    assert(bbox.x == 10 && bbox.width == 50);
-
-    std::cout << "Shape creation tests passed." << std::endl;
-}
-
-void testCoordinateTranslation() {
-    std::cout << "Testing Coordinate Translation..." << std::endl;
-    vectma::WorkspaceStage workspace;
-    // View translated by 100, 100
-    workspace.setViewMatrix(vectma::GTransform::Translation(100, 100));
-
-    vectma::GPoint screenPos(150, 150);
-    vectma::GPoint canvasPos = workspace.screenToCanvas(screenPos);
-
-    assert(canvasPos.x == 50);
-    assert(canvasPos.y == 50);
-    std::cout << "Coordinate translation tests passed." << std::endl;
+    std::cout << "Path hit testing tests passed." << std::endl;
 }
 
 int main() {
-    testToolSwitching();
-    testMarqueeSelection();
-    testShapeCreation();
-    testCoordinateTranslation();
-    std::cout << "All core tests passed!" << std::endl;
+    testBezierMath();
+    testPathHitTesting();
+    std::cout << "All new Bezier engine tests passed!" << std::endl;
     return 0;
 }

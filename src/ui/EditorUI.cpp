@@ -2,9 +2,13 @@
 #include "ui/Theme.hpp"
 #include "ui/Toolbar.hpp"
 #include "ui/Inspector.hpp"
+#include "core/PathNode.hpp"
 #include <imgui.h>
+
+#ifdef VECTMA_USE_OPENGL
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#endif
 
 namespace vectma {
 
@@ -14,8 +18,10 @@ EditorUI::EditorUI(WorkspaceStage& stage, RenderPipeline& renderer)
 }
 
 void EditorUI::render() {
+#ifdef VECTMA_USE_OPENGL
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
+#endif
     ImGui::NewFrame();
 
     handleInputs();
@@ -59,6 +65,21 @@ void EditorUI::renderViewport() {
     if (m_stage.getScene()) {
         m_stage.getScene()->render(m_renderer);
     }
+
+    // Render overlays
+    if (m_stage.isSubSelectionMode()) {
+        for (auto node : m_stage.getSelection()) {
+            PathNode* path = dynamic_cast<PathNode*>(node);
+            if (path) {
+                int activeIdx = m_stage.getActiveAnchorIndex();
+                int activeHandle = m_stage.getActiveHandleId();
+                for (size_t i = 0; i < path->getAnchors().size(); ++i) {
+                    m_renderer.drawAnchorOverlay(path->getAnchors()[i], (int)i == activeIdx, ((int)i == activeIdx) ? activeHandle : -1);
+                }
+            }
+        }
+    }
+
     m_renderer.endFrame();
 
     ImGui::End();

@@ -32,6 +32,17 @@ void Toolbar::render(WorkspaceStage& stage) {
         ImGui::SameLine();
         renderButton("Path", ToolType::Path);
 
+        ImGui::SameLine();
+        ImGui::Separator();
+        ImGui::SameLine();
+
+        bool subSel = stage.isSubSelectionMode();
+        if (subSel) ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]);
+        if (ImGui::Button("Sub-Selection")) {
+            stage.setSubSelectionMode(!subSel);
+        }
+        if (subSel) ImGui::PopStyleColor();
+
         ImGui::End();
     }
 }

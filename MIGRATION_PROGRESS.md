@@ -16,6 +16,8 @@
 - [x] `RenderPipeline` Abstraction
 - [x] Main Entrypoint (`src/main.cpp`)
 - [x] Build System (`Makefile`)
+- [x] **Bezier Math Engine** (Phase 6)
+- [x] **Sub-Selection Interaction** (Phase 6)
 
 ### Module Groups (Legacy -> Native)
 - [x] Core Objects (`reverse-engineering/reconstructed/infinity/core/`)
@@ -26,9 +28,11 @@
 ## Verification
 - [x] Baseline Functional Compilation
 - [x] Core Logic Unit Tests
+- [x] **Bezier Anchor & Handle Interaction Tests**
 
 ### UI Layer (Legacy -> Native)
 - [x] Premium Dark Theme
 - [x] Floating Modality Toolbar
 - [x] Adaptive Inspector Window
 - [x] Hardware Viewport Integration
+- [x] **Vector Path Overlays**

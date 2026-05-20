@@ -3,6 +3,7 @@
 #include "core/EllipseNode.hpp"
 #include "core/PathNode.hpp"
 #include <algorithm>
+#include <cmath>
 
 namespace vectma {
 
@@ -24,6 +25,8 @@ void WorkspaceStage::addToSelection(CanvasNode* node) {
 
 void WorkspaceStage::clearSelection() {
     m_selection.clear();
+    m_activeAnchorIndex = -1;
+    m_activeHandleId = -1;
 }
 
 const std::vector<CanvasNode*>& WorkspaceStage::getSelection() const {
@@ -44,12 +47,71 @@ void WorkspaceStage::handleMouseDown(const GPoint& screenPos) {
     m_isDragging = true;
     m_dragStart = screenToCanvas(screenPos);
     m_marqueeRect = GRect(m_dragStart.x, m_dragStart.y, 0, 0);
+
+    if (m_subSelectionMode && !m_selection.empty()) {
+        PathNode* path = dynamic_cast<PathNode*>(m_selection[0]);
+        if (path) {
+            int hit = path->hitTestAnchors(m_dragStart, 10.0f);
+            if (hit != -1) {
+                m_activeAnchorIndex = hit >> 2;
+                m_activeHandleId = hit & 3;
+            } else {
+                m_activeAnchorIndex = -1;
+                m_activeHandleId = -1;
+            }
+        }
+    }
 }
 
 void WorkspaceStage::handleMouseMove(const GPoint& screenPos) {
     if (!m_isDragging) return;
 
     GPoint canvasPos = screenToCanvas(screenPos);
+
+    if (m_subSelectionMode && m_activeAnchorIndex != -1) {
+        PathNode* path = dynamic_cast<PathNode*>(m_selection[0]);
+        if (path) {
+            auto anchors = path->getAnchors();
+            BezierAnchor& anchor = anchors[m_activeAnchorIndex];
+
+            double dx = canvasPos.x - m_dragStart.x;
+            double dy = canvasPos.y - m_dragStart.y;
+
+            if (m_activeHandleId == 0) { // Position
+                anchor.position.x += dx;
+                anchor.position.y += dy;
+                anchor.handleIn.x += dx;
+                anchor.handleIn.y += dy;
+                anchor.handleOut.x += dx;
+                anchor.handleOut.y += dy;
+            } else if (m_activeHandleId == 1) { // Handle In
+                anchor.handleIn.x += dx;
+                anchor.handleIn.y += dy;
+
+                if (anchor.type == AnchorType::Symmetric) {
+                    double rx = anchor.position.x - anchor.handleIn.x;
+                    double ry = anchor.position.y - anchor.handleIn.y;
+                    anchor.handleOut.x = anchor.position.x + rx;
+                    anchor.handleOut.y = anchor.position.y + ry;
+                }
+            } else if (m_activeHandleId == 2) { // Handle Out
+                anchor.handleOut.x += dx;
+                anchor.handleOut.y += dy;
+
+                if (anchor.type == AnchorType::Symmetric) {
+                    double rx = anchor.position.x - anchor.handleOut.x;
+                    double ry = anchor.position.y - anchor.handleOut.y;
+                    anchor.handleIn.x = anchor.position.x + rx;
+                    anchor.handleIn.y = anchor.position.y + ry;
+                }
+            }
+
+            path->setAnchors(anchors);
+            m_dragStart = canvasPos;
+            return;
+        }
+    }
+
     updateMarquee(canvasPos);
 }
 
@@ -70,6 +132,13 @@ void WorkspaceStage::handleMouseUp() {
             double rx = m_marqueeRect.width / 2.0;
             double ry = m_marqueeRect.height / 2.0;
             m_scene->addChild(std::make_unique<EllipseNode>(m_marqueeRect.x + rx, m_marqueeRect.y + ry, rx, ry));
+        }
+    } else if (m_tool == ToolType::Path) {
+        if (m_marqueeRect.width > 0 && m_marqueeRect.height > 0) {
+            std::vector<BezierAnchor> anchors;
+            anchors.emplace_back(Point2D(m_marqueeRect.x, m_marqueeRect.y), Point2D(m_marqueeRect.x - 20, m_marqueeRect.y), Point2D(m_marqueeRect.x + 20, m_marqueeRect.y));
+            anchors.emplace_back(Point2D(m_marqueeRect.x + m_marqueeRect.width, m_marqueeRect.y + m_marqueeRect.height), Point2D(m_marqueeRect.x + m_marqueeRect.width - 20, m_marqueeRect.y + m_marqueeRect.height), Point2D(m_marqueeRect.x + m_marqueeRect.width + 20, m_marqueeRect.y + m_marqueeRect.height));
+            m_scene->addChild(std::make_unique<PathNode>(anchors));
         }
     }
 }

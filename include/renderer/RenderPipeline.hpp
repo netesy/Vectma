@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include "core/GPoint.hpp"
 
 namespace vectma {
 
@@ -25,6 +26,10 @@ public:
     virtual void drawEllipse(const EllipseNode& node) = 0;
     virtual void drawPath(const PathNode& node) = 0;
 
+    // Bezier specific rendering
+    virtual void drawBezierPath(const PathNode& node) = 0;
+    virtual void drawAnchorOverlay(const BezierAnchor& anchor, bool selected, int activeHandle) = 0;
+
     // Legacy support (to be phased out)
     virtual void renderNode(const CanvasNode& node) = 0;
 };
@@ -40,6 +45,9 @@ public:
     void drawRect(const RectNode& node) override;
     void drawEllipse(const EllipseNode& node) override;
     void drawPath(const PathNode& node) override;
+
+    void drawBezierPath(const PathNode& node) override;
+    void drawAnchorOverlay(const BezierAnchor& anchor, bool selected, int activeHandle) override;
 
     void renderNode(const CanvasNode& node) override;
 };

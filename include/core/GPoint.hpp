@@ -12,4 +12,17 @@ struct GPoint {
 
 using Point2D = GPoint;
 
+enum class AnchorType { Corner, Symmetric, Disconnected };
+
+struct BezierAnchor {
+    Point2D position;
+    Point2D handleIn;
+    Point2D handleOut;
+    AnchorType type = AnchorType::Symmetric;
+
+    BezierAnchor() = default;
+    BezierAnchor(Point2D pos, Point2D hIn, Point2D hOut, AnchorType t = AnchorType::Symmetric)
+        : position(pos), handleIn(hIn), handleOut(hOut), type(t) {}
+};
+
 } // namespace vectma

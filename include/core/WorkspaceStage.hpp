@@ -30,6 +30,12 @@ public:
     void setTool(ToolType tool);
     ToolType getTool() const { return m_tool; }
 
+    // Sub-Selection Mode
+    void setSubSelectionMode(bool active) { m_subSelectionMode = active; }
+    bool isSubSelectionMode() const { return m_subSelectionMode; }
+    int getActiveAnchorIndex() const { return m_activeAnchorIndex; }
+    int getActiveHandleId() const { return m_activeHandleId; }
+
     // Viewport
     void setViewMatrix(const GTransform& matrix) { m_viewMatrix = matrix; }
     GTransform getViewMatrix() const { return m_viewMatrix; }
@@ -54,6 +60,11 @@ private:
     bool m_isDragging = false;
     Point2D m_dragStart;
     GRect m_marqueeRect;
+
+    // Sub-selection state
+    bool m_subSelectionMode = false;
+    int m_activeAnchorIndex = -1;
+    int m_activeHandleId = -1; // 0: pos, 1: handleIn, 2: handleOut
 
     void updateMarquee(const Point2D& currentCanvasPos);
     void performSelection(const GRect& rect);
