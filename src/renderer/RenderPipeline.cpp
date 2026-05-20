@@ -20,7 +20,8 @@ void BaselineRenderer::endFrame() {
     // Finalize GL frame
 }
 
-void BaselineRenderer::drawRect(const RectNode& node) {
+void BaselineRenderer::drawRect(const RectNode& node, FillType fillType, const GradientConfig& gradConfig, StrokeAlignment strokeAlign) {
+    (void)fillType; (void)gradConfig; (void)strokeAlign;
 #ifdef VECTMA_USE_OPENGL
     glColor3f(0.0f, 0.5f, 0.5f); // Teal
     glBegin(GL_LINE_LOOP);
@@ -38,7 +39,8 @@ void BaselineRenderer::drawRect(const RectNode& node) {
 #endif
 }
 
-void BaselineRenderer::drawEllipse(const EllipseNode& node) {
+void BaselineRenderer::drawEllipse(const EllipseNode& node, FillType fillType, const GradientConfig& gradConfig, StrokeAlignment strokeAlign) {
+    (void)fillType; (void)gradConfig; (void)strokeAlign;
 #ifdef VECTMA_USE_OPENGL
     glColor3f(0.0f, 0.7f, 0.7f); // Lighter Teal
     glBegin(GL_LINE_LOOP);
@@ -56,7 +58,8 @@ void BaselineRenderer::drawEllipse(const EllipseNode& node) {
 #endif
 }
 
-void BaselineRenderer::drawPath(const PathNode& node) {
+void BaselineRenderer::drawPath(const PathNode& node, FillType fillType, const GradientConfig& gradConfig, StrokeAlignment strokeAlign) {
+    (void)fillType; (void)gradConfig; (void)strokeAlign;
     drawBezierPath(node);
 }
 

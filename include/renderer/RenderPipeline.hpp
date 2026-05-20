@@ -2,6 +2,7 @@
 
 #include <string>
 #include "core/GPoint.hpp"
+#include "core/GColor.hpp"
 
 namespace vectma {
 
@@ -21,10 +22,10 @@ public:
     virtual void beginFrame() = 0;
     virtual void endFrame() = 0;
 
-    // Double-dispatch primitive hooks
-    virtual void drawRect(const RectNode& node) = 0;
-    virtual void drawEllipse(const EllipseNode& node) = 0;
-    virtual void drawPath(const PathNode& node) = 0;
+    // Double-dispatch primitive hooks with styling parameters
+    virtual void drawRect(const RectNode& node, FillType fillType, const GradientConfig& gradConfig, StrokeAlignment strokeAlign) = 0;
+    virtual void drawEllipse(const EllipseNode& node, FillType fillType, const GradientConfig& gradConfig, StrokeAlignment strokeAlign) = 0;
+    virtual void drawPath(const PathNode& node, FillType fillType, const GradientConfig& gradConfig, StrokeAlignment strokeAlign) = 0;
 
     // Bezier specific rendering
     virtual void drawBezierPath(const PathNode& node) = 0;
@@ -42,9 +43,9 @@ public:
     void beginFrame() override;
     void endFrame() override;
 
-    void drawRect(const RectNode& node) override;
-    void drawEllipse(const EllipseNode& node) override;
-    void drawPath(const PathNode& node) override;
+    void drawRect(const RectNode& node, FillType fillType, const GradientConfig& gradConfig, StrokeAlignment strokeAlign) override;
+    void drawEllipse(const EllipseNode& node, FillType fillType, const GradientConfig& gradConfig, StrokeAlignment strokeAlign) override;
+    void drawPath(const PathNode& node, FillType fillType, const GradientConfig& gradConfig, StrokeAlignment strokeAlign) override;
 
     void drawBezierPath(const PathNode& node) override;
     void drawAnchorOverlay(const BezierAnchor& anchor, bool selected, int activeHandle) override;

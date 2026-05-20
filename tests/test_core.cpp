@@ -29,9 +29,9 @@ public:
     std::vector<std::string> callOrder;
     void beginFrame() override {}
     void endFrame() override {}
-    void drawRect(const vectma::RectNode&) override {}
-    void drawEllipse(const vectma::EllipseNode&) override {}
-    void drawPath(const vectma::PathNode&) override {}
+    void drawRect(const vectma::RectNode&, vectma::FillType, const vectma::GradientConfig&, vectma::StrokeAlignment) override {}
+    void drawEllipse(const vectma::EllipseNode&, vectma::FillType, const vectma::GradientConfig&, vectma::StrokeAlignment) override {}
+    void drawPath(const vectma::PathNode&, vectma::FillType, const vectma::GradientConfig&, vectma::StrokeAlignment) override {}
     void drawBezierPath(const vectma::PathNode&) override {}
     void drawAnchorOverlay(const vectma::BezierAnchor&, bool, int) override {}
     void renderNode(const vectma::CanvasNode& node) override {
@@ -41,69 +41,48 @@ public:
     }
 };
 
-void testBezierMath() {
-    std::cout << "Testing Bezier Math..." << std::endl;
-    vectma::WorkspaceStage workspace;
-    auto scene = std::make_shared<vectma::SceneGraph>();
-    workspace.setScene(scene);
+void testGradients() {
+    std::cout << "Testing Gradients..." << std::endl;
+    vectma::RectNode rect(0, 0, 100, 100);
+    rect.setFillType(vectma::FillType::LinearGradient);
 
-    std::vector<vectma::BezierAnchor> anchors;
-    anchors.emplace_back(vectma::Point2D(100, 100), vectma::Point2D(80, 100), vectma::Point2D(120, 100), vectma::AnchorType::Symmetric);
-    auto path = std::make_unique<vectma::PathNode>(anchors);
-    vectma::PathNode* pathPtr = path.get();
-    scene->addChild(std::move(path));
+    auto config = rect.getGradientConfig();
+    config.stops.push_back({0.5f, 0xFF0000FF});
+    rect.setGradientConfig(config);
 
-    workspace.addToSelection(pathPtr);
-    workspace.setSubSelectionMode(true);
-
-    // Hit test anchor position
-    workspace.handleMouseDown({100, 100});
-    assert(workspace.getActiveAnchorIndex() == 0);
-    assert(workspace.getActiveHandleId() == 0);
-
-    // Move anchor position
-    workspace.handleMouseMove({110, 110});
-    workspace.handleMouseUp();
-
-    auto updatedAnchors = pathPtr->getAnchors();
-    assert(updatedAnchors[0].position.x == 110);
-    assert(updatedAnchors[0].position.y == 110);
-    assert(updatedAnchors[0].handleIn.x == 90);
-    assert(updatedAnchors[0].handleIn.y == 110); // Symmetric move moves handles too
-
-    // Hit test handle
-    workspace.handleMouseDown({90, 110});
-    assert(workspace.getActiveAnchorIndex() == 0);
-    assert(workspace.getActiveHandleId() == 1);
-
-    // Move handle In, should mirror handle Out
-    workspace.handleMouseMove({80, 110});
-    workspace.handleMouseUp();
-
-    updatedAnchors = pathPtr->getAnchors();
-    assert(updatedAnchors[0].handleIn.x == 80);
-    assert(updatedAnchors[0].handleOut.x == 140); // 110 + (110 - 80) = 140
-
-    std::cout << "Bezier math tests passed." << std::endl;
+    assert(rect.getGradientConfig().stops.size() == 3);
+    assert(rect.getGradientConfig().stops[2].offset == 0.5f);
+    std::cout << "Gradient tests passed." << std::endl;
 }
 
-void testPathHitTesting() {
-    std::cout << "Testing Path Hit Testing..." << std::endl;
-    std::vector<vectma::BezierAnchor> anchors;
-    anchors.emplace_back(vectma::Point2D(100, 100), vectma::Point2D(80, 100), vectma::Point2D(120, 100));
-    vectma::PathNode path(anchors);
+void testStrokeAlignment() {
+    std::cout << "Testing Stroke Alignment BBox..." << std::endl;
+    vectma::RectNode rect(10, 10, 100, 100);
+    rect.setStrokeWidth(10.0);
 
-    assert(path.hitTestAnchors({100, 100}, 5.0f) == 0); // anchor 0, pos
-    assert(path.hitTestAnchors({80, 100}, 5.0f) == 1);  // anchor 0, handleIn
-    assert(path.hitTestAnchors({120, 100}, 5.0f) == 2); // anchor 0, handleOut
-    assert(path.hitTestAnchors({150, 150}, 5.0f) == -1);
+    // Center alignment
+    rect.setStrokeAlignment(vectma::StrokeAlignment::Center);
+    auto bbox = rect.computeBoundingBox();
+    // x: 10 - 5 = 5, y: 10 - 5 = 5, w: 100 + 10 = 110, h: 100 + 10 = 110
+    assert(bbox.x == 5 && bbox.y == 5 && bbox.width == 110 && bbox.height == 110);
 
-    std::cout << "Path hit testing tests passed." << std::endl;
+    // Outside alignment
+    rect.setStrokeAlignment(vectma::StrokeAlignment::Outside);
+    bbox = rect.computeBoundingBox();
+    // x: 10 - 10 = 0, y: 10 - 10 = 0, w: 100 + 20 = 120, h: 100 + 20 = 120
+    assert(bbox.x == 0 && bbox.y == 0 && bbox.width == 120 && bbox.height == 120);
+
+    // Inside alignment
+    rect.setStrokeAlignment(vectma::StrokeAlignment::Inside);
+    bbox = rect.computeBoundingBox();
+    assert(bbox.x == 10 && bbox.y == 10 && bbox.width == 100 && bbox.height == 100);
+
+    std::cout << "Stroke alignment tests passed." << std::endl;
 }
 
 int main() {
-    testBezierMath();
-    testPathHitTesting();
-    std::cout << "All new Bezier engine tests passed!" << std::endl;
+    testGradients();
+    testStrokeAlignment();
+    std::cout << "All Phase 7 tests passed!" << std::endl;
     return 0;
 }

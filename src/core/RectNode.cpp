@@ -7,7 +7,7 @@ RectNode::RectNode(double x, double y, double w, double h)
     : m_x(x), m_y(y), m_w(w), m_h(h) {}
 
 void RectNode::render(RenderPipeline& pipeline) const {
-    pipeline.drawRect(*this);
+    pipeline.drawRect(*this, getFillType(), getGradientConfig(), getStrokeAlignment());
 }
 
 bool RectNode::containsPoint(const GPoint& point) const {
@@ -16,7 +16,26 @@ bool RectNode::containsPoint(const GPoint& point) const {
 }
 
 GRect RectNode::computeBoundingBox() const {
-    return GRect(m_x, m_y, m_w, m_h);
+    double halfStroke = getStrokeWidth() / 2.0;
+    double x = m_x;
+    double y = m_y;
+    double w = m_w;
+    double h = m_h;
+
+    if (getStrokeAlignment() == StrokeAlignment::Center) {
+        x -= halfStroke;
+        y -= halfStroke;
+        w += getStrokeWidth();
+        h += getStrokeWidth();
+    } else if (getStrokeAlignment() == StrokeAlignment::Outside) {
+        x -= getStrokeWidth();
+        y -= getStrokeWidth();
+        w += getStrokeWidth() * 2.0;
+        h += getStrokeWidth() * 2.0;
+    }
+    // Inside: no inflation needed beyond the primitive border
+
+    return GRect(x, y, w, h);
 }
 
 } // namespace vectma

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include <vector>
+#include "core/GPoint.hpp"
 
 namespace vectma {
 
@@ -17,5 +19,29 @@ struct GColor {
     static GColor White() { return GColor(255, 255, 255); }
     static GColor Transparent() { return GColor(0, 0, 0, 0); }
 };
+
+struct GradientStop {
+    float offset = 0.0f;
+    uint32_t color = 0xFFFFFFFF; // RGBA8
+
+    GradientStop() = default;
+    GradientStop(float off, uint32_t col) : offset(off), color(col) {}
+};
+
+enum class FillType { Solid, LinearGradient, RadialGradient };
+
+struct GradientConfig {
+    std::vector<GradientStop> stops;
+    Point2D startPoint;
+    Point2D endPoint;
+
+    GradientConfig() {
+        stops = { {0.0f, 0xFFFFFFFF}, {1.0f, 0x000000FF} };
+        startPoint = {0, 0};
+        endPoint = {100, 100};
+    }
+};
+
+enum class StrokeAlignment { Center, Inside, Outside };
 
 } // namespace vectma

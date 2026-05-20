@@ -1,6 +1,7 @@
 #include "core/PathNode.hpp"
 #include "renderer/RenderPipeline.hpp"
 #include <cmath>
+#include <algorithm>
 
 namespace vectma {
 
@@ -10,12 +11,11 @@ PathNode::PathNode(const std::vector<BezierAnchor>& anchors)
     : m_anchors(anchors) {}
 
 void PathNode::render(RenderPipeline& pipeline) const {
-    pipeline.drawPath(*this);
+    pipeline.drawPath(*this, getFillType(), getGradientConfig(), getStrokeAlignment());
 }
 
 bool PathNode::containsPoint(const GPoint& point) const {
     (void)point;
-    // Basic implementation: check if point is near any anchor or handle
     return hitTestAnchors(point, 5.0f) != -1;
 }
 
@@ -40,7 +40,25 @@ GRect PathNode::computeBoundingBox() const {
         update(anchor.handleOut);
     }
 
-    return GRect(minX, minY, maxX - minX, maxY - minY);
+    double x = minX;
+    double y = minY;
+    double w = maxX - minX;
+    double h = maxY - minY;
+
+    double halfStroke = getStrokeWidth() / 2.0;
+    if (getStrokeAlignment() == StrokeAlignment::Center) {
+        x -= halfStroke;
+        y -= halfStroke;
+        w += getStrokeWidth();
+        h += getStrokeWidth();
+    } else if (getStrokeAlignment() == StrokeAlignment::Outside) {
+        x -= getStrokeWidth();
+        y -= getStrokeWidth();
+        w += getStrokeWidth() * 2.0;
+        h += getStrokeWidth() * 2.0;
+    }
+
+    return GRect(x, y, w, h);
 }
 
 int PathNode::hitTestAnchors(const Point2D& canvasPos, float toleranceRadius) const {

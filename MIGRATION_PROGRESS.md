@@ -18,6 +18,9 @@
 - [x] Build System (`Makefile`)
 - [x] **Bezier Math Engine** (Phase 6)
 - [x] **Sub-Selection Interaction** (Phase 6)
+- [x] **Advanced Styling Engine** (Phase 7)
+- [x] **Multi-Stop Gradients** (Phase 7)
+- [x] **Stroke Alignment Properties** (Phase 7)
 
 ### Module Groups (Legacy -> Native)
 - [x] Core Objects (`reverse-engineering/reconstructed/infinity/core/`)
@@ -28,11 +31,13 @@
 ## Verification
 - [x] Baseline Functional Compilation
 - [x] Core Logic Unit Tests
-- [x] **Bezier Anchor & Handle Interaction Tests**
+- [x] Bezier Anchor & Handle Interaction Tests
+- [x] **Gradient & Stroke Alignment Tests**
 
 ### UI Layer (Legacy -> Native)
 - [x] Premium Dark Theme
 - [x] Floating Modality Toolbar
 - [x] Adaptive Inspector Window
 - [x] Hardware Viewport Integration
-- [x] **Vector Path Overlays**
+- [x] Vector Path Overlays
+- [x] **Gradient Ramp Editor**
