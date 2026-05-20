@@ -17,6 +17,7 @@ private:
 
     void handleInputs();
     void renderViewport();
+    void renderSettingsMenu();
 };
 
 } // namespace vectma

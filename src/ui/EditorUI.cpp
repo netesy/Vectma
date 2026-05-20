@@ -3,6 +3,7 @@
 #include "ui/Toolbar.hpp"
 #include "ui/Inspector.hpp"
 #include "core/PathNode.hpp"
+#include "core/LocaleManager.hpp"
 #include <imgui.h>
 
 #ifdef VECTMA_USE_OPENGL
@@ -27,11 +28,9 @@ void EditorUI::render() {
     handleInputs();
 
     // UI Layout
+    renderSettingsMenu();
     Toolbar::render(m_stage);
-
-    // Viewport fills the background or a dedicated window
     renderViewport();
-
     Inspector::render(m_stage);
 
     ImGui::Render();
@@ -40,7 +39,6 @@ void EditorUI::render() {
 void EditorUI::handleInputs() {
     ImGuiIO& io = ImGui::GetIO();
 
-    // Only route to stage if mouse is not captured by ImGui windows
     if (!io.WantCaptureMouse) {
         Point2D mousePos(io.MousePos.x, io.MousePos.y);
 
@@ -60,13 +58,11 @@ void EditorUI::renderViewport() {
     ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
     ImGui::Begin("Canvas", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoNav);
 
-    // Off-screen rendering logic would blit here
     m_renderer.beginFrame();
     if (m_stage.getScene()) {
         m_stage.getScene()->render(m_renderer);
     }
 
-    // Render overlays
     if (m_stage.isSubSelectionMode()) {
         for (auto node : m_stage.getSelection()) {
             PathNode* path = dynamic_cast<PathNode*>(node);
@@ -81,6 +77,18 @@ void EditorUI::renderViewport() {
     }
 
     m_renderer.endFrame();
+    ImGui::End();
+}
+
+void EditorUI::renderSettingsMenu() {
+    ImGui::Begin("System Settings");
+
+    const char* locales[] = { "English (US)", "Français (FR)" };
+    int currentLocale = (int)LocaleManager::getInstance().getLocale();
+
+    if (ImGui::Combo("Language", &currentLocale, locales, 2)) {
+        LocaleManager::getInstance().setLocale((Locale)currentLocale);
+    }
 
     ImGui::End();
 }

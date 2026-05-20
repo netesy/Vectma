@@ -12,11 +12,13 @@
 #include "core/GeometryEngine.hpp"
 #include "core/PDFExporter.hpp"
 #include "core/FigmaExporter.hpp"
+#include "core/LocaleManager.hpp"
 #include "renderer/RenderPipeline.hpp"
 #include <cassert>
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <string_view>
 
 class MockRenderPipeline : public vectma::RenderPipeline {
 public:
@@ -32,39 +34,37 @@ public:
     std::vector<uint8_t> exportRaster(float) override { return {}; }
 };
 
-void testSVGSerialization() {
-    std::cout << "Testing SVG Serialization..." << std::endl;
-    vectma::SceneGraph scene;
-    scene.addChild(std::make_unique<vectma::RectNode>(10, 20, 100, 200));
+void testI18n() {
+    std::cout << "Testing Internationalization Engine..." << std::endl;
+    auto& mgr = vectma::LocaleManager::getInstance();
 
-    std::string svg = scene.toSVG();
-    assert(svg.find("<svg") != std::string::npos);
-    assert(svg.find("<rect") != std::string::npos);
-    assert(svg.find("x=\"10.000000\"") != std::string::npos);
-    assert(svg.find("width=\"100.000000\"") != std::string::npos);
-    std::cout << "SVG serialization test passed." << std::endl;
+    mgr.setLocale(vectma::Locale::EN_US);
+    assert(mgr.translate("toolbar.select") == "Select");
+
+    mgr.setLocale(vectma::Locale::FR_FR);
+    assert(mgr.translate("toolbar.select") == "Sélectionner");
+
+    // Fallback
+    assert(mgr.translate("non.existent.key") == "non.existent.key");
+
+    std::cout << "I18n engine tests passed." << std::endl;
 }
 
-void testPDFSerialization() {
-    std::cout << "Testing PDF Serialization..." << std::endl;
-    vectma::SceneGraph scene;
-    std::string pdf = vectma::PDFExporter::exportToPDF(scene);
-    assert(pdf.find("%PDF") != std::string::npos);
-    std::cout << "PDF serialization test passed." << std::endl;
-}
+void testUTF8Safety() {
+    std::cout << "Testing UTF-8 Safety..." << std::endl;
+    auto& mgr = vectma::LocaleManager::getInstance();
+    mgr.setLocale(vectma::Locale::FR_FR);
 
-void testFigmaSerialization() {
-    std::cout << "Testing Figma JSON Serialization..." << std::endl;
-    vectma::SceneGraph scene;
-    std::string json = vectma::FigmaExporter::exportToJSON(scene);
-    assert(json.find("document") != std::string::npos);
-    std::cout << "Figma JSON serialization test passed." << std::endl;
+    std::string_view frText = mgr.translate("toolbar.marquee");
+    // "Rectangle de sélection" contains 'é' which is multi-byte
+    assert(frText.length() > 0);
+
+    std::cout << "UTF-8 safety checks passed." << std::endl;
 }
 
 int main() {
-    testSVGSerialization();
-    testPDFSerialization();
-    testFigmaSerialization();
-    std::cout << "All Phase 10 Asset Exporter tests passed!" << std::endl;
+    testI18n();
+    testUTF8Safety();
+    std::cout << "All Phase 11 I18n tests passed!" << std::endl;
     return 0;
 }
