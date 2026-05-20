@@ -17,6 +17,8 @@ public:
     bool containsPoint(const GPoint& point) const override;
     GRect computeBoundingBox() const override;
 
+    std::string toSVG() const override;
+
     // Text specific
     std::string text_buffer;
     std::shared_ptr<FontAsset> active_font;

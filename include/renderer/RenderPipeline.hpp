@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include "core/GPoint.hpp"
 #include "core/GColor.hpp"
 
@@ -31,6 +32,9 @@ public:
     virtual void drawAnchorOverlay(const BezierAnchor& anchor, bool selected, int activeHandle) = 0;
 
     virtual void renderNode(const CanvasNode& node) = 0;
+
+    // Phase 10: Offscreen Raster Export
+    virtual std::vector<uint8_t> exportRaster(float scale) = 0;
 };
 
 class BaselineRenderer : public RenderPipeline {
@@ -47,6 +51,8 @@ public:
     void drawAnchorOverlay(const BezierAnchor& anchor, bool selected, int activeHandle) override;
 
     void renderNode(const CanvasNode& node) override;
+
+    std::vector<uint8_t> exportRaster(float scale) override;
 };
 
 } // namespace vectma

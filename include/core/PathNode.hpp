@@ -18,15 +18,14 @@ public:
     bool containsPoint(const GPoint& point) const override;
     GRect computeBoundingBox() const override;
 
+    std::string toSVG() const override;
+
     const std::vector<BezierAnchor>& getAnchors() const { return m_anchors; }
     void setAnchors(const std::vector<BezierAnchor>& anchors) { m_anchors = anchors; }
 
     void addAnchor(const BezierAnchor& anchor) { m_anchors.push_back(anchor); }
 
     // Hit testing for sub-selection
-    // Returns encoded index: (anchorIndex << 2) | handleId
-    // handleId: 0 = position, 1 = handleIn, 2 = handleOut
-    // Returns -1 if no hit.
     int hitTestAnchors(const Point2D& canvasPos, float toleranceRadius) const;
 
 private:

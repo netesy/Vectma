@@ -59,6 +59,9 @@ public:
     virtual bool containsPoint(const GPoint& point) const = 0;
     virtual GRect computeBoundingBox() const = 0;
 
+    // Phase 10: Asset Export
+    virtual std::string toSVG() const = 0;
+
 protected:
     CanvasNode* m_parent = nullptr;
     std::vector<std::unique_ptr<CanvasNode>> m_children;

@@ -67,7 +67,7 @@ $$P_{canvas} = M^{-1} \cdot P_{screen}$$
 
 ---
 
-## 5. Active Execution Phase: Phase 10 — Advanced Path Effects
+## 5. Active Execution Phase: Phase 10 — High-Fidelity Asset Exporters
 
-Your immediate goal is to build a post-processing pipeline for PathNodes that allows non-destructive transformations like rounding corners, dash-array offsets, and path-growing (offset) mathematics.
+Your immediate goal is to build a polymorphic export system capable of taking the compiled SceneGraph tree and serializing it into high-density raster formats, native vector XML, and modern web application payloads.
 

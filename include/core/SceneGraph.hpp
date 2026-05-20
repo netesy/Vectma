@@ -22,6 +22,8 @@ public:
     bool containsPoint(const GPoint& point) const override;
     GRect computeBoundingBox() const override;
 
+    std::string toSVG() const override;
+
     // Z-Order Stacking Controls
     void bringToFront(size_t index);
     void sendToBack(size_t index);
@@ -36,7 +38,6 @@ public:
     void clear();
 
 private:
-    // Root node is the SceneGraph itself
 };
 
 } // namespace vectma

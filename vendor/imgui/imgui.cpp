@@ -31,6 +31,7 @@ namespace ImGui {
     void PushID(int) {}
     void PopID() {}
     bool BeginCombo(const char*, const char*, int) { return true; }
+    bool Combo(const char*, int*, const char* const[], int, int) { return false; } bool CollapsingHeader(const char*, int) { return false; }
     void EndCombo() {}
     bool Selectable(const char*, bool, int, const ImVec2&) { return false; }
     bool SliderFloat(const char*, float*, float, float, const char*, int) { return false; }

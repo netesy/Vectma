@@ -33,9 +33,13 @@ GRect RectNode::computeBoundingBox() const {
         w += getStrokeWidth() * 2.0;
         h += getStrokeWidth() * 2.0;
     }
-    // Inside: no inflation needed beyond the primitive border
 
     return GRect(x, y, w, h);
+}
+
+std::string RectNode::toSVG() const {
+    return "<rect x=\"" + std::to_string(m_x) + "\" y=\"" + std::to_string(m_y) +
+           "\" width=\"" + std::to_string(m_w) + "\" height=\"" + std::to_string(m_h) + "\" />";
 }
 
 } // namespace vectma

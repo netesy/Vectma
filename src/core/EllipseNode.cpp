@@ -39,4 +39,9 @@ GRect EllipseNode::computeBoundingBox() const {
     return GRect(x, y, w, h);
 }
 
+std::string EllipseNode::toSVG() const {
+    return "<ellipse cx=\"" + std::to_string(m_cx) + "\" cy=\"" + std::to_string(m_cy) +
+           "\" rx=\"" + std::to_string(m_rx) + "\" ry=\"" + std::to_string(m_ry) + "\" />";
+}
+
 } // namespace vectma

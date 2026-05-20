@@ -14,6 +14,8 @@ public:
     bool containsPoint(const GPoint& point) const override;
     GRect computeBoundingBox() const override;
 
+    std::string toSVG() const override;
+
     double getCX() const { return m_cx; }
     double getCY() const { return m_cy; }
     double getRX() const { return m_rx; }

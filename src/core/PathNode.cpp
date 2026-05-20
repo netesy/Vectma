@@ -79,4 +79,18 @@ int PathNode::hitTestAnchors(const Point2D& canvasPos, float toleranceRadius) co
     return -1;
 }
 
+std::string PathNode::toSVG() const {
+    if (m_anchors.empty()) return "";
+    std::string d = "M " + std::to_string(m_anchors[0].position.x) + " " + std::to_string(m_anchors[0].position.y);
+    for (size_t i = 0; i < m_anchors.size() - 1; ++i) {
+        const auto& p1 = m_anchors[i].handleOut;
+        const auto& p2 = m_anchors[i+1].handleIn;
+        const auto& p3 = m_anchors[i+1].position;
+        d += " C " + std::to_string(p1.x) + " " + std::to_string(p1.y) + ", " +
+             std::to_string(p2.x) + " " + std::to_string(p2.y) + ", " +
+             std::to_string(p3.x) + " " + std::to_string(p3.y);
+    }
+    return "<path d=\"" + d + "\" />";
+}
+
 } // namespace vectma

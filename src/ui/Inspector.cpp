@@ -3,11 +3,38 @@
 #include "core/EllipseNode.hpp"
 #include "core/PathNode.hpp"
 #include "core/TextNode.hpp"
+#include "core/PDFExporter.hpp"
+#include "core/FigmaExporter.hpp"
 #include <imgui.h>
 #include <cstring>
 #include <string>
 
 namespace vectma {
+
+void renderExportDashboard(WorkspaceStage& stage) {
+    if (ImGui::CollapsingHeader("Export Canvas", ImGuiTreeNodeFlags_DefaultOpen)) {
+        static int formatIdx = 0;
+        const char* formats[] = { "PNG", "SVG", "PDF", "Figma JSON" };
+        ImGui::Combo("Format", &formatIdx, formats, 4);
+
+        static float scale = 1.0f;
+        ImGui::SliderFloat("Scale", &scale, 1.0f, 4.0f, "%.1fx");
+
+        if (ImGui::Button("Export Now")) {
+            auto scene = stage.getScene();
+            if (scene) {
+                if (formatIdx == 0) { // PNG
+                } else if (formatIdx == 1) { // SVG
+                    std::string svg = scene->toSVG();
+                } else if (formatIdx == 2) { // PDF
+                    std::string pdf = PDFExporter::exportToPDF(*scene);
+                } else if (formatIdx == 3) { // Figma
+                    std::string json = FigmaExporter::exportToJSON(*scene);
+                }
+            }
+        }
+    }
+}
 
 void Inspector::render(WorkspaceStage& stage) {
     ImGui::Begin("Inspector");
@@ -15,6 +42,8 @@ void Inspector::render(WorkspaceStage& stage) {
     const auto& selection = stage.getSelection();
     if (selection.empty()) {
         ImGui::TextDisabled("No objects selected");
+        ImGui::Separator();
+        renderExportDashboard(stage);
         ImGui::End();
         return;
     }
@@ -31,7 +60,6 @@ void Inspector::render(WorkspaceStage& stage) {
             node->setVisibility(visible);
         }
 
-        // Common stroke/fill settings
         const char* alignments[] = { "Center", "Inside", "Outside" };
         int currentAlign = (int)node->getStrokeAlignment();
         if (ImGui::BeginCombo("Stroke Alignment", alignments[currentAlign])) {
@@ -43,7 +71,6 @@ void Inspector::render(WorkspaceStage& stage) {
             ImGui::EndCombo();
         }
 
-        // Type-specific properties
         if (TextNode* textNode = dynamic_cast<TextNode*>(node)) {
             ImGui::Separator();
             ImGui::Text("Typography");
@@ -71,6 +98,9 @@ void Inspector::render(WorkspaceStage& stage) {
             }
         }
     }
+
+    ImGui::Separator();
+    renderExportDashboard(stage);
 
     ImGui::End();
 }

@@ -49,4 +49,9 @@ void BaselineRenderer::renderNode(const CanvasNode& node) {
     (void)node;
 }
 
+std::vector<uint8_t> BaselineRenderer::exportRaster(float scale) {
+    (void)scale;
+    return std::vector<uint8_t>();
+}
+
 } // namespace vectma

@@ -76,4 +76,9 @@ void TextNode::bindToPath(const PathNode& target_path) {
     }
 }
 
+std::string TextNode::toSVG() const {
+    return "<text x=\"" + std::to_string(m_position.x) + "\" y=\"" + std::to_string(m_position.y) +
+           "\" font-size=\"" + std::to_string(font_size) + "\">" + text_buffer + "</text>";
+}
+
 } // namespace vectma

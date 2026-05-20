@@ -41,6 +41,7 @@ namespace ImGui {
     void PushID(int);
     void PopID();
     bool BeginCombo(const char*, const char*, int = 0);
+    bool Combo(const char*, int*, const char* const[], int, int = -1); bool CollapsingHeader(const char*, int = 0);
     void EndCombo();
     bool Selectable(const char*, bool = false, int = 0, const ImVec2& = ImVec2(0,0));
     bool SliderFloat(const char*, float*, float, float, const char* = "%.3f", int = 0);
@@ -59,6 +60,7 @@ typedef int ImGuiWindowFlags;
 enum ImGuiMouseButton_ { ImGuiMouseButton_Left = 0 };
 enum ImGuiWindowFlags_ { ImGuiWindowFlags_NoBackground=1, ImGuiWindowFlags_NoDecoration=2, ImGuiWindowFlags_NoInputs=4, ImGuiWindowFlags_NoNav=8, ImGuiWindowFlags_AlwaysAutoResize=16, ImGuiWindowFlags_NoMove=32, ImGuiWindowFlags_NoSavedSettings=64, ImGuiWindowFlags_NoFocusOnAppearing=128 };
 enum ImGuiCond_ { ImGuiCond_FirstUseEver=1, ImGuiCond_Always=2 };
+enum ImGuiTreeNodeFlags_ { ImGuiTreeNodeFlags_DefaultOpen = 1 << 5 };
 enum ImGuiCol_ {
     ImGuiCol_Button=0, ImGuiCol_ButtonActive=1, ImGuiCol_WindowBg=2, ImGuiCol_ChildBg=3,
     ImGuiCol_FrameBg=4, ImGuiCol_FrameBgHovered=5, ImGuiCol_FrameBgActive=6,

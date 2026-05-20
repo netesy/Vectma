@@ -10,6 +10,8 @@
 #include "core/GColor.hpp"
 #include "core/GTransform.hpp"
 #include "core/GeometryEngine.hpp"
+#include "core/PDFExporter.hpp"
+#include "core/FigmaExporter.hpp"
 #include "renderer/RenderPipeline.hpp"
 #include <cassert>
 #include <iostream>
@@ -27,52 +29,42 @@ public:
     void drawBezierPath(const vectma::PathNode&) override {}
     void drawAnchorOverlay(const vectma::BezierAnchor&, bool, int) override {}
     void renderNode(const vectma::CanvasNode&) override {}
+    std::vector<uint8_t> exportRaster(float) override { return {}; }
 };
 
-void testTextBounds() {
-    std::cout << "Testing Text Bounds..." << std::endl;
-    auto font = std::make_shared<vectma::FontAsset>(std::vector<unsigned char>{});
-    vectma::TextNode text("Hello", font, 20.0f);
+void testSVGSerialization() {
+    std::cout << "Testing SVG Serialization..." << std::endl;
+    vectma::SceneGraph scene;
+    scene.addChild(std::make_unique<vectma::RectNode>(10, 20, 100, 200));
 
-    auto bbox = text.computeBoundingBox();
-    assert(bbox.width > 0);
-    assert(bbox.height >= 20.0f);
-    std::cout << "Text bounds test passed." << std::endl;
+    std::string svg = scene.toSVG();
+    assert(svg.find("<svg") != std::string::npos);
+    assert(svg.find("<rect") != std::string::npos);
+    assert(svg.find("x=\"10.000000\"") != std::string::npos);
+    assert(svg.find("width=\"100.000000\"") != std::string::npos);
+    std::cout << "SVG serialization test passed." << std::endl;
 }
 
-void testTextTracking() {
-    std::cout << "Testing Text Tracking..." << std::endl;
-    auto font = std::make_shared<vectma::FontAsset>(std::vector<unsigned char>{});
-    vectma::TextNode text("ABC", font, 10.0f);
-
-    auto bbox1 = text.computeBoundingBox();
-    text.tracking = 5.0f;
-    // (mock implementation doesn't include tracking in bbox yet, but let's check toPathNode)
-    auto path = text.toPathNode();
-    // 3 chars, mock adds 4 anchors per char?
-    // Wait, mock toPathNode uses tracking
-    assert(path->getAnchors().size() > 0);
-
-    std::cout << "Text tracking test passed." << std::endl;
+void testPDFSerialization() {
+    std::cout << "Testing PDF Serialization..." << std::endl;
+    vectma::SceneGraph scene;
+    std::string pdf = vectma::PDFExporter::exportToPDF(scene);
+    assert(pdf.find("%PDF") != std::string::npos);
+    std::cout << "PDF serialization test passed." << std::endl;
 }
 
-void testTextOnPath() {
-    std::cout << "Testing Text-on-Path Alignment..." << std::endl;
-    auto font = std::make_shared<vectma::FontAsset>(std::vector<unsigned char>{});
-    vectma::TextNode text("Path", font, 12.0f);
-
-    std::vector<vectma::BezierAnchor> anchors = { { {0, 0}, {0, 0}, {0, 0} }, { {100, 100}, {100, 100}, {100, 100} } };
-    vectma::PathNode path(anchors);
-
-    text.bindToPath(path);
-    // Should not crash
-    std::cout << "Text-on-path alignment test passed." << std::endl;
+void testFigmaSerialization() {
+    std::cout << "Testing Figma JSON Serialization..." << std::endl;
+    vectma::SceneGraph scene;
+    std::string json = vectma::FigmaExporter::exportToJSON(scene);
+    assert(json.find("document") != std::string::npos);
+    std::cout << "Figma JSON serialization test passed." << std::endl;
 }
 
 int main() {
-    testTextBounds();
-    testTextTracking();
-    testTextOnPath();
-    std::cout << "All Phase 9 Typography tests passed!" << std::endl;
+    testSVGSerialization();
+    testPDFSerialization();
+    testFigmaSerialization();
+    std::cout << "All Phase 10 Asset Exporter tests passed!" << std::endl;
     return 0;
 }

@@ -96,4 +96,17 @@ void SceneGraph::clear() {
     m_children.clear();
 }
 
+std::string SceneGraph::toSVG() const {
+    std::string svg = "<svg xmlns=\"http://www.w3.org/2000/svg\">\n";
+    svg += "<defs>\n";
+    svg += "</defs>\n";
+    for (const auto& child : m_children) {
+        if (child) {
+            svg += "  " + child->toSVG() + "\n";
+        }
+    }
+    svg += "</svg>";
+    return svg;
+}
+
 } // namespace vectma
