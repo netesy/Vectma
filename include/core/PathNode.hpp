@@ -28,6 +28,11 @@ public:
     // Hit testing for sub-selection
     int hitTestAnchors(const Point2D& canvasPos, float toleranceRadius) const;
 
+    // Phase 12: Effect Attributes
+    float cornerRadius = 0.0f;
+    std::vector<float> dashPattern;
+    float strokeOffset = 0.0f;
+
 private:
     std::vector<BezierAnchor> m_anchors;
 };

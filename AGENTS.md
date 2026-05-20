@@ -67,7 +67,7 @@ $$P_{canvas} = M^{-1} \cdot P_{screen}$$
 
 ---
 
-## 5. Active Execution Phase: Phase 11 — Compilation & Runtime Internationalization (I18n)
+## 5. Active Execution Phase: Phase 12 — Advanced Path Effects
 
-Your immediate goal is to build a high-performance, zero-allocation runtime translation engine with strict UTF-8 support, enabling seamless UI localization without impacting viewport execution loops.
+Your immediate goal is to expand Vectma’s vector compilation pipeline to support dynamic path styling, non-destructive geometric modifiers, and exact parallel curve expansion.
 

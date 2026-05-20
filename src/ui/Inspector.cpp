@@ -72,6 +72,19 @@ void Inspector::render(WorkspaceStage& stage) {
             ImGui::EndCombo();
         }
 
+        if (PathNode* pathNode = dynamic_cast<PathNode*>(node)) {
+            ImGui::Separator();
+            ImGui::Text("Path Effects");
+            ImGui::SliderFloat("Corner Radius", &pathNode->cornerRadius, 0.0f, 50.0f);
+            ImGui::SliderFloat("Stroke Offset", &pathNode->strokeOffset, -20.0f, 20.0f);
+
+            bool isDashed = !pathNode->dashPattern.empty();
+            if (ImGui::Checkbox("Dashed Stroke", &isDashed)) {
+                if (isDashed) pathNode->dashPattern = { 5.0f, 5.0f };
+                else pathNode->dashPattern.clear();
+            }
+        }
+
         if (TextNode* textNode = dynamic_cast<TextNode*>(node)) {
             ImGui::Separator();
             ImGui::Text(V_TXT("inspector.typography"));

@@ -33,8 +33,11 @@ public:
 
     virtual void renderNode(const CanvasNode& node) = 0;
 
-    // Phase 10: Offscreen Raster Export
+    // Phase 10: Asset Export
     virtual std::vector<uint8_t> exportRaster(float scale) = 0;
+
+    // Phase 12: Advanced Stroke Support
+    virtual void setStrokeStyle(const std::vector<float>& dashPattern, float offset) = 0;
 };
 
 class BaselineRenderer : public RenderPipeline {
@@ -53,6 +56,8 @@ public:
     void renderNode(const CanvasNode& node) override;
 
     std::vector<uint8_t> exportRaster(float scale) override;
+
+    void setStrokeStyle(const std::vector<float>& dashPattern, float offset) override;
 };
 
 } // namespace vectma

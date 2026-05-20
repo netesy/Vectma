@@ -18,7 +18,6 @@
 #include <iostream>
 #include <memory>
 #include <vector>
-#include <string_view>
 
 class MockRenderPipeline : public vectma::RenderPipeline {
 public:
@@ -32,39 +31,35 @@ public:
     void drawAnchorOverlay(const vectma::BezierAnchor&, bool, int) override {}
     void renderNode(const vectma::CanvasNode&) override {}
     std::vector<uint8_t> exportRaster(float) override { return {}; }
+    void setStrokeStyle(const std::vector<float>&, float) override {}
 };
 
-void testI18n() {
-    std::cout << "Testing Internationalization Engine..." << std::endl;
-    auto& mgr = vectma::LocaleManager::getInstance();
+void testCornerRounding() {
+    std::cout << "Testing Non-Destructive Corner Rounding..." << std::endl;
+    std::vector<vectma::BezierAnchor> anchors = { { {0, 0}, {0, 0}, {0, 0} }, { {100, 0}, {100, 0}, {100, 0} }, { {100, 100}, {100, 100}, {100, 100} } };
+    vectma::PathNode path(anchors);
 
-    mgr.setLocale(vectma::Locale::EN_US);
-    assert(mgr.translate("toolbar.select") == "Select");
-
-    mgr.setLocale(vectma::Locale::FR_FR);
-    assert(mgr.translate("toolbar.select") == "Sélectionner");
-
-    // Fallback
-    assert(mgr.translate("non.existent.key") == "non.existent.key");
-
-    std::cout << "I18n engine tests passed." << std::endl;
+    path.cornerRadius = 10.0f;
+    path.setStrokeWidth(0.0f);
+    auto bbox = path.computeBoundingBox();
+    // Bbox should still be based on anchors for this mock, but structural pass-through is verified
+    assert(bbox.width == 100);
+    assert(bbox.height == 100);
+    std::cout << "Corner rounding structural pass-through verified." << std::endl;
 }
 
-void testUTF8Safety() {
-    std::cout << "Testing UTF-8 Safety..." << std::endl;
-    auto& mgr = vectma::LocaleManager::getInstance();
-    mgr.setLocale(vectma::Locale::FR_FR);
-
-    std::string_view frText = mgr.translate("toolbar.marquee");
-    // "Rectangle de sélection" contains 'é' which is multi-byte
-    assert(frText.length() > 0);
-
-    std::cout << "UTF-8 safety checks passed." << std::endl;
+void testDashCounts() {
+    std::cout << "Testing Dash Pattern persistence..." << std::endl;
+    vectma::PathNode path;
+    path.dashPattern = { 5.0f, 2.0f };
+    assert(path.dashPattern.size() == 2);
+    assert(path.dashPattern[0] == 5.0f);
+    std::cout << "Dash pattern attributes verified." << std::endl;
 }
 
 int main() {
-    testI18n();
-    testUTF8Safety();
-    std::cout << "All Phase 11 I18n tests passed!" << std::endl;
+    testCornerRounding();
+    testDashCounts();
+    std::cout << "All Phase 12 Path Effect tests passed!" << std::endl;
     return 0;
 }

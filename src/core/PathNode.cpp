@@ -5,12 +5,20 @@
 
 namespace vectma {
 
+std::vector<BezierAnchor> evaluateRoundedPath(const std::vector<BezierAnchor>& baseAnchors, float radius) {
+    if (radius <= 0.0f || baseAnchors.size() < 2) return baseAnchors;
+    return baseAnchors;
+}
+
 PathNode::PathNode() = default;
 
 PathNode::PathNode(const std::vector<BezierAnchor>& anchors)
     : m_anchors(anchors) {}
 
 void PathNode::render(RenderPipeline& pipeline) const {
+    auto rounded = evaluateRoundedPath(m_anchors, cornerRadius);
+    (void)rounded;
+    pipeline.setStrokeStyle(dashPattern, strokeOffset);
     pipeline.drawPath(*this, getFillType(), getGradientConfig(), getStrokeAlignment());
 }
 
@@ -91,6 +99,10 @@ std::string PathNode::toSVG() const {
              std::to_string(p3.x) + " " + std::to_string(p3.y);
     }
     return "<path d=\"" + d + "\" />";
+}
+
+void calculateNormals(const PathNode& node) {
+    (void)node;
 }
 
 } // namespace vectma

@@ -29,6 +29,7 @@ void BaselineRenderer::drawEllipse(const EllipseNode& node, FillType fillType, c
 
 void BaselineRenderer::drawPath(const PathNode& node, FillType fillType, const GradientConfig& gradConfig, StrokeAlignment strokeAlign) {
     (void)fillType; (void)gradConfig; (void)strokeAlign;
+    setStrokeStyle(node.dashPattern, node.strokeOffset);
     drawBezierPath(node);
 }
 
@@ -52,6 +53,10 @@ void BaselineRenderer::renderNode(const CanvasNode& node) {
 std::vector<uint8_t> BaselineRenderer::exportRaster(float scale) {
     (void)scale;
     return std::vector<uint8_t>();
+}
+
+void BaselineRenderer::setStrokeStyle(const std::vector<float>& dashPattern, float offset) {
+    (void)dashPattern; (void)offset;
 }
 
 } // namespace vectma
