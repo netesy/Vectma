@@ -8,7 +8,7 @@
 
 namespace vectma {
 
-enum class ToolType { Select, Marquee, Rect, Ellipse, Path };
+enum class ToolType { Select, Marquee, Rect, Ellipse, Path, Text };
 
 /**
  * @brief State coordinator for active tools and selections.

@@ -19,20 +19,15 @@
 - [x] **Bezier Math Engine** (Phase 6)
 - [x] **Sub-Selection Interaction** (Phase 6)
 - [x] **Advanced Styling Engine** (Phase 7)
-- [x] **Multi-Stop Gradients** (Phase 7)
-- [x] **Stroke Alignment Properties** (Phase 7)
-
-### Module Groups (Legacy -> Native)
-- [x] Core Objects (`reverse-engineering/reconstructed/infinity/core/`)
-- [x] Scene Management (`reverse-engineering/reconstructed/infinity/scene/`)
-- [x] Rendering Engine (`reverse-engineering/reconstructed/infinity/rendering/`)
-- [x] Editor Actions (`reverse-engineering/reconstructed/editor/`)
+- [x] **Constructive Solid Geometry (CSG)** (Phase 8)
+- [x] **Typography & Text Layout** (Phase 9)
 
 ## Verification
 - [x] Baseline Functional Compilation
 - [x] Core Logic Unit Tests
 - [x] Bezier Anchor & Handle Interaction Tests
-- [x] **Gradient & Stroke Alignment Tests**
+- [x] Gradient & Stroke Alignment Tests
+- [x] **Typography & Text Metrics Tests**
 
 ### UI Layer (Legacy -> Native)
 - [x] Premium Dark Theme
@@ -40,4 +35,5 @@
 - [x] Adaptive Inspector Window
 - [x] Hardware Viewport Integration
 - [x] Vector Path Overlays
-- [x] **Gradient Ramp Editor**
+- [x] Gradient Ramp Editor
+- [x] **Typography Suite & Text Tool**

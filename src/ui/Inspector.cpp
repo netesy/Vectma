@@ -2,7 +2,9 @@
 #include "core/RectNode.hpp"
 #include "core/EllipseNode.hpp"
 #include "core/PathNode.hpp"
+#include "core/TextNode.hpp"
 #include <imgui.h>
+#include <cstring>
 #include <string>
 
 namespace vectma {
@@ -29,90 +31,43 @@ void Inspector::render(WorkspaceStage& stage) {
             node->setVisibility(visible);
         }
 
-        // Stroke Alignment
+        // Common stroke/fill settings
         const char* alignments[] = { "Center", "Inside", "Outside" };
         int currentAlign = (int)node->getStrokeAlignment();
         if (ImGui::BeginCombo("Stroke Alignment", alignments[currentAlign])) {
             for (int i = 0; i < 3; i++) {
-                bool isSelected = (currentAlign == i);
-                if (ImGui::Selectable(alignments[i], isSelected)) {
+                if (ImGui::Selectable(alignments[i], currentAlign == i)) {
                     node->setStrokeAlignment((StrokeAlignment)i);
                 }
-                if (isSelected) ImGui::SetItemDefaultFocus();
             }
             ImGui::EndCombo();
         }
 
-        // Fill Type
-        const char* fillTypes[] = { "Solid", "Linear Gradient", "Radial Gradient" };
-        int currentFill = (int)node->getFillType();
-        if (ImGui::BeginCombo("Fill Type", fillTypes[currentFill])) {
-            for (int i = 0; i < 3; i++) {
-                bool isSelected = (currentFill == i);
-                if (ImGui::Selectable(fillTypes[i], isSelected)) {
-                    node->setFillType((FillType)i);
-                }
-                if (isSelected) ImGui::SetItemDefaultFocus();
-            }
-            ImGui::EndCombo();
-        }
+        // Type-specific properties
+        if (TextNode* textNode = dynamic_cast<TextNode*>(node)) {
+            ImGui::Separator();
+            ImGui::Text("Typography");
 
-        if (node->getFillType() == FillType::Solid) {
-            float color[4] = {
-                node->getFillColor().r / 255.0f,
-                node->getFillColor().g / 255.0f,
-                node->getFillColor().b / 255.0f,
-                node->getFillColor().a / 255.0f
-            };
-            if (ImGui::ColorEdit4("Color", color)) {
-                node->setFillColor(GColor(
-                    (uint8_t)(color[0] * 255),
-                    (uint8_t)(color[1] * 255),
-                    (uint8_t)(color[2] * 255),
-                    (uint8_t)(color[3] * 255)
-                ));
-            }
-        } else {
-            // Gradient Editor
-            auto config = node->getGradientConfig();
-            bool changed = false;
-
-            ImGui::Text("Gradient Stops");
-            for (size_t i = 0; i < config.stops.size(); ++i) {
-                ImGui::PushID((int)i);
-                float offset = config.stops[i].offset;
-                if (ImGui::SliderFloat("Offset", &offset, 0.0f, 1.0f)) {
-                    config.stops[i].offset = offset;
-                    changed = true;
-                }
-
-                // Color as float array
-                uint32_t c = config.stops[i].color;
-                float color[4] = {
-                    ((c >> 24) & 0xFF) / 255.0f,
-                    ((c >> 16) & 0xFF) / 255.0f,
-                    ((c >> 8) & 0xFF) / 255.0f,
-                    (c & 0xFF) / 255.0f
-                };
-                if (ImGui::ColorEdit4("Stop Color", color)) {
-                    uint32_t newColor =
-                        ((uint32_t)(color[0] * 255) << 24) |
-                        ((uint32_t)(color[1] * 255) << 16) |
-                        ((uint32_t)(color[2] * 255) << 8) |
-                        ((uint32_t)(color[3] * 255));
-                    config.stops[i].color = newColor;
-                    changed = true;
-                }
-                ImGui::PopID();
+            float fontSize = textNode->font_size;
+            if (ImGui::SliderFloat("Font Size", &fontSize, 6.0f, 120.0f)) {
+                textNode->font_size = fontSize;
             }
 
-            if (ImGui::Button("Add Stop")) {
-                config.stops.push_back({1.0f, 0x000000FF});
-                changed = true;
+            float tracking = textNode->tracking;
+            if (ImGui::SliderFloat("Tracking", &tracking, -5.0f, 20.0f)) {
+                textNode->tracking = tracking;
             }
 
-            if (changed) {
-                node->setGradientConfig(config);
+            float leading = textNode->leading;
+            if (ImGui::SliderFloat("Leading", &leading, 0.5f, 3.0f)) {
+                textNode->leading = leading;
+            }
+
+            char buf[256];
+            std::strncpy(buf, textNode->text_buffer.c_str(), sizeof(buf));
+            buf[sizeof(buf)-1] = '\0';
+            if (ImGui::InputTextMultiline("Text", buf, sizeof(buf))) {
+                textNode->text_buffer = buf;
             }
         }
     }

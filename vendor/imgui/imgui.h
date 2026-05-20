@@ -45,6 +45,7 @@ namespace ImGui {
     bool Selectable(const char*, bool = false, int = 0, const ImVec2& = ImVec2(0,0));
     bool SliderFloat(const char*, float*, float, float, const char* = "%.3f", int = 0);
     bool ColorEdit4(const char*, float*, int = 0);
+    bool InputTextMultiline(const char*, char*, size_t, const ImVec2& = ImVec2(0,0), int = 0);
 }
 
 typedef ImGui::ImVec2 ImVec2;

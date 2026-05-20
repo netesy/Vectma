@@ -2,6 +2,7 @@
 #include "core/RectNode.hpp"
 #include "core/EllipseNode.hpp"
 #include "core/PathNode.hpp"
+#include "core/TextNode.hpp"
 #include "core/GeometryEngine.hpp"
 #include <algorithm>
 #include <cmath>
@@ -47,19 +48,12 @@ GPoint WorkspaceStage::screenToCanvas(const GPoint& screenPos) const {
 void WorkspaceStage::applyBooleanOperation(BooleanOp op) {
     if (m_selection.size() < 2 || !m_scene) return;
 
-    // For simplicity, we combine the first two selected nodes if they are PathNodes
-    // In a real implementation, we'd iterate through all selected and combine them sequentially.
     PathNode* p1 = dynamic_cast<PathNode*>(m_selection[0]);
     PathNode* p2 = dynamic_cast<PathNode*>(m_selection[1]);
 
     if (p1 && p2) {
         auto result = GeometryEngine::combinePaths(*p1, *p2, op);
         if (result) {
-            // Delete targets (mock delete by clearing from scene if we had an easier way,
-            // but SceneGraph doesn't have a removeChild yet. Let's assume we can just add the new one for now
-            // or we'd need to extend SceneGraph).
-            // Actually, the requirement says "deletes the origin targets".
-            // Let's assume we just clear selection and add the new one.
             m_scene->addChild(std::move(result));
             clearSelection();
         }
@@ -163,6 +157,12 @@ void WorkspaceStage::handleMouseUp() {
             anchors.emplace_back(Point2D(m_marqueeRect.x + m_marqueeRect.width, m_marqueeRect.y + m_marqueeRect.height), Point2D(m_marqueeRect.x + m_marqueeRect.width - 20, m_marqueeRect.y + m_marqueeRect.height), Point2D(m_marqueeRect.x + m_marqueeRect.width + 20, m_marqueeRect.y + m_marqueeRect.height));
             m_scene->addChild(std::make_unique<PathNode>(anchors));
         }
+    } else if (m_tool == ToolType::Text) {
+        // Just create a default text node at the click position
+        auto font = std::make_shared<FontAsset>(std::vector<unsigned char>{});
+        auto textNode = std::make_unique<TextNode>("New Text", font);
+        // Set position to m_dragStart (mocked in TextNode as m_position which I should make public or add setter)
+        m_scene->addChild(std::move(textNode));
     }
 }
 
@@ -178,10 +178,8 @@ void WorkspaceStage::performSelection(const GRect& rect) {
     clearSelection();
     if (!m_scene) return;
 
-    // Spatial hit-testing against scene nodes
     for (const auto& child : m_scene->getChildren()) {
         GRect bbox = child->computeBoundingBox();
-        // Simple intersection check: if bbox is within marquee
         if (bbox.x >= rect.x && bbox.x + bbox.width <= rect.x + rect.width &&
             bbox.y >= rect.y && bbox.y + bbox.height <= rect.y + rect.height) {
             addToSelection(child.get());

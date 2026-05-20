@@ -35,4 +35,5 @@ namespace ImGui {
     bool Selectable(const char*, bool, int, const ImVec2&) { return false; }
     bool SliderFloat(const char*, float*, float, float, const char*, int) { return false; }
     bool ColorEdit4(const char*, float*, int) { return false; }
+    bool InputTextMultiline(const char*, char*, size_t, const ImVec2&, int) { return false; }
 }

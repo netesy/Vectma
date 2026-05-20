@@ -31,6 +31,7 @@ void Toolbar::render(WorkspaceStage& stage) {
         renderButton("Ellipse", ToolType::Ellipse);
         ImGui::SameLine();
         renderButton("Path", ToolType::Path);
+        renderButton("Text", ToolType::Text);
 
         ImGui::SameLine();
         ImGui::Separator();

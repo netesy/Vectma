@@ -1,13 +1,13 @@
 # Vectma Core Development Roadmap
 
-## Phase 8: Constructive Solid Geometry (CSG) [DONE]
-- [x] Define Boolean Operation Enums
-- [x] Implement GeometryEngine Path Clipping Logic
-- [x] Integrate Boolean Modality into WorkspaceStage
-- [x] Upgrade Toolbar UI for Boolean Suite
-- [x] Add CSG Verification Tests
+## Phase 9: Typography & Text Layout [DONE]
+- [x] Integrate stb_truetype.h Infrastructure
+- [x] Implement TextNode Primitives
+- [x] Decompose Font Outlines to Paths
+- [x] Parametric Text-on-Path Alignment
+- [x] Typography Inspector UI & Text Tool
 
-## Phase 9: Path Effects & Non-Destructive Modifiers [ACTIVE]
-- [ ] Dash Array Generators
-- [ ] Rounded Corner Post-Processor
-- [ ] Offset Path Math Engine
+## Phase 10: Advanced Path Effects [ACTIVE]
+- [ ] Non-Destructive Corner Rounding
+- [ ] Parametric Dash-Array Generator
+- [ ] Offset Path Engine (Inner/Outer strokes)

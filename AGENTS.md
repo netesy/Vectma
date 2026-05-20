@@ -59,43 +59,15 @@ Before submitting changes, all automated workflows and human collaborators must 
 
 * **Headless Soundness:** Running `make test` must return a 100% green pass. All core selection math and node grouping mechanics must verify accurately without opening a window context.
 * **Warning-Free Builds:** Code must compile clean with zero compiler warnings under standard build constraints.
+* **Progressive Logs:** Maintain a progressive `MIGRATION_PROGRESS.md` and `TODO.md` log at the root, checking off each legacy module group or phase as it reaches functional status.
+* **Test Requirement:** For every module refactored or feature added, you must write matching validation checks inside the `tests/` directory using simple assertions.
 * **Coordinate Isolation Rule:** Ensure screen interaction events always route through our inverse viewport transformations:
 
 $$P_{canvas} = M^{-1} \cdot P_{screen}$$
 
 ---
 
-## 5. Active Execution Phase: Phase 8 — Constructive Solid Geometry (CSG)
+## 5. Active Execution Phase: Phase 10 — Advanced Path Effects
 
-Your immediate goal is to build an intersection and path-clipping utility that resolves Boolean operations on multiple selected shapes, outputting a newly formed, single unified PathNode.
+Your immediate goal is to build a post-processing pipeline for PathNodes that allows non-destructive transformations like rounding corners, dash-array offsets, and path-growing (offset) mathematics.
 
-### Core Implementation Tasks
-
-1. **Define Boolean Operation Enums:**
-* Within `include/core/Geometry.hpp` (or your active core engine file), define an enum class `BooleanOp { Union, Subtract, Intersect, Exclude };`.
-
-
-2. **Implement Path Decomposition and Clipping Logic:**
-* Create a static utility structure `GeometryEngine` or extend `PathNode` with a method:
-`static std::unique_ptr<PathNode> combinePaths(const PathNode& target, const PathNode& source, BooleanOp op);`
-* Implement basic winding rule evaluations (Non-Zero or Even-Odd) to determine inner/outer boundary crossings when shapes overlap.
-* For complex curve segments, execute a reliable linear approximation/subdivision step to isolate intersection points before rebuilding the final edge arrays.
-
-
-3. **Integrate Modality in WorkspaceStage:**
-* Update `WorkspaceStage` selection controls to check if multiple shapes are actively selected.
-* Implement an execution routine `void applyBooleanOperation(BooleanOp op);` that extracts the selected paths from the SceneGraph, computes the combined geometry, deletes the origin targets, and inserts the newly generated `PathNode` back into the graph while preserving depth/z-index order.
-
-
-4. **Upgrade the Floating Modality Toolbar UI:**
-* In `src/ui/Toolbar.cpp`, read the current selection size from the active workspace. If count is greater than 1, display a distinct grouped row of immediate-mode icon buttons for the Boolean suite (Union, Subtract, Intersect, Exclude).
-* Wire each button to trigger its respective `applyBooleanOperation` handler via the coordinator. Ensure colors and layouts match the UI Design System rules.
-
-
-5. **Verification Passes:**
-* Add targeted test cases to `tests/test_core.cpp` processing the Union and Intersect of two overlapping basic rectangles, verifying that the vertex counts and resulting bounding box dimensions conform exactly to the mathematical expectation.
-* Confirm a clean, warning-free project compilation under headless environments.
-
-
-6. **Repository Documentation Alignment:**
-* Update `TODO.md` to check off Phase 8 under the Active Backlog and shift Phase 9 to the immediate next focus area.
