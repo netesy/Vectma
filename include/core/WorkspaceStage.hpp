@@ -2,6 +2,7 @@
 
 #include "core/SceneGraph.hpp"
 #include "core/GTransform.hpp"
+#include "core/Geometry.hpp"
 #include <memory>
 #include <vector>
 
@@ -35,6 +36,9 @@ public:
     bool isSubSelectionMode() const { return m_subSelectionMode; }
     int getActiveAnchorIndex() const { return m_activeAnchorIndex; }
     int getActiveHandleId() const { return m_activeHandleId; }
+
+    // Boolean Operations
+    void applyBooleanOperation(BooleanOp op);
 
     // Viewport
     void setViewMatrix(const GTransform& matrix) { m_viewMatrix = matrix; }

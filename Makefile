@@ -2,7 +2,7 @@ CXX = g++
 CXXFLAGS = -std=c++20 -Iinclude -Ivendor/imgui -Ivendor/imgui/backends -Wall -Wextra
 LDFLAGS = -lGL -lGLEW -lglfw
 
-IMGUI_OBJS = vendor/imgui/imgui.o              vendor/imgui/imgui_draw.o              vendor/imgui/imgui_widgets.o              vendor/imgui/imgui_tables.o              vendor/imgui/backends/imgui_impl_glfw.o              vendor/imgui/backends/imgui_impl_opengl3.o
+IMGUI_OBJS = vendor/imgui/imgui.o
 
 SRC_DIRS = src src/core src/renderer src/ui
 SRCS = $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))

@@ -43,6 +43,21 @@ void Toolbar::render(WorkspaceStage& stage) {
         }
         if (subSel) ImGui::PopStyleColor();
 
+        // Boolean Suite
+        if (stage.getSelection().size() > 1) {
+            ImGui::SameLine();
+            ImGui::Separator();
+            ImGui::SameLine();
+
+            if (ImGui::Button("Union")) stage.applyBooleanOperation(BooleanOp::Union);
+            ImGui::SameLine();
+            if (ImGui::Button("Subtract")) stage.applyBooleanOperation(BooleanOp::Subtract);
+            ImGui::SameLine();
+            if (ImGui::Button("Intersect")) stage.applyBooleanOperation(BooleanOp::Intersect);
+            ImGui::SameLine();
+            if (ImGui::Button("Exclude")) stage.applyBooleanOperation(BooleanOp::Exclude);
+        }
+
         ImGui::End();
     }
 }
