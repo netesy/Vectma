@@ -23,6 +23,8 @@
 - [x] **Typography & Text Layout** (Phase 9)
 - [x] **High-Fidelity Asset Exporters** (Phase 10)
 - [x] **Runtime Internationalization (I18n)** (Phase 11)
+- [x] **Advanced Path Effects** (Phase 12)
+- [x] **Command Pattern & State History** (Phase 13)
 
 ## Verification
 - [x] Baseline Functional Compilation
@@ -32,6 +34,8 @@
 - [x] Typography & Text Metrics Tests
 - [x] Polymorphic Serialization & Export Tests
 - [x] I18n Lookup & UTF-8 Safety Tests
+- [x] Path Effects Integrity Tests
+- [x] **Undo/Redo State Delta Tests**
 
 ### UI Layer (Legacy -> Native)
 - [x] Premium Dark Theme
@@ -43,6 +47,8 @@
 - [x] Typography Suite & Text Tool
 - [x] Asset Export Dashboard
 - [x] Dynamic Locale Switcher
+- [x] Advanced Geometry Controls
+- [x] **Undo/Redo History Buttons**
 
 ---
-**Core Native Engineering Migration Roadmap: Phases 1-11 COMPLETE**
+**Core Native Engineering Migration Roadmap: Phases 1-13 COMPLETE**

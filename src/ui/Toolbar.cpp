@@ -12,7 +12,7 @@ void Toolbar::render(WorkspaceStage& stage) {
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
 
     if (ImGui::Begin("FloatingToolbar", nullptr, window_flags)) {
-        auto renderButton = [&](const char* label, const char* key, ToolType type) {
+        auto renderButton = [&](const char* key, ToolType type) {
             bool active = (stage.getTool() == type);
             if (active) ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]);
 
@@ -23,17 +23,17 @@ void Toolbar::render(WorkspaceStage& stage) {
             if (active) ImGui::PopStyleColor();
         };
 
-        renderButton("Select", "toolbar.select", ToolType::Select);
+        renderButton("toolbar.select", ToolType::Select);
         ImGui::SameLine();
-        renderButton("Marquee", "toolbar.marquee", ToolType::Marquee);
+        renderButton("toolbar.marquee", ToolType::Marquee);
         ImGui::SameLine();
-        renderButton("Rect", "toolbar.rect", ToolType::Rect);
+        renderButton("toolbar.rect", ToolType::Rect);
         ImGui::SameLine();
-        renderButton("Ellipse", "toolbar.ellipse", ToolType::Ellipse);
+        renderButton("toolbar.ellipse", ToolType::Ellipse);
         ImGui::SameLine();
-        renderButton("Path", "toolbar.path", ToolType::Path);
+        renderButton("toolbar.path", ToolType::Path);
         ImGui::SameLine();
-        renderButton("Text", "toolbar.text", ToolType::Text);
+        renderButton("toolbar.text", ToolType::Text);
 
         ImGui::SameLine();
         ImGui::Separator();
@@ -45,6 +45,21 @@ void Toolbar::render(WorkspaceStage& stage) {
             stage.setSubSelectionMode(!subSel);
         }
         if (subSel) ImGui::PopStyleColor();
+
+        // Undo / Redo
+        ImGui::SameLine();
+        ImGui::Separator();
+        ImGui::SameLine();
+
+        if (!stage.canUndo()) ImGui::BeginDisabled();
+        if (ImGui::Button("Undo")) stage.undo();
+        if (!stage.canUndo()) ImGui::EndDisabled();
+
+        ImGui::SameLine();
+
+        if (!stage.canRedo()) ImGui::BeginDisabled();
+        if (ImGui::Button("Redo")) stage.redo();
+        if (!stage.canRedo()) ImGui::EndDisabled();
 
         ImGui::End();
     }

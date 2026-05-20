@@ -30,6 +30,7 @@ namespace ImGui {
     void SetItemDefaultFocus() {}
     void PushID(int) {}
     void PopID() {}
+    void BeginDisabled(bool) {} void EndDisabled() {}
     bool BeginCombo(const char*, const char*, int) { return true; }
     bool Combo(const char*, int*, const char* const[], int, int) { return false; } bool CollapsingHeader(const char*, int) { return false; }
     void EndCombo() {}

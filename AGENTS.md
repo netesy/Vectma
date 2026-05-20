@@ -67,7 +67,7 @@ $$P_{canvas} = M^{-1} \cdot P_{screen}$$
 
 ---
 
-## 5. Active Execution Phase: Phase 12 — Advanced Path Effects
+## 5. Active Execution Phase: Phase 13 — Command Pattern & State History Engine
 
-Your immediate goal is to expand Vectma’s vector compilation pipeline to support dynamic path styling, non-destructive geometric modifiers, and exact parallel curve expansion.
+Your immediate goal is to implement a high-performance, memory-bounded undo/redo state history engine based on a strict structural Command Pattern.
 

@@ -4,6 +4,7 @@
 #include "core/PathNode.hpp"
 #include "core/TextNode.hpp"
 #include "core/GeometryEngine.hpp"
+#include "core/Commands.hpp"
 #include <algorithm>
 #include <cmath>
 
@@ -54,6 +55,7 @@ void WorkspaceStage::applyBooleanOperation(BooleanOp op) {
     if (p1 && p2) {
         auto result = GeometryEngine::combinePaths(*p1, *p2, op);
         if (result) {
+            // executeCommand(std::make_unique<AddNodeCommand>(m_scene.get(), std::move(result)));
             m_scene->addChild(std::move(result));
             clearSelection();
         }
@@ -142,27 +144,28 @@ void WorkspaceStage::handleMouseUp() {
         performSelection(m_marqueeRect);
     } else if (m_tool == ToolType::Rect) {
         if (m_marqueeRect.width > 0 && m_marqueeRect.height > 0) {
-            m_scene->addChild(std::make_unique<RectNode>(m_marqueeRect.x, m_marqueeRect.y, m_marqueeRect.width, m_marqueeRect.height));
+            auto node = std::make_unique<RectNode>(m_marqueeRect.x, m_marqueeRect.y, m_marqueeRect.width, m_marqueeRect.height);
+            executeCommand(std::make_unique<AddNodeCommand>(m_scene.get(), std::move(node)));
         }
     } else if (m_tool == ToolType::Ellipse) {
         if (m_marqueeRect.width > 0 && m_marqueeRect.height > 0) {
             double rx = m_marqueeRect.width / 2.0;
             double ry = m_marqueeRect.height / 2.0;
-            m_scene->addChild(std::make_unique<EllipseNode>(m_marqueeRect.x + rx, m_marqueeRect.y + ry, rx, ry));
+            auto node = std::make_unique<EllipseNode>(m_marqueeRect.x + rx, m_marqueeRect.y + ry, rx, ry);
+            executeCommand(std::make_unique<AddNodeCommand>(m_scene.get(), std::move(node)));
         }
     } else if (m_tool == ToolType::Path) {
         if (m_marqueeRect.width > 0 && m_marqueeRect.height > 0) {
             std::vector<BezierAnchor> anchors;
             anchors.emplace_back(Point2D(m_marqueeRect.x, m_marqueeRect.y), Point2D(m_marqueeRect.x - 20, m_marqueeRect.y), Point2D(m_marqueeRect.x + 20, m_marqueeRect.y));
             anchors.emplace_back(Point2D(m_marqueeRect.x + m_marqueeRect.width, m_marqueeRect.y + m_marqueeRect.height), Point2D(m_marqueeRect.x + m_marqueeRect.width - 20, m_marqueeRect.y + m_marqueeRect.height), Point2D(m_marqueeRect.x + m_marqueeRect.width + 20, m_marqueeRect.y + m_marqueeRect.height));
-            m_scene->addChild(std::make_unique<PathNode>(anchors));
+            auto node = std::make_unique<PathNode>(anchors);
+            executeCommand(std::make_unique<AddNodeCommand>(m_scene.get(), std::move(node)));
         }
     } else if (m_tool == ToolType::Text) {
-        // Just create a default text node at the click position
         auto font = std::make_shared<FontAsset>(std::vector<unsigned char>{});
-        auto textNode = std::make_unique<TextNode>("New Text", font);
-        // Set position to m_dragStart (mocked in TextNode as m_position which I should make public or add setter)
-        m_scene->addChild(std::move(textNode));
+        auto node = std::make_unique<TextNode>("New Text", font);
+        executeCommand(std::make_unique<AddNodeCommand>(m_scene.get(), std::move(node)));
     }
 }
 

@@ -3,6 +3,7 @@
 #include "core/SceneGraph.hpp"
 #include "core/GTransform.hpp"
 #include "core/Geometry.hpp"
+#include "core/HistoryManager.hpp"
 #include <memory>
 #include <vector>
 
@@ -40,6 +41,13 @@ public:
     // Boolean Operations
     void applyBooleanOperation(BooleanOp op);
 
+    // History
+    void undo() { m_history.undo(); }
+    void redo() { m_history.redo(); }
+    bool canUndo() const { return m_history.canUndo(); }
+    bool canRedo() const { return m_history.canRedo(); }
+    void executeCommand(std::unique_ptr<Command> cmd) { m_history.executeCommand(std::move(cmd)); }
+
     // Viewport
     void setViewMatrix(const GTransform& matrix) { m_viewMatrix = matrix; }
     GTransform getViewMatrix() const { return m_viewMatrix; }
@@ -57,6 +65,7 @@ public:
 private:
     std::shared_ptr<SceneGraph> m_scene;
     std::vector<CanvasNode*> m_selection;
+    HistoryManager m_history;
 
     ToolType m_tool = ToolType::Select;
     GTransform m_viewMatrix = GTransform::Identity();
