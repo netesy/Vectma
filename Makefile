@@ -1,11 +1,13 @@
 CXX = g++
 CXXFLAGS = -std=c++20 -Iinclude -I. -Ivendor/imgui -Ivendor/imgui/backends -Ivendor/glfw/include -Wall -Wextra -Werror
 
-IMGUI_OBJS = vendor/imgui/imgui.o
+# Centralized vendor objects
+VENDOR_SRCS = vendor/imgui/imgui.cpp
+VENDOR_OBJS = $(VENDOR_SRCS:.cpp=.o)
 
 SRC_DIRS = src src/core src/core/spatial src/core/snap src/core/modifiers src/renderer src/ui
 SRCS = $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))
-OBJS = $(SRCS:.cpp=.o) $(IMGUI_OBJS)
+OBJS = $(SRCS:.cpp=.o) $(VENDOR_OBJS)
 
 TARGET = vectma
 
@@ -33,5 +35,5 @@ run: $(TARGET)
 test: $(TEST_TARGET)
 	./$(TEST_TARGET)
 
-$(TEST_TARGET): $(TEST_OBJS) $(CORE_OBJS) $(IMGUI_OBJS)
+$(TEST_TARGET): $(TEST_OBJS) $(CORE_OBJS) $(VENDOR_OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^

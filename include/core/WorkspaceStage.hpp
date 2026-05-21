@@ -56,6 +56,7 @@ public:
     // Viewport
     void setViewMatrix(const GTransform& matrix) { m_viewMatrix = matrix; }
     GTransform getViewMatrix() const { return m_viewMatrix; }
+    double getScale() const { return std::sqrt(m_viewMatrix.a * m_viewMatrix.d - m_viewMatrix.b * m_viewMatrix.c); }
     Point2D screenToCanvas(const Point2D& screenPos) const;
 
     // Mouse Lifecycle
@@ -66,6 +67,10 @@ public:
     // Interaction State
     bool isDragging() const { return m_isDragging; }
     GRect getMarqueeRect() const { return m_marqueeRect; }
+    Point2D getCursorCanvasPos() const { return m_cursorCanvasPos; }
+
+    // Status Info
+    size_t getSceneNodeCount() const;
 
 private:
     std::shared_ptr<SceneGraph> m_scene;
@@ -77,6 +82,7 @@ private:
 
     bool m_isDragging = false;
     Point2D m_dragStart;
+    Point2D m_cursorCanvasPos;
     GRect m_marqueeRect;
 
     // Sub-selection state
@@ -89,6 +95,7 @@ private:
 
     void updateMarquee(const Point2D& currentCanvasPos);
     void performSelection(const GRect& rect);
+    size_t countNodesRecursive(const CanvasNode* node) const;
 };
 
 } // namespace vectma

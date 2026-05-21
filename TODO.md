@@ -14,10 +14,10 @@
 - [x] Dynamic modifier evaluation engine
 - [x] Cascading live path operations (Corner rounding, offsets, dashing)
 
-## Phase 18: Enhanced Layer Management & Infinite Canvas Artboards [ACTIVE]
-- [ ] High-fidelity layer-tree nesting
-- [ ] Isolation clip masks
-- [ ] Multi-artboard support
+## Phase 18: Enhanced Layer Management & Infinite Canvas Artboards [DONE] [ACTIVE]
+- [x] High-fidelity layer-tree nesting
+- [x] Isolation clip masks
+- [x] Multi-artboard support
 
 ## Phase 19: UI/UX Refinement via Stitch Integration
 - [ ] High-fidelity interface layouts from Stitch

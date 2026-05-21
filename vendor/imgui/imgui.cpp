@@ -27,6 +27,7 @@ namespace ImGui {
     ImGuiViewport viewport;
     ImGuiViewport* GetMainViewport() { return &viewport; }
     void SetNextWindowPos(const ImVec2&, int, const ImVec2&) {}
+    void SetNextWindowSize(const ImVec2&, int) {}
     void SetNextWindowBgAlpha(float) {}
     void SetItemDefaultFocus() {}
     void PushID(int) {}

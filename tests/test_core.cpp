@@ -27,6 +27,7 @@
 #include <memory>
 #include <vector>
 #include <chrono>
+#include <cmath>
 
 class MockRenderPipeline : public vectma::RenderPipeline {
 public:
@@ -119,10 +120,34 @@ void testLayersAndArtboards() {
     std::cout << "Layer and Artboard tests passed." << std::endl;
 }
 
+void testStatusReporting() {
+    std::cout << "Testing Workspace Status Reporting..." << std::endl;
+
+    vectma::WorkspaceStage stage;
+    auto scene = std::make_shared<vectma::SceneGraph>();
+    stage.setScene(scene);
+
+    // Test node count
+    scene->addChild(std::make_unique<vectma::RectNode>(0, 0, 100, 100));
+    assert(stage.getSceneNodeCount() == 2); // SceneGraph (1) + RectNode (1)
+
+    // Test scale
+    stage.setViewMatrix(vectma::GTransform(2.0, 0, 0, 2.0, 0, 0)); // 2x zoom
+    assert(std::abs(stage.getScale() - 2.0) < 1e-6);
+
+    // Test cursor tracking
+    stage.handleMouseMove(vectma::Point2D(100, 100)); // Screen pos
+    // Screen to canvas: (100 - 0) / 2 = 50
+    assert(std::abs(stage.getCursorCanvasPos().x - 50.0) < 1e-6);
+
+    std::cout << "Status Reporting tests passed." << std::endl;
+}
+
 int main() {
     testSnapping();
     testModifiers();
     testLayersAndArtboards();
-    std::cout << "All Phase 18 tests passed!" << std::endl;
+    testStatusReporting();
+    std::cout << "All Phase 19 tests passed!" << std::endl;
     return 0;
 }

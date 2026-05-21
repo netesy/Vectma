@@ -37,6 +37,7 @@ namespace ImGui {
     struct ImGuiViewport { ImVec2 Pos, Size; };
     ImGuiViewport* GetMainViewport();
     void SetNextWindowPos(const ImVec2&, int = 0, const ImVec2& = ImVec2(0,0));
+    void SetNextWindowSize(const ImVec2&, int = 0);
     void SetNextWindowBgAlpha(float);
     void SetItemDefaultFocus();
     void PushID(int);

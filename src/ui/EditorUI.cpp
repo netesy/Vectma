@@ -2,6 +2,7 @@
 #include "ui/Theme.hpp"
 #include "ui/Toolbar.hpp"
 #include "ui/Inspector.hpp"
+#include "ui/LayerPanel.hpp"
 #include "core/PathNode.hpp"
 #include "core/LocaleManager.hpp"
 #include <imgui.h>
@@ -16,6 +17,7 @@ namespace vectma {
 EditorUI::EditorUI(WorkspaceStage& stage, RenderPipeline& renderer)
     : m_stage(stage), m_renderer(renderer) {
     Theme::applyPremiumDark();
+    m_layerPanel = std::make_unique<LayerPanel>(m_stage);
 }
 
 void EditorUI::render() {
@@ -27,11 +29,38 @@ void EditorUI::render() {
 
     handleInputs();
 
-    // UI Layout
-    renderSettingsMenu();
-    Toolbar::render(m_stage);
-    renderViewport();
+    // High-Fidelity Stitch Layout Integration: Sidebar Docking
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+    float sidebarWidth = 250.0f;
+    float toolbarHeight = 50.0f;
+    float statusBarHeight = 30.0f;
+
+    // Sidebar Left: Layer Panel
+    ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x, viewport->Pos.y + toolbarHeight));
+    ImGui::SetNextWindowSize(ImVec2(sidebarWidth, viewport->Size.y - toolbarHeight - statusBarHeight));
+    m_layerPanel->render();
+
+    // Sidebar Right: Inspector
+    ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x + viewport->Size.x - sidebarWidth, viewport->Pos.y + toolbarHeight));
+    ImGui::SetNextWindowSize(ImVec2(sidebarWidth, viewport->Size.y - toolbarHeight - statusBarHeight));
     Inspector::render(m_stage);
+
+    // Toolbar
+    ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x, viewport->Pos.y));
+    ImGui::SetNextWindowSize(ImVec2(viewport->Size.x, toolbarHeight));
+    Toolbar::render(m_stage);
+
+    // Status Bar
+    ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x, viewport->Pos.y + viewport->Size.y - statusBarHeight));
+    ImGui::SetNextWindowSize(ImVec2(viewport->Size.x, statusBarHeight));
+    renderStatusBar();
+
+    // Central Viewport
+    ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x + sidebarWidth, viewport->Pos.y + toolbarHeight));
+    ImGui::SetNextWindowSize(ImVec2(viewport->Size.x - 2 * sidebarWidth, viewport->Size.y - toolbarHeight - statusBarHeight));
+    renderViewport();
+
+    renderSettingsMenu();
 
     ImGui::Render();
 }
@@ -55,7 +84,6 @@ void EditorUI::handleInputs() {
 }
 
 void EditorUI::renderViewport() {
-    ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
     ImGui::Begin("Canvas", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoNav);
 
     m_renderer.beginFrame();
@@ -98,6 +126,20 @@ void EditorUI::renderSettingsMenu() {
     if (ImGui::Combo("Language", &currentLocale, locales, 2)) {
         LocaleManager::getInstance().setLocale((Locale)currentLocale);
     }
+
+    ImGui::End();
+}
+
+void EditorUI::renderStatusBar() {
+    ImGui::Begin("Status Bar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs);
+
+    Point2D cursor = m_stage.getCursorCanvasPos();
+    double scale = m_stage.getScale() * 100.0;
+    size_t layerCount = m_stage.getSceneNodeCount();
+    size_t selectionCount = m_stage.getSelection().size();
+
+    ImGui::Text("X: %.1f Y: %.1f | Zoom: %.0f%% | Layers: %zu | Selection: %zu",
+                cursor.x, cursor.y, scale, layerCount, selectionCount);
 
     ImGui::End();
 }
