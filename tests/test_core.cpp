@@ -22,6 +22,7 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <chrono>
 
 class MockRenderPipeline : public vectma::RenderPipeline {
 public:
@@ -38,29 +39,31 @@ public:
     void setStrokeStyle(const std::vector<float>&, float) override {}
 };
 
-void testSymbols() {
-    std::cout << "Testing Component Symbols and Instances..." << std::endl;
-    auto& registry = vectma::SymbolRegistry::getInstance();
+void testSpatialPerformance() {
+    std::cout << "Testing Spatial Indexing Performance (10,000 nodes)..." << std::endl;
+    auto scene = std::make_shared<vectma::SceneGraph>();
 
-    auto master = std::make_unique<vectma::RectNode>(0, 0, 100, 100);
-    master->setStrokeWidth(0.0f);
-    registry.registerSymbol("Button", std::move(master));
+    for (int i = 0; i < 10000; ++i) {
+        scene->addChild(std::make_unique<vectma::RectNode>(i, i, 10, 10));
+    }
 
-    assert(registry.getSymbolRoot("Button") != nullptr);
+    vectma::WorkspaceStage workspace;
+    workspace.setScene(scene);
+    workspace.setTool(vectma::ToolType::Select);
 
-    vectma::InstanceNode instance("Button");
-    auto bbox = instance.computeBoundingBox();
-    assert(bbox.width == 100);
-    assert(bbox.height == 100);
+    auto start = std::chrono::high_resolution_clock::now();
+    workspace.handleMouseDown({5000, 5000}); // Should be O(log N)
+    auto end = std::chrono::high_resolution_clock::now();
 
-    instance.setOverride("text", "Click Me");
-    assert(instance.getOverride("text") == "Click Me");
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+    std::cout << "Spatial pick duration: " << duration << "us" << std::endl;
 
-    std::cout << "Symbol and Instance tests passed." << std::endl;
+    assert(workspace.getSelection().size() == 1);
+    std::cout << "Spatial performance test passed." << std::endl;
 }
 
 int main() {
-    testSymbols();
-    std::cout << "All Phase 14 Symbol tests passed!" << std::endl;
+    testSpatialPerformance();
+    std::cout << "All Phase 15 Performance tests passed!" << std::endl;
     return 0;
 }

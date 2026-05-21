@@ -1,13 +1,30 @@
 # Vectma Core Development Roadmap
 
-## Phase 14: Dynamic Component Instances & Symbols [DONE]
-- [x] Implement Symbol Definition Registry
-- [x] Build Component Overrides Engine (InstanceNode)
-- [x] Establish Instance Invalidation & Propagation
-- [x] Surface Component Tools in Inspector
-- [x] Programmatic UI Workspace Screenshot
+## Phase 15: Spatial Indexing & Frustum Culling [ACTIVE]
+- [ ] Adaptive 2D Quadtree/BVH engine in `src/core/spatial/`
+- [ ] View-frustum tracking for non-visible node culling
+- [ ] O(log N) canvas sub-selection and hit-testing
 
-## Phase 15: Collaborative Real-Time Sync [ACTIVE]
-- [ ] Differential CRDT Engine
-- [ ] Protocol Buffer Serialization
-- [ ] Transient Cursor Registry
+## Phase 16: Precision Snapping & Proximity Engine [NEXT]
+- [ ] Proximity lookup indices
+- [ ] Real-time vector alignment & snap-grids
+- [ ] Smart construction guides
+
+## Phase 17: Non-Destructive Modifier Pipeline
+- [ ] Dynamic modifier evaluation engine
+- [ ] Cascading live path operations (Corner rounding, offsets, dashing)
+
+## Phase 18: Enhanced Layer Management & Infinite Canvas Artboards
+- [ ] High-fidelity layer-tree nesting
+- [ ] Isolation clip masks
+- [ ] Multi-artboard support
+
+## Phase 19: UI/UX Refinement via Stitch Integration
+- [ ] High-fidelity interface layouts from Stitch
+- [ ] Flawless alignment with structural designs
+- [ ] Complete third-party vendor source population
+
+## Phase 20: CRDT Collaborative Real-Time Sync
+- [ ] Decentralized document sync layer
+- [ ] Lamport vector clocks & Protocol Buffers
+- [ ] Transient multiplayer cursor telemetry

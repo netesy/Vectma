@@ -4,21 +4,35 @@
 
 namespace vectma {
 
-SceneGraph::SceneGraph() = default;
+SceneGraph::SceneGraph() {
+    m_spatialIndex = std::make_unique<Quadtree>(GRect(-10000, -10000, 20000, 20000));
+}
 
 SceneGraph::~SceneGraph() = default;
 
+void SceneGraph::addChild(std::unique_ptr<CanvasNode> child) {
+    CanvasNode::addChild(std::move(child));
+    if (m_spatialIndex) m_spatialIndex->insert(m_children.back().get());
+}
+
 void SceneGraph::render(RenderPipeline& pipeline) const {
-    for (const auto& child : m_children) {
-        if (child && child->isVisible()) {
-            child->render(pipeline);
+    // Frustum Culling: Query only visible nodes
+    // viewport region should be provided by a viewport state in real app
+    // Mock viewport for now: entire canvas
+    GRect viewport(-10000, -10000, 20000, 20000);
+    auto visibleNodes = m_spatialIndex->query(viewport);
+
+    for (auto node : visibleNodes) {
+        if (node && node->isVisible()) {
+            node->render(pipeline);
         }
     }
 }
 
 bool SceneGraph::containsPoint(const GPoint& point) const {
-    for (const auto& child : m_children) {
-        if (child->containsPoint(point)) return true;
+    auto hits = m_spatialIndex->query(GRect(point.x - 1, point.y - 1, 2, 2));
+    for (auto node : hits) {
+        if (node->containsPoint(point)) return true;
     }
     return false;
 }
@@ -36,6 +50,7 @@ void SceneGraph::bringToFront(size_t index) {
     auto node = std::move(m_children[index]);
     m_children.erase(m_children.begin() + index);
     m_children.push_back(std::move(node));
+    rebuildIndex();
 }
 
 void SceneGraph::sendToBack(size_t index) {
@@ -43,16 +58,19 @@ void SceneGraph::sendToBack(size_t index) {
     auto node = std::move(m_children[index]);
     m_children.erase(m_children.begin() + index);
     m_children.insert(m_children.begin(), std::move(node));
+    rebuildIndex();
 }
 
 void SceneGraph::moveUp(size_t index) {
     if (index >= m_children.size() - 1) return;
     std::swap(m_children[index], m_children[index + 1]);
+    rebuildIndex();
 }
 
 void SceneGraph::moveDown(size_t index) {
     if (index == 0 || index >= m_children.size()) return;
     std::swap(m_children[index], m_children[index - 1]);
+    rebuildIndex();
 }
 
 void SceneGraph::groupNodes(const std::vector<size_t>& indices) {
@@ -73,6 +91,7 @@ void SceneGraph::groupNodes(const std::vector<size_t>& indices) {
 
     std::reverse(group->m_children.begin(), group->m_children.end());
     m_children.insert(m_children.begin() + insertAt, std::move(group));
+    rebuildIndex();
 }
 
 void SceneGraph::ungroupNode(size_t index) {
@@ -90,10 +109,23 @@ void SceneGraph::ungroupNode(size_t index) {
         m_children.insert(m_children.begin() + insertAt, std::move(child));
         insertAt++;
     }
+    rebuildIndex();
 }
 
 void SceneGraph::clear() {
     m_children.clear();
+    m_spatialIndex->clear();
+}
+
+void SceneGraph::rebuildIndex() {
+    m_spatialIndex->clear();
+    for (const auto& child : m_children) {
+        m_spatialIndex->insert(child.get());
+    }
+}
+
+std::vector<CanvasNode*> SceneGraph::queryVisible(const GRect& viewport) const {
+    return m_spatialIndex->query(viewport);
 }
 
 std::string SceneGraph::toSVG() const {

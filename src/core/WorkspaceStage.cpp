@@ -55,7 +55,6 @@ void WorkspaceStage::applyBooleanOperation(BooleanOp op) {
     if (p1 && p2) {
         auto result = GeometryEngine::combinePaths(*p1, *p2, op);
         if (result) {
-            // executeCommand(std::make_unique<AddNodeCommand>(m_scene.get(), std::move(result)));
             m_scene->addChild(std::move(result));
             clearSelection();
         }
@@ -66,6 +65,18 @@ void WorkspaceStage::handleMouseDown(const GPoint& screenPos) {
     m_isDragging = true;
     m_dragStart = screenToCanvas(screenPos);
     m_marqueeRect = GRect(m_dragStart.x, m_dragStart.y, 0, 0);
+
+    // Optimized point selection via spatial index
+    if (m_tool == ToolType::Select && m_scene) {
+        clearSelection();
+        auto hits = m_scene->queryVisible(GRect(m_dragStart.x - 1, m_dragStart.y - 1, 2, 2));
+        for (auto node : hits) {
+            if (node->containsPoint(m_dragStart)) {
+                addToSelection(node);
+                break;
+            }
+        }
+    }
 
     if (m_subSelectionMode && !m_selection.empty()) {
         PathNode* path = dynamic_cast<PathNode*>(m_selection[0]);
@@ -127,6 +138,7 @@ void WorkspaceStage::handleMouseMove(const GPoint& screenPos) {
 
             path->setAnchors(anchors);
             m_dragStart = canvasPos;
+            m_scene->rebuildIndex(); // Keep index in sync
             return;
         }
     }
@@ -181,11 +193,13 @@ void WorkspaceStage::performSelection(const GRect& rect) {
     clearSelection();
     if (!m_scene) return;
 
-    for (const auto& child : m_scene->getChildren()) {
-        GRect bbox = child->computeBoundingBox();
+    // Optimized region selection
+    auto hits = m_scene->queryVisible(rect);
+    for (auto node : hits) {
+        GRect bbox = node->computeBoundingBox();
         if (bbox.x >= rect.x && bbox.x + bbox.width <= rect.x + rect.width &&
             bbox.y >= rect.y && bbox.y + bbox.height <= rect.y + rect.height) {
-            addToSelection(child.get());
+            addToSelection(node);
         }
     }
 }

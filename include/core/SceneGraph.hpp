@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/CanvasNode.hpp"
+#include "core/spatial/Quadtree.hpp"
 #include <memory>
 #include <vector>
 
@@ -16,6 +17,9 @@ public:
     virtual ~SceneGraph();
 
     std::string getClassName() const override { return "SceneGraph"; }
+
+    // Overrides
+    void addChild(std::unique_ptr<CanvasNode> child);
 
     // CanvasNode implementation
     void render(RenderPipeline& pipeline) const override;
@@ -37,7 +41,12 @@ public:
     // Root-level management
     void clear();
 
+    // Spatial Index
+    void rebuildIndex();
+    std::vector<CanvasNode*> queryVisible(const GRect& viewport) const;
+
 private:
+    std::unique_ptr<Quadtree> m_spatialIndex;
 };
 
 } // namespace vectma

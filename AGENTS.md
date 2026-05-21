@@ -67,7 +67,7 @@ $$P_{canvas} = M^{-1} \cdot P_{screen}$$
 
 ---
 
-## 5. Active Execution Phase: Phase 14 — Dynamic Component Instances & Symbols
+## 5. Active Execution Phase: Phase 15 — Spatial Indexing & Frustum Culling
 
-Your immediate goal is to architect an instanced component system within Vectma, allowing master symbols to be registered, locally overridden by instance node references, and dynamically propagated upon modification.
+Your immediate goal is to build a performance-optimized graphics subsystem featuring 2D Quadtrees and viewport culling to maintain sub-linear picking and rendering complexity.
 

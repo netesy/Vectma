@@ -16,16 +16,17 @@
 - [x] `RenderPipeline` Abstraction
 - [x] Main Entrypoint (`src/main.cpp`)
 - [x] Build System (`Makefile`)
-- [x] **Bezier Math Engine** (Phase 6)
-- [x] **Sub-Selection Interaction** (Phase 6)
-- [x] **Advanced Styling Engine** (Phase 7)
-- [x] **Constructive Solid Geometry (CSG)** (Phase 8)
-- [x] **Typography & Text Layout** (Phase 9)
-- [x] **High-Fidelity Asset Exporters** (Phase 10)
-- [x] **Runtime Internationalization (I18n)** (Phase 11)
-- [x] **Advanced Path Effects** (Phase 12)
-- [x] **Command Pattern & State History** (Phase 13)
-- [x] **Dynamic Component Instances & Symbols** (Phase 14)
+- [x] Bezier Math Engine (Phase 6)
+- [x] Sub-Selection Interaction (Phase 6)
+- [x] Advanced Styling Engine (Phase 7)
+- [x] Constructive Solid Geometry (CSG) (Phase 8)
+- [x] Typography & Text Layout (Phase 9)
+- [x] High-Fidelity Asset Exporters (Phase 10)
+- [x] Runtime Internationalization (I18n) (Phase 11)
+- [x] Advanced Path Effects (Phase 12)
+- [x] Command Pattern & State History (Phase 13)
+- [x] Dynamic Component Instances & Symbols (Phase 14)
+- [ ] **Spatial Indexing & Frustum Culling** (Phase 15)
 
 ## Verification
 - [x] Baseline Functional Compilation
@@ -37,7 +38,8 @@
 - [x] I18n Lookup & UTF-8 Safety Tests
 - [x] Path Effects Integrity Tests
 - [x] Undo/Redo State Delta Tests
-- [x] **Symbol Instance & Override Stability Tests**
+- [x] Symbol Instance & Override Stability Tests
+- [ ] **Spatial Range Query Performance Benchmarks**
 
 ### UI Layer (Legacy -> Native)
 - [x] Premium Dark Theme
@@ -51,7 +53,7 @@
 - [x] Dynamic Locale Switcher
 - [x] Advanced Geometry Controls
 - [x] Undo/Redo History Buttons
-- [x] **Symbol Asset Palette**
+- [x] Symbol Asset Palette
 
 ---
 **Core Native Engineering Migration Roadmap: Phases 1-14 COMPLETE**
