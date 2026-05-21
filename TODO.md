@@ -5,12 +5,12 @@
 - [x] View-frustum tracking for non-visible node culling
 - [x] O(log N) canvas sub-selection and hit-testing
 
-## Phase 16: Precision Snapping & Proximity Engine [ACTIVE]
-- [ ] Proximity lookup indices
-- [ ] Real-time vector alignment & snap-grids
-- [ ] Smart construction guides
+## Phase 16: Precision Snapping & Proximity Engine [DONE]
+- [x] Proximity lookup indices
+- [x] Real-time vector alignment & snap-grids
+- [x] Smart construction guides
 
-## Phase 17: Non-Destructive Modifier Pipeline [NEXT]
+## Phase 17: Non-Destructive Modifier Pipeline [ACTIVE]
 - [ ] Dynamic modifier evaluation engine
 - [ ] Cascading live path operations (Corner rounding, offsets, dashing)
 

@@ -18,6 +18,7 @@
 #include "core/HistoryManager.hpp"
 #include "core/Commands.hpp"
 #include "core/snap/SnappingEngine.hpp"
+#include "core/modifiers/CornerRoundingModifier.hpp"
 #include "renderer/RenderPipeline.hpp"
 #include <cassert>
 #include <iostream>
@@ -61,8 +62,39 @@ void testSnapping() {
     std::cout << "Snapping accuracy test passed." << std::endl;
 }
 
+void testModifiers() {
+    std::cout << "Testing Non-Destructive Modifier Pipeline..." << std::endl;
+
+    std::vector<vectma::BezierAnchor> anchors = {
+        vectma::BezierAnchor({0, 0}, {0, 0}, {0, 0}),
+        vectma::BezierAnchor({100, 0}, {100, 0}, {100, 0})
+    };
+    vectma::PathNode path(anchors);
+
+    assert(path.getCompiledPath().anchors.size() == 2);
+
+    auto roundMod = std::make_unique<vectma::CornerRoundingModifier>(10.0f);
+    auto roundModPtr = roundMod.get();
+    path.addModifier(std::move(roundMod));
+
+    // Evaluation
+    assert(path.getCompiledPath().anchors.size() == 2);
+    assert(!roundModPtr->isDirty());
+
+    // Mutation
+    roundModPtr->setRadius(20.0f);
+    assert(roundModPtr->isDirty());
+
+    // Cache invalidation & re-evaluation
+    assert(path.getCompiledPath().anchors.size() == 2);
+    assert(!roundModPtr->isDirty());
+
+    std::cout << "Modifier Pipeline tests passed." << std::endl;
+}
+
 int main() {
     testSnapping();
-    std::cout << "All Phase 16 Snapping tests passed!" << std::endl;
+    testModifiers();
+    std::cout << "All Phase 17 tests passed!" << std::endl;
     return 0;
 }

@@ -3,6 +3,7 @@
 #include "core/EllipseNode.hpp"
 #include "core/PathNode.hpp"
 #include "core/TextNode.hpp"
+#include "core/modifiers/DashGeneratorModifier.hpp"
 
 #ifdef VECTMA_USE_OPENGL
 #include <GL/glew.h>
@@ -29,7 +30,15 @@ void BaselineRenderer::drawEllipse(const EllipseNode& node, FillType fillType, c
 
 void BaselineRenderer::drawPath(const PathNode& node, FillType fillType, const GradientConfig& gradConfig, StrokeAlignment strokeAlign) {
     (void)fillType; (void)gradConfig; (void)strokeAlign;
-    setStrokeStyle(node.dashPattern, node.strokeOffset);
+
+    // Search for DashGeneratorModifier in the stack to apply legacy stroke style if needed
+    for (const auto& mod : node.getModifierStack()) {
+        if (auto dashMod = dynamic_cast<DashGeneratorModifier*>(mod.get())) {
+            setStrokeStyle(dashMod->getPattern(), dashMod->getOffset());
+            break;
+        }
+    }
+
     drawBezierPath(node);
 }
 
@@ -38,8 +47,8 @@ void BaselineRenderer::drawText(const TextNode& node) {
 }
 
 void BaselineRenderer::drawBezierPath(const PathNode& node) {
-    const auto& anchors = node.getAnchors();
-    if (anchors.size() < 2) return;
+    const auto& data = node.getCompiledPath();
+    if (data.anchors.size() < 2) return;
 }
 
 void BaselineRenderer::drawAnchorOverlay(const BezierAnchor& anchor, bool selected, int activeHandle) {

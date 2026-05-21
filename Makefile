@@ -1,10 +1,9 @@
 CXX = g++
 CXXFLAGS = -std=c++20 -Iinclude -I. -Ivendor/imgui -Ivendor/imgui/backends -Ivendor/glfw/include -Wall -Wextra -Werror
-LDFLAGS = -lGL -lGLEW -lglfw
 
 IMGUI_OBJS = vendor/imgui/imgui.o
 
-SRC_DIRS = src src/core src/core/spatial src/core/snap src/renderer src/ui
+SRC_DIRS = src src/core src/core/spatial src/core/snap src/core/modifiers src/renderer src/ui
 SRCS = $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))
 OBJS = $(SRCS:.cpp=.o) $(IMGUI_OBJS)
 
@@ -20,7 +19,7 @@ TEST_TARGET = test_runner
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -o $@ $^
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
@@ -35,4 +34,4 @@ test: $(TEST_TARGET)
 	./$(TEST_TARGET)
 
 $(TEST_TARGET): $(TEST_OBJS) $(CORE_OBJS) $(IMGUI_OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -o $@ $^

@@ -4,6 +4,7 @@
 #include "core/CanvasNode.hpp"
 #include "core/SceneGraph.hpp"
 #include "core/PathNode.hpp"
+#include "core/modifiers/CornerRoundingModifier.hpp"
 #include <memory>
 
 namespace vectma {
@@ -30,8 +31,27 @@ public:
     ModifyPathEffectsCommand(PathNode* node, float oldRad, float newRad)
         : m_node(node), m_oldRad(oldRad), m_newRad(newRad) {}
 
-    void execute() override { m_node->cornerRadius = m_newRad; }
-    void undo() override { m_node->cornerRadius = m_oldRad; }
+    void execute() override {
+        for (const auto& mod : m_node->getModifierStack()) {
+            if (auto roundMod = dynamic_cast<CornerRoundingModifier*>(mod.get())) {
+                roundMod->setRadius(m_newRad);
+                return;
+            }
+        }
+        // If not found, add one
+        auto roundMod = std::make_unique<CornerRoundingModifier>(m_newRad);
+        m_node->addModifier(std::move(roundMod));
+    }
+
+    void undo() override {
+        for (const auto& mod : m_node->getModifierStack()) {
+            if (auto roundMod = dynamic_cast<CornerRoundingModifier*>(mod.get())) {
+                roundMod->setRadius(m_oldRad);
+                return;
+            }
+        }
+    }
+
     void redo() override { execute(); }
 
 private:

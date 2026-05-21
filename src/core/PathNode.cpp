@@ -5,33 +5,72 @@
 
 namespace vectma {
 
-std::vector<BezierAnchor> evaluateRoundedPath(const std::vector<BezierAnchor>& baseAnchors, float radius) {
-    if (radius <= 0.0f || baseAnchors.size() < 2) return baseAnchors;
-    return baseAnchors;
-}
-
 PathNode::PathNode() = default;
 
 PathNode::PathNode(const std::vector<BezierAnchor>& anchors)
     : m_anchors(anchors) {}
 
+void PathNode::setAnchors(const std::vector<BezierAnchor>& anchors) {
+    m_anchors = anchors;
+    m_geometry_dirty = true;
+}
+
+void PathNode::addAnchor(const BezierAnchor& anchor) {
+    m_anchors.push_back(anchor);
+    m_geometry_dirty = true;
+}
+
+void PathNode::addModifier(std::unique_ptr<Modifier> modifier) {
+    m_modifier_stack.push_back(std::move(modifier));
+}
+
+void PathNode::updatePipelineCache() const {
+    bool stack_dirty = false;
+    for (const auto& mod : m_modifier_stack) {
+        if (mod->isDirty()) {
+            stack_dirty = true;
+            break;
+        }
+    }
+
+    if (!m_geometry_dirty && !stack_dirty && m_cached_compiled_path) {
+        return;
+    }
+
+    // Start with base geometry
+    auto current_data = std::make_unique<PathData>(m_anchors, m_isClosed);
+
+    // Apply modifier stack
+    for (const auto& mod : m_modifier_stack) {
+        current_data = mod->apply(*current_data);
+    }
+
+    m_cached_compiled_path = std::move(current_data);
+    m_geometry_dirty = false;
+}
+
+const PathData& PathNode::getCompiledPath() const {
+    updatePipelineCache();
+    return *m_cached_compiled_path;
+}
+
 void PathNode::render(RenderPipeline& pipeline) const {
-    auto rounded = evaluateRoundedPath(m_anchors, cornerRadius);
-    (void)rounded;
-    pipeline.setStrokeStyle(dashPattern, strokeOffset);
+    updatePipelineCache();
+    // In a real implementation, we might pass the compiled path to the pipeline
+    // For now, we still pass 'this' but the pipeline will use getCompiledPath() if needed
     pipeline.drawPath(*this, getFillType(), getGradientConfig(), getStrokeAlignment());
 }
 
 bool PathNode::containsPoint(const GPoint& point) const {
-    (void)point;
     return hitTestAnchors(point, 5.0f) != -1;
 }
 
 GRect PathNode::computeBoundingBox() const {
-    if (m_anchors.empty()) return GRect(0, 0, 0, 0);
+    const auto& data = getCompiledPath();
+    if (data.anchors.empty()) return GRect(0, 0, 0, 0);
 
-    double minX = m_anchors[0].position.x;
-    double minY = m_anchors[0].position.y;
+    double minX = data.anchors[0].position.x;
+    double minY = data.anchors[0].position.y;
     double maxX = minX;
     double maxY = minY;
 
@@ -42,7 +81,7 @@ GRect PathNode::computeBoundingBox() const {
         maxY = std::max(maxY, p.y);
     };
 
-    for (const auto& anchor : m_anchors) {
+    for (const auto& anchor : data.anchors) {
         update(anchor.position);
         update(anchor.handleIn);
         update(anchor.handleOut);
@@ -88,21 +127,18 @@ int PathNode::hitTestAnchors(const Point2D& canvasPos, float toleranceRadius) co
 }
 
 std::string PathNode::toSVG() const {
-    if (m_anchors.empty()) return "";
-    std::string d = "M " + std::to_string(m_anchors[0].position.x) + " " + std::to_string(m_anchors[0].position.y);
-    for (size_t i = 0; i < m_anchors.size() - 1; ++i) {
-        const auto& p1 = m_anchors[i].handleOut;
-        const auto& p2 = m_anchors[i+1].handleIn;
-        const auto& p3 = m_anchors[i+1].position;
+    const auto& data = getCompiledPath();
+    if (data.anchors.empty()) return "";
+    std::string d = "M " + std::to_string(data.anchors[0].position.x) + " " + std::to_string(data.anchors[0].position.y);
+    for (size_t i = 0; i < data.anchors.size() - 1; ++i) {
+        const auto& p1 = data.anchors[i].handleOut;
+        const auto& p2 = data.anchors[i+1].handleIn;
+        const auto& p3 = data.anchors[i+1].position;
         d += " C " + std::to_string(p1.x) + " " + std::to_string(p1.y) + ", " +
              std::to_string(p2.x) + " " + std::to_string(p2.y) + ", " +
              std::to_string(p3.x) + " " + std::to_string(p3.y);
     }
     return "<path d=\"" + d + "\" />";
-}
-
-void calculateNormals(const PathNode& node) {
-    (void)node;
 }
 
 } // namespace vectma

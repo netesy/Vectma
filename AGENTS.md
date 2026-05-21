@@ -67,7 +67,7 @@ $$P_{canvas} = M^{-1} \cdot P_{screen}$$
 
 ---
 
-## 5. Active Execution Phase: Phase 15 — Spatial Indexing & Frustum Culling
+## 5. Active Execution Phase: Phase 17 — Non-Destructive Modifier Pipeline
 
-Your immediate goal is to build a performance-optimized graphics subsystem featuring 2D Quadtrees and viewport culling to maintain sub-linear picking and rendering complexity.
+Your immediate goal is to implement a non-destructive modifier architecture for path manipulations, featuring lazy evaluation and render-time caching.
 
