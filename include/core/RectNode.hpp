@@ -21,6 +21,11 @@ public:
     double getW() const { return m_w; }
     double getH() const { return m_h; }
 
+    void setX(double x) { m_x = x; }
+    void setY(double y) { m_y = y; }
+    void setW(double w) { m_w = w; }
+    void setH(double h) { m_h = h; }
+
 private:
     double m_x, m_y, m_w, m_h;
 };

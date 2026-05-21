@@ -1,7 +1,5 @@
 CXX = g++
 CXXFLAGS = -std=c++20 -Iinclude -I. -Ivendor -Ivendor/imgui -Ivendor/imgui/backends -Ivendor/glfw/include -Wall -Wextra -Werror
-# Flags for new subsystems
-# CXXFLAGS += -DVECTMA_USE_SKIA -Ivendor/skia -Ivendor/json -Ivendor/minizip -Ivendor/lunasvg/include -Ivendor/pdfium/public -Ivendor/woff2/include -Ivendor/brotli/include
 
 # Centralized vendor objects
 VENDOR_SRCS = vendor/imgui/imgui.cpp

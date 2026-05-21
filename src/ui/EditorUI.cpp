@@ -4,6 +4,8 @@
 #include "ui/Inspector.hpp"
 #include "ui/LayerPanel.hpp"
 #include "ui/SplashScreen.hpp"
+#include "ui/WelcomeScreen.hpp"
+#include "ui/ExportDashboard.hpp"
 #include "ui/ThemeTokens.hpp"
 #include "core/PathNode.hpp"
 #include "core/LocaleManager.hpp"
@@ -33,11 +35,15 @@ void EditorUI::render() {
     if (m_showSplash) {
         SplashScreen::render("logo.png");
         m_splashTimer -= 0.016f;
-        if (m_splashTimer <= 0.0f) m_showSplash = false;
+        if (m_splashTimer <= 0.0f) {
+            m_showSplash = false;
+            m_showWelcome = true;
+        }
+    } else if (m_showWelcome) {
+        WelcomeScreen::render(m_stage, m_showWelcome);
     } else {
         handleInputs();
 
-        // Production-grade layout using Stitch tokens
         ImGuiViewport* viewport = ImGui::GetMainViewport();
         float sidebarWidth = tokens::spacing::SidebarWidth;
         float toolbarHeight = tokens::spacing::ToolbarHeight;
@@ -63,11 +69,13 @@ void EditorUI::render() {
         ImGui::SetNextWindowSize(ImVec2(viewport->Size.x, statusBarHeight));
         renderStatusBar();
 
-        // Central Viewport: Constrained by sidebars
+        // Central Viewport
         ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x + sidebarWidth, viewport->Pos.y + toolbarHeight));
         ImGui::SetNextWindowSize(ImVec2(viewport->Size.x - 2 * sidebarWidth, viewport->Size.y - toolbarHeight - statusBarHeight));
         renderViewport();
 
+        // Overlays
+        ExportDashboard::render(m_stage, m_renderer, m_showExport);
         renderSettingsMenu();
     }
 
@@ -132,6 +140,14 @@ void EditorUI::renderSettingsMenu() {
 
     if (ImGui::Combo("Language", &currentLocale, locales, 2)) {
         LocaleManager::getInstance().setLocale((Locale)currentLocale);
+    }
+
+    if (ImGui::Button("Welcome Screen")) {
+        m_showWelcome = true;
+    }
+
+    if (ImGui::Button("Export Hub")) {
+        m_showExport = true;
     }
 
     ImGui::End();

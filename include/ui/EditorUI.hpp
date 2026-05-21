@@ -4,6 +4,8 @@
 #include "renderer/RenderPipeline.hpp"
 #include "ui/LayerPanel.hpp"
 #include "ui/SplashScreen.hpp"
+#include "ui/WelcomeScreen.hpp"
+#include "ui/ExportDashboard.hpp"
 #include <memory>
 
 namespace vectma {
@@ -18,8 +20,12 @@ private:
     WorkspaceStage& m_stage;
     RenderPipeline& m_renderer;
     std::unique_ptr<LayerPanel> m_layerPanel;
+
     bool m_showSplash = true;
     float m_splashTimer = 3.0f;
+
+    bool m_showWelcome = false;
+    bool m_showExport = false;
 
     void handleInputs();
     void renderViewport();
