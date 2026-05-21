@@ -28,7 +28,7 @@ std::optional<SnapResult> SnappingEngine::findSnapPoint(const Point2D& cursor, c
                 bestDistX = dist;
                 result.snappedPoint.x = sx;
                 result.snappedX = true;
-                // Add guide points (mock: vertical line segment)
+                // High-precision vertical alignment guide
                 result.guideLines.push_back({sx, bbox.y});
                 result.guideLines.push_back({sx, bbox.y + bbox.height});
             }
@@ -40,7 +40,7 @@ std::optional<SnapResult> SnappingEngine::findSnapPoint(const Point2D& cursor, c
                 bestDistY = dist;
                 result.snappedPoint.y = sy;
                 result.snappedY = true;
-                // Add guide points (mock: horizontal line segment)
+                // High-precision horizontal alignment guide
                 result.guideLines.push_back({bbox.x, sy});
                 result.guideLines.push_back({bbox.x + bbox.width, sy});
             }

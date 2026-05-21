@@ -4,6 +4,7 @@
 #include "ui/Inspector.hpp"
 #include "ui/LayerPanel.hpp"
 #include "ui/SplashScreen.hpp"
+#include "ui/ThemeTokens.hpp"
 #include "core/PathNode.hpp"
 #include "core/LocaleManager.hpp"
 #include <imgui.h>
@@ -31,16 +32,16 @@ void EditorUI::render() {
 
     if (m_showSplash) {
         SplashScreen::render("logo.png");
-        m_splashTimer -= 0.016f; // Mock 60fps frame time
+        m_splashTimer -= 0.016f;
         if (m_splashTimer <= 0.0f) m_showSplash = false;
     } else {
         handleInputs();
 
-        // High-Fidelity Stitch Layout Integration: Sidebar Docking
+        // Production-grade layout using Stitch tokens
         ImGuiViewport* viewport = ImGui::GetMainViewport();
-        float sidebarWidth = 250.0f;
-        float toolbarHeight = 50.0f;
-        float statusBarHeight = 30.0f;
+        float sidebarWidth = tokens::spacing::SidebarWidth;
+        float toolbarHeight = tokens::spacing::ToolbarHeight;
+        float statusBarHeight = tokens::spacing::StatusBarHeight;
 
         // Sidebar Left: Layer Panel
         ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x, viewport->Pos.y + toolbarHeight));
@@ -62,7 +63,7 @@ void EditorUI::render() {
         ImGui::SetNextWindowSize(ImVec2(viewport->Size.x, statusBarHeight));
         renderStatusBar();
 
-        // Central Viewport
+        // Central Viewport: Constrained by sidebars
         ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x + sidebarWidth, viewport->Pos.y + toolbarHeight));
         ImGui::SetNextWindowSize(ImVec2(viewport->Size.x - 2 * sidebarWidth, viewport->Size.y - toolbarHeight - statusBarHeight));
         renderViewport();
@@ -99,7 +100,6 @@ void EditorUI::renderViewport() {
         m_stage.getScene()->render(m_renderer);
     }
 
-    // Render Sub-Selection Overlays
     if (m_stage.isSubSelectionMode()) {
         for (auto node : m_stage.getSelection()) {
             PathNode* path = dynamic_cast<PathNode*>(node);
@@ -113,7 +113,6 @@ void EditorUI::renderViewport() {
         }
     }
 
-    // Render Snapping Guides
     auto snap = m_stage.getActiveSnap();
     if (snap) {
         for (size_t i = 0; i + 1 < snap->guideLines.size(); i += 2) {

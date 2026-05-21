@@ -14,16 +14,21 @@ public:
     AddNodeCommand(SceneGraph* scene, std::unique_ptr<CanvasNode> node)
         : m_scene(scene), m_node(std::move(node)) {}
 
-    void execute() override { m_scene->addChild(std::move(m_node)); }
-    void undo() override {
-        // Mock remove (Phase 13 assumes SceneGraph can manage its children)
-        // In real app, would need SceneGraph::removeChild
+    void execute() override {
+        m_node_ptr = m_node.get();
+        m_scene->addChild(std::move(m_node));
     }
+
+    void undo() override {
+        m_node = m_scene->removeChild(m_node_ptr);
+    }
+
     void redo() override { execute(); }
 
 private:
     SceneGraph* m_scene;
     std::unique_ptr<CanvasNode> m_node;
+    CanvasNode* m_node_ptr = nullptr;
 };
 
 class ModifyPathEffectsCommand : public Command {
@@ -38,7 +43,6 @@ public:
                 return;
             }
         }
-        // If not found, add one
         auto roundMod = std::make_unique<CornerRoundingModifier>(m_newRad);
         m_node->addModifier(std::move(roundMod));
     }

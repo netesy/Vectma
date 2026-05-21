@@ -2,6 +2,8 @@
 
 #include <cstdint>
 #include <vector>
+#include <string>
+#include <stdexcept>
 #include "core/GPoint.hpp"
 
 namespace vectma {
@@ -18,6 +20,18 @@ struct GColor {
     static GColor Black() { return GColor(0, 0, 0); }
     static GColor White() { return GColor(255, 255, 255); }
     static GColor Transparent() { return GColor(0, 0, 0, 0); }
+
+    static GColor FromHex(const std::string& hex) {
+        if (hex.empty()) return Black();
+        size_t start = (hex[0] == '#') ? 1 : 0;
+        uint32_t val = std::stoul(hex.substr(start), nullptr, 16);
+        if (hex.length() - start == 6) {
+            return GColor((val >> 16) & 0xFF, (val >> 8) & 0xFF, val & 0xFF);
+        } else if (hex.length() - start == 8) {
+            return GColor((val >> 24) & 0xFF, (val >> 16) & 0xFF, (val >> 8) & 0xFF, val & 0xFF);
+        }
+        return Black();
+    }
 };
 
 struct GradientStop {

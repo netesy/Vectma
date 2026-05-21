@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <cstdint>
 
 namespace ImGui {
     struct ImVec2 { float x, y; ImVec2(float _x=0, float _y=0):x(_x),y(_y){} };
@@ -50,6 +51,16 @@ namespace ImGui {
     bool SliderFloat(const char*, float*, float, float, const char* = "%.3f", int = 0);
     bool ColorEdit4(const char*, float*, int = 0);
     bool InputTextMultiline(const char*, char*, size_t, const ImVec2& = ImVec2(0,0), int = 0);
+
+    struct ImDrawList {
+        void AddRectFilled(const ImVec2&, const ImVec2&, uint32_t, float = 0.0f, int = 0) {}
+        void AddLine(const ImVec2&, const ImVec2&, uint32_t, float = 1.0f) {}
+        void AddCircleFilled(const ImVec2&, float, uint32_t, int = 12) {}
+        void AddText(const ImVec2&, uint32_t, const char*, const char* = nullptr) {}
+    };
+    ImDrawList* GetWindowDrawList();
+    uint32_t ColorConvertFloat4ToU32(const ImVec4&);
+    ImVec2 CalcTextSize(const char*, const char* = nullptr, bool = false, float = -1.0f);
 }
 
 typedef ImGui::ImVec2 ImVec2;
@@ -58,6 +69,7 @@ typedef ImGui::ImGuiIO ImGuiIO;
 typedef ImGui::ImGuiStyle ImGuiStyle;
 typedef ImGui::ImGuiViewport ImGuiViewport;
 typedef int ImGuiWindowFlags;
+typedef ImGui::ImDrawList ImDrawList;
 
 #define IMGUI_CHECKVERSION()
 enum ImGuiMouseButton_ { ImGuiMouseButton_Left = 0 };

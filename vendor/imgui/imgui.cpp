@@ -40,4 +40,9 @@ namespace ImGui {
     bool SliderFloat(const char*, float*, float, float, const char*, int) { return false; }
     bool ColorEdit4(const char*, float*, int) { return false; }
     bool InputTextMultiline(const char*, char*, size_t, const ImVec2&, int) { return false; }
+
+    ImDrawList drawList;
+    ImDrawList* GetWindowDrawList() { return &drawList; }
+    uint32_t ColorConvertFloat4ToU32(const ImVec4&) { return 0; }
+    ImVec2 CalcTextSize(const char*, const char*, bool, float) { return ImVec2(100, 20); }
 }

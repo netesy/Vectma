@@ -20,6 +20,7 @@ public:
 
     // Overrides
     void addChild(std::unique_ptr<CanvasNode> child);
+    std::unique_ptr<CanvasNode> removeChild(CanvasNode* node);
 
     // CanvasNode implementation
     void render(RenderPipeline& pipeline) const override;

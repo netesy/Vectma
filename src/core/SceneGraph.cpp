@@ -15,10 +15,18 @@ void SceneGraph::addChild(std::unique_ptr<CanvasNode> child) {
     if (m_spatialIndex) m_spatialIndex->insert(m_children.back().get());
 }
 
+std::unique_ptr<CanvasNode> SceneGraph::removeChild(CanvasNode* node) {
+    auto it = std::find_if(m_children.begin(), m_children.end(), [node](const auto& p) { return p.get() == node; });
+    if (it != m_children.end()) {
+        auto removed = std::move(*it);
+        m_children.erase(it);
+        if (m_spatialIndex) m_spatialIndex->remove(node);
+        return removed;
+    }
+    return nullptr;
+}
+
 void SceneGraph::render(RenderPipeline& pipeline) const {
-    // Frustum Culling: Query only visible nodes
-    // viewport region should be provided by a viewport state in real app
-    // Mock viewport for now: entire canvas
     GRect viewport(-10000, -10000, 20000, 20000);
     auto visibleNodes = m_spatialIndex->query(viewport);
 

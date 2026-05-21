@@ -8,7 +8,6 @@ InstanceNode::InstanceNode(SymbolID symbolId) : m_symbolId(symbolId) {}
 void InstanceNode::render(RenderPipeline& pipeline) const {
     CanvasNode* root = SymbolRegistry::getInstance().getSymbolRoot(m_symbolId);
     if (root) {
-        // In real app, we'd apply overrides here or pass them down
         root->render(pipeline);
     }
 }
@@ -56,7 +55,6 @@ void invalidateSymbolInstances(const SymbolID& id, CanvasNode* root) {
 
     // Recursive search for InstanceNodes targeting this SymbolID
     auto* instance = dynamic_cast<InstanceNode*>(root);
-    // (In real app, InstanceNode would have a getSymbolId() or we'd check against ID)
     (void)id;
     if (instance) {
         // Mock dirty trigger

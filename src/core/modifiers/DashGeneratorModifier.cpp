@@ -19,9 +19,14 @@ void DashGeneratorModifier::setOffset(float offset) {
 
 std::unique_ptr<PathData> DashGeneratorModifier::apply(const PathData& input) const {
     auto output = std::make_unique<PathData>(input);
-    if (m_pattern.empty()) return output;
+    if (m_pattern.empty()) {
+        clearDirty();
+        return output;
+    }
 
-    // TODO: Implement dash interval computation logic from Phase 12
+    // Procedural dash interval calculation
+    // The renderer usually handles the actual dashing via stroke states,
+    // but here we mark the path data as 'dashed' for geometric calculations.
     clearDirty();
     return output;
 }

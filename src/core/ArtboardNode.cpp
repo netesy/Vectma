@@ -12,7 +12,7 @@ void ArtboardNode::render(RenderPipeline& pipeline) const {
     pipeline.pushClipRect(m_bounds);
 
     // Draw background/canvas for artboard if needed
-    // ...
+
 
     for (const auto& child : m_children) {
         child->render(pipeline);

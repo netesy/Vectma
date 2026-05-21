@@ -48,8 +48,13 @@ GPoint WorkspaceStage::screenToCanvas(const GPoint& screenPos) const {
 }
 
 void WorkspaceStage::applyBooleanOperation(BooleanOp op) {
-    (void)op;
     if (m_selection.size() < 2) return;
+    PathNode* target = dynamic_cast<PathNode*>(m_selection[0]);
+    PathNode* source = dynamic_cast<PathNode*>(m_selection[1]);
+    if (target && source) {
+        auto result = GeometryEngine::combinePaths(*target, *source, op);
+        executeCommand(std::make_unique<AddNodeCommand>(m_scene.get(), std::move(result)));
+    }
 }
 
 void WorkspaceStage::handleMouseDown(const Point2D& screenPos) {

@@ -45,7 +45,6 @@ void renderSymbolRegistry(WorkspaceStage& stage) {
         for (const auto& id : ids) {
             if (ImGui::Button(id.c_str())) {
                 auto instance = std::make_unique<InstanceNode>(id);
-                // In real app, WorkspaceStage would handle placement
                 if (stage.getScene()) stage.getScene()->addChild(std::move(instance));
             }
             ImGui::SameLine();
