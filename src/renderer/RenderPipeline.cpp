@@ -9,6 +9,12 @@
 #include <GL/glew.h>
 #endif
 
+#ifdef VECTMA_USE_SKIA
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#endif
+
 #include <iostream>
 #include <cmath>
 
@@ -24,6 +30,11 @@ void BaselineRenderer::endFrame() {
 
 void BaselineRenderer::drawRect(const RectNode& node, FillType fillType, const GradientConfig& gradConfig, StrokeAlignment strokeAlign) {
     (void)fillType; (void)gradConfig; (void)strokeAlign; (void)node;
+    // Skia implementation:
+    // SkRect rect = SkRect::MakeXYWH(node.getX(), node.getY(), node.getWidth(), node.getHeight());
+    // SkPaint paint;
+    // paint.setColor(node.getFillColor().toSkColor());
+    // m_skCanvas->drawRect(rect, paint);
 }
 
 void BaselineRenderer::drawEllipse(const EllipseNode& node, FillType fillType, const GradientConfig& gradConfig, StrokeAlignment strokeAlign) {
@@ -33,7 +44,6 @@ void BaselineRenderer::drawEllipse(const EllipseNode& node, FillType fillType, c
 void BaselineRenderer::drawPath(const PathNode& node, FillType fillType, const GradientConfig& gradConfig, StrokeAlignment strokeAlign) {
     (void)fillType; (void)gradConfig; (void)strokeAlign;
 
-    // Search for DashGeneratorModifier in the stack to apply legacy stroke style if needed
     for (const auto& mod : node.getModifierStack()) {
         if (auto dashMod = dynamic_cast<DashGeneratorModifier*>(mod.get())) {
             setStrokeStyle(dashMod->getPattern(), dashMod->getOffset());
@@ -51,6 +61,23 @@ void BaselineRenderer::drawText(const TextNode& node) {
 void BaselineRenderer::drawBezierPath(const PathNode& node) {
     const auto& data = node.getCompiledPath();
     if (data.anchors.size() < 2) return;
+
+#ifdef VECTMA_USE_SKIA
+    SkPath path;
+    const auto& anchors = data.anchors;
+    path.moveTo(anchors[0].position.x, anchors[0].position.y);
+    for (size_t i = 1; i < anchors.size(); ++i) {
+        path.cubicTo(anchors[i-1].handleOut.x, anchors[i-1].handleOut.y,
+                     anchors[i].handleIn.x, anchors[i].handleIn.y,
+                     anchors[i].position.x, anchors[i].position.y);
+    }
+    if (data.isClosed) path.close();
+
+    SkPaint paint;
+    paint.setAntiAlias(true);
+    // ... apply styles from node ...
+    // m_skCanvas->drawPath(path, paint);
+#endif
 }
 
 void BaselineRenderer::drawAnchorOverlay(const BezierAnchor& anchor, bool selected, int activeHandle) {
@@ -81,17 +108,25 @@ void BaselineRenderer::drawSnappingGuide(const Point2D& start, const Point2D& en
 
 void BaselineRenderer::pushClipRect(const GRect& rect) {
     m_clipStack.push_back(rect);
+#ifdef VECTMA_USE_SKIA
+    // m_skCanvas->save();
+    // m_skCanvas->clipRect(SkRect::MakeXYWH(rect.x, rect.y, rect.width, rect.height));
+#endif
+
 #ifdef VECTMA_USE_OPENGL
     glEnable(GL_SCISSOR_TEST);
     glScissor((int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height);
-#else
-    (void)rect;
 #endif
 }
 
 void BaselineRenderer::popClipRect() {
     if (m_clipStack.empty()) return;
     m_clipStack.pop_back();
+
+#ifdef VECTMA_USE_SKIA
+    // m_skCanvas->restore();
+#endif
+
     if (m_clipStack.empty()) {
 #ifdef VECTMA_USE_OPENGL
         glDisable(GL_SCISSOR_TEST);
