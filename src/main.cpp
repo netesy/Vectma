@@ -21,7 +21,6 @@ static void glfw_error_callback(int error, const char* description) {
 }
 #endif
 
-// Seed the scene with some nodes for the screenshot
 void seed_scene(std::shared_ptr<vectma::SceneGraph> scene) {
     scene->addChild(std::make_unique<vectma::RectNode>(100, 100, 200, 150));
     scene->addChild(std::make_unique<vectma::EllipseNode>(500, 300, 80, 100));
@@ -39,15 +38,12 @@ int main() {
     GLFWwindow* window = glfwCreateWindow(1280, 720, "Vectma Core", NULL, NULL);
     if (window == NULL) return 1;
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(1); // Enable vsync
+    glfwSwapInterval(1);
 
     if (glewInit() != GLEW_OK) return 1;
 
-    // Setup ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 #else
@@ -55,43 +51,43 @@ int main() {
     ImGui::CreateContext();
 #endif
 
-    // Initialize core components
-    auto workspace = std::make_unique<vectma::WorkspaceStage>();
-    auto scene = std::make_shared<vectma::SceneGraph>();
-    workspace->setScene(scene);
+    {
+        auto workspace = std::make_unique<vectma::WorkspaceStage>();
+        auto scene = std::make_shared<vectma::SceneGraph>();
+        workspace->setScene(scene);
+        seed_scene(scene);
 
-    seed_scene(scene);
-
-    auto renderer = std::make_unique<vectma::BaselineRenderer>();
-    auto ui = std::make_unique<vectma::EditorUI>(*workspace, *renderer);
+        auto renderer = std::make_unique<vectma::BaselineRenderer>();
+        auto ui = std::make_unique<vectma::EditorUI>(*workspace, *renderer);
 
 #ifdef VECTMA_USE_OPENGL
-    while (!glfwWindowShouldClose(window)) {
-        glfwPollEvents();
+        while (!glfwWindowShouldClose(window)) {
+            glfwPollEvents();
+            ui->render();
 
+            int display_w, display_h;
+            glfwGetFramebufferSize(window, &display_w, &display_h);
+            glViewport(0, 0, display_w, display_h);
+            glClearColor(0.043f, 0.043f, 0.047f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+            glfwSwapBuffers(window);
+        }
+
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+#else
+        std::cout << "OpenGL disabled. Running headless core logic." << std::endl;
         ui->render();
-
-        int display_w, display_h;
-        glfwGetFramebufferSize(window, &display_w, &display_h);
-        glViewport(0, 0, display_w, display_h);
-        glClearColor(0.043f, 0.043f, 0.047f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        glfwSwapBuffers(window);
+#endif
     }
 
-    // Cleanup
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
+#ifdef VECTMA_USE_OPENGL
     glfwDestroyWindow(window);
     glfwTerminate();
-#else
-    std::cout << "OpenGL disabled. Running headless core logic." << std::endl;
-    ui->render();
-    ImGui::DestroyContext();
 #endif
 
     return 0;

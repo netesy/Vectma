@@ -3,6 +3,7 @@
 #include "ui/Toolbar.hpp"
 #include "ui/Inspector.hpp"
 #include "ui/LayerPanel.hpp"
+#include "ui/SplashScreen.hpp"
 #include "core/PathNode.hpp"
 #include "core/LocaleManager.hpp"
 #include <imgui.h>
@@ -18,6 +19,7 @@ EditorUI::EditorUI(WorkspaceStage& stage, RenderPipeline& renderer)
     : m_stage(stage), m_renderer(renderer) {
     Theme::applyPremiumDark();
     m_layerPanel = std::make_unique<LayerPanel>(m_stage);
+    m_showSplash = true;
 }
 
 void EditorUI::render() {
@@ -27,40 +29,46 @@ void EditorUI::render() {
 #endif
     ImGui::NewFrame();
 
-    handleInputs();
+    if (m_showSplash) {
+        SplashScreen::render("logo.png");
+        m_splashTimer -= 0.016f; // Mock 60fps frame time
+        if (m_splashTimer <= 0.0f) m_showSplash = false;
+    } else {
+        handleInputs();
 
-    // High-Fidelity Stitch Layout Integration: Sidebar Docking
-    ImGuiViewport* viewport = ImGui::GetMainViewport();
-    float sidebarWidth = 250.0f;
-    float toolbarHeight = 50.0f;
-    float statusBarHeight = 30.0f;
+        // High-Fidelity Stitch Layout Integration: Sidebar Docking
+        ImGuiViewport* viewport = ImGui::GetMainViewport();
+        float sidebarWidth = 250.0f;
+        float toolbarHeight = 50.0f;
+        float statusBarHeight = 30.0f;
 
-    // Sidebar Left: Layer Panel
-    ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x, viewport->Pos.y + toolbarHeight));
-    ImGui::SetNextWindowSize(ImVec2(sidebarWidth, viewport->Size.y - toolbarHeight - statusBarHeight));
-    m_layerPanel->render();
+        // Sidebar Left: Layer Panel
+        ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x, viewport->Pos.y + toolbarHeight));
+        ImGui::SetNextWindowSize(ImVec2(sidebarWidth, viewport->Size.y - toolbarHeight - statusBarHeight));
+        m_layerPanel->render();
 
-    // Sidebar Right: Inspector
-    ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x + viewport->Size.x - sidebarWidth, viewport->Pos.y + toolbarHeight));
-    ImGui::SetNextWindowSize(ImVec2(sidebarWidth, viewport->Size.y - toolbarHeight - statusBarHeight));
-    Inspector::render(m_stage);
+        // Sidebar Right: Inspector
+        ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x + viewport->Size.x - sidebarWidth, viewport->Pos.y + toolbarHeight));
+        ImGui::SetNextWindowSize(ImVec2(sidebarWidth, viewport->Size.y - toolbarHeight - statusBarHeight));
+        Inspector::render(m_stage);
 
-    // Toolbar
-    ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x, viewport->Pos.y));
-    ImGui::SetNextWindowSize(ImVec2(viewport->Size.x, toolbarHeight));
-    Toolbar::render(m_stage);
+        // Toolbar
+        ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x, viewport->Pos.y));
+        ImGui::SetNextWindowSize(ImVec2(viewport->Size.x, toolbarHeight));
+        Toolbar::render(m_stage);
 
-    // Status Bar
-    ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x, viewport->Pos.y + viewport->Size.y - statusBarHeight));
-    ImGui::SetNextWindowSize(ImVec2(viewport->Size.x, statusBarHeight));
-    renderStatusBar();
+        // Status Bar
+        ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x, viewport->Pos.y + viewport->Size.y - statusBarHeight));
+        ImGui::SetNextWindowSize(ImVec2(viewport->Size.x, statusBarHeight));
+        renderStatusBar();
 
-    // Central Viewport
-    ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x + sidebarWidth, viewport->Pos.y + toolbarHeight));
-    ImGui::SetNextWindowSize(ImVec2(viewport->Size.x - 2 * sidebarWidth, viewport->Size.y - toolbarHeight - statusBarHeight));
-    renderViewport();
+        // Central Viewport
+        ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x + sidebarWidth, viewport->Pos.y + toolbarHeight));
+        ImGui::SetNextWindowSize(ImVec2(viewport->Size.x - 2 * sidebarWidth, viewport->Size.y - toolbarHeight - statusBarHeight));
+        renderViewport();
 
-    renderSettingsMenu();
+        renderSettingsMenu();
+    }
 
     ImGui::Render();
 }
