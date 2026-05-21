@@ -12,6 +12,7 @@ namespace ImGui {
     void Text(const char*, ...) {}
     void TextDisabled(const char*, ...) {}
     void Separator() {}
+    void NewLine() {}
     bool Checkbox(const char*, bool*) { return false; }
     bool Button(const char*, const ImVec2&) { return false; }
     void SameLine() {}

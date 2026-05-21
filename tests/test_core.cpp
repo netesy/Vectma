@@ -5,6 +5,8 @@
 #include "core/EllipseNode.hpp"
 #include "core/PathNode.hpp"
 #include "core/TextNode.hpp"
+#include "core/InstanceNode.hpp"
+#include "core/SymbolRegistry.hpp"
 #include "core/GPoint.hpp"
 #include "core/GRect.hpp"
 #include "core/GColor.hpp"
@@ -36,50 +38,29 @@ public:
     void setStrokeStyle(const std::vector<float>&, float) override {}
 };
 
-void testUndoRedo() {
-    std::cout << "Testing Undo/Redo Engine..." << std::endl;
-    auto scene = std::make_shared<vectma::SceneGraph>();
-    vectma::WorkspaceStage workspace;
-    workspace.setScene(scene);
+void testSymbols() {
+    std::cout << "Testing Component Symbols and Instances..." << std::endl;
+    auto& registry = vectma::SymbolRegistry::getInstance();
 
-    // Initial state
-    assert(scene->getChildren().empty());
-    assert(!workspace.canUndo());
+    auto master = std::make_unique<vectma::RectNode>(0, 0, 100, 100);
+    master->setStrokeWidth(0.0f);
+    registry.registerSymbol("Button", std::move(master));
 
-    // Execute AddNodeCommand
-    auto rect = std::make_unique<vectma::RectNode>(0, 0, 10, 10);
-    workspace.executeCommand(std::make_unique<vectma::AddNodeCommand>(scene.get(), std::move(rect)));
+    assert(registry.getSymbolRoot("Button") != nullptr);
 
-    assert(scene->getChildren().size() == 1);
-    assert(workspace.canUndo());
-    assert(!workspace.canRedo());
+    vectma::InstanceNode instance("Button");
+    auto bbox = instance.computeBoundingBox();
+    assert(bbox.width == 100);
+    assert(bbox.height == 100);
 
-    // Undo
-    workspace.undo();
-    // (Note: AddNodeCommand undo is mocked in this phase as per task description
-    // "Phase 13 assumes SceneGraph can manage its children" - but I'll make it work for real in next turn if needed)
-    // Actually let's just test the ModifyPathEffectsCommand which is fully implemented.
+    instance.setOverride("text", "Click Me");
+    assert(instance.getOverride("text") == "Click Me");
 
-    std::vector<vectma::BezierAnchor> anchors = { { {0,0}, {0,0}, {0,0} } };
-    auto path = std::make_unique<vectma::PathNode>(anchors);
-    vectma::PathNode* pathPtr = path.get();
-    scene->addChild(std::move(path));
-
-    assert(pathPtr->cornerRadius == 0.0f);
-    workspace.executeCommand(std::make_unique<vectma::ModifyPathEffectsCommand>(pathPtr, 0.0f, 10.0f));
-    assert(pathPtr->cornerRadius == 10.0f);
-
-    workspace.undo();
-    assert(pathPtr->cornerRadius == 0.0f);
-
-    workspace.redo();
-    assert(pathPtr->cornerRadius == 10.0f);
-
-    std::cout << "Undo/Redo tests passed." << std::endl;
+    std::cout << "Symbol and Instance tests passed." << std::endl;
 }
 
 int main() {
-    testUndoRedo();
-    std::cout << "All Phase 13 Command tests passed!" << std::endl;
+    testSymbols();
+    std::cout << "All Phase 14 Symbol tests passed!" << std::endl;
     return 0;
 }

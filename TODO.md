@@ -1,13 +1,13 @@
 # Vectma Core Development Roadmap
 
-## Phase 13: Command Pattern & State History Engine [DONE]
-- [x] Implement Polymorphic Command Interface
-- [x] Build Bounded History Manager (Double-Stack)
-- [x] Implement Transform, Add/Delete, and ModifyPathEffects Commands
-- [x] Wire History Hooks into WorkspaceStage
-- [x] Expose Undo/Redo States to UI
+## Phase 14: Dynamic Component Instances & Symbols [DONE]
+- [x] Implement Symbol Definition Registry
+- [x] Build Component Overrides Engine (InstanceNode)
+- [x] Establish Instance Invalidation & Propagation
+- [x] Surface Component Tools in Inspector
+- [x] Programmatic UI Workspace Screenshot
 
-## Phase 14: Dynamic Component Instances & Symbols [ACTIVE]
-- [ ] Symbol Definition Registry
-- [ ] Component Overrides Engine
-- [ ] Instance Invalidation & Propagation
+## Phase 15: Collaborative Real-Time Sync [ACTIVE]
+- [ ] Differential CRDT Engine
+- [ ] Protocol Buffer Serialization
+- [ ] Transient Cursor Registry

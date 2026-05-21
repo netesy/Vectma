@@ -67,7 +67,7 @@ $$P_{canvas} = M^{-1} \cdot P_{screen}$$
 
 ---
 
-## 5. Active Execution Phase: Phase 13 — Command Pattern & State History Engine
+## 5. Active Execution Phase: Phase 14 — Dynamic Component Instances & Symbols
 
-Your immediate goal is to implement a high-performance, memory-bounded undo/redo state history engine based on a strict structural Command Pattern.
+Your immediate goal is to architect an instanced component system within Vectma, allowing master symbols to be registered, locally overridden by instance node references, and dynamically propagated upon modification.
 

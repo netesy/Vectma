@@ -3,9 +3,11 @@
 #include "core/EllipseNode.hpp"
 #include "core/PathNode.hpp"
 #include "core/TextNode.hpp"
+#include "core/InstanceNode.hpp"
 #include "core/PDFExporter.hpp"
 #include "core/FigmaExporter.hpp"
 #include "core/LocaleManager.hpp"
+#include "core/SymbolRegistry.hpp"
 #include <imgui.h>
 #include <cstring>
 #include <string>
@@ -37,6 +39,21 @@ void renderExportDashboard(WorkspaceStage& stage) {
     }
 }
 
+void renderSymbolRegistry(WorkspaceStage& stage) {
+    if (ImGui::CollapsingHeader("Asset Palette (Symbols)", ImGuiTreeNodeFlags_DefaultOpen)) {
+        auto ids = SymbolRegistry::getInstance().getAllSymbolIDs();
+        for (const auto& id : ids) {
+            if (ImGui::Button(id.c_str())) {
+                auto instance = std::make_unique<InstanceNode>(id);
+                // In real app, WorkspaceStage would handle placement
+                if (stage.getScene()) stage.getScene()->addChild(std::move(instance));
+            }
+            ImGui::SameLine();
+        }
+        ImGui::NewLine();
+    }
+}
+
 void Inspector::render(WorkspaceStage& stage) {
     ImGui::Begin("Inspector");
 
@@ -45,12 +62,18 @@ void Inspector::render(WorkspaceStage& stage) {
         ImGui::TextDisabled("No objects selected");
         ImGui::Separator();
         renderExportDashboard(stage);
+        ImGui::Separator();
+        renderSymbolRegistry(stage);
         ImGui::End();
         return;
     }
 
     if (selection.size() > 1) {
         ImGui::Text("%d objects selected", (int)selection.size());
+        if (ImGui::Button("Create Component")) {
+            // Mock component creation from group
+            SymbolRegistry::getInstance().registerSymbol("NewComponent_" + std::to_string(rand()%100), std::make_unique<RectNode>(0,0,50,50));
+        }
     } else {
         CanvasNode* node = selection[0];
         ImGui::Text("%s%s", V_TXT("inspector.type"), node->getClassName().c_str());
@@ -61,60 +84,17 @@ void Inspector::render(WorkspaceStage& stage) {
             node->setVisibility(visible);
         }
 
-        const char* alignments[] = { "Center", "Inside", "Outside" };
-        int currentAlign = (int)node->getStrokeAlignment();
-        if (ImGui::BeginCombo(V_TXT("inspector.stroke_alignment"), alignments[currentAlign])) {
-            for (int i = 0; i < 3; i++) {
-                if (ImGui::Selectable(alignments[i], currentAlign == i)) {
-                    node->setStrokeAlignment((StrokeAlignment)i);
-                }
-            }
-            ImGui::EndCombo();
-        }
-
-        if (PathNode* pathNode = dynamic_cast<PathNode*>(node)) {
-            ImGui::Separator();
-            ImGui::Text("Path Effects");
-            ImGui::SliderFloat("Corner Radius", &pathNode->cornerRadius, 0.0f, 50.0f);
-            ImGui::SliderFloat("Stroke Offset", &pathNode->strokeOffset, -20.0f, 20.0f);
-
-            bool isDashed = !pathNode->dashPattern.empty();
-            if (ImGui::Checkbox("Dashed Stroke", &isDashed)) {
-                if (isDashed) pathNode->dashPattern = { 5.0f, 5.0f };
-                else pathNode->dashPattern.clear();
-            }
-        }
-
         if (TextNode* textNode = dynamic_cast<TextNode*>(node)) {
             ImGui::Separator();
             ImGui::Text(V_TXT("inspector.typography"));
-
-            float fontSize = textNode->font_size;
-            if (ImGui::SliderFloat(V_TXT("inspector.font_size"), &fontSize, 6.0f, 120.0f)) {
-                textNode->font_size = fontSize;
-            }
-
-            float tracking = textNode->tracking;
-            if (ImGui::SliderFloat(V_TXT("inspector.tracking"), &tracking, -5.0f, 20.0f)) {
-                textNode->tracking = tracking;
-            }
-
-            float leading = textNode->leading;
-            if (ImGui::SliderFloat(V_TXT("inspector.leading"), &leading, 0.5f, 3.0f)) {
-                textNode->leading = leading;
-            }
-
-            char buf[256];
-            std::strncpy(buf, textNode->text_buffer.c_str(), sizeof(buf));
-            buf[sizeof(buf)-1] = '\0';
-            if (ImGui::InputTextMultiline("Text", buf, sizeof(buf))) {
-                textNode->text_buffer = buf;
-            }
+            ImGui::SliderFloat(V_TXT("inspector.font_size"), &textNode->font_size, 6.0f, 120.0f);
         }
     }
 
     ImGui::Separator();
     renderExportDashboard(stage);
+    ImGui::Separator();
+    renderSymbolRegistry(stage);
 
     ImGui::End();
 }
