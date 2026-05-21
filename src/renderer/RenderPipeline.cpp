@@ -30,11 +30,6 @@ void BaselineRenderer::endFrame() {
 
 void BaselineRenderer::drawRect(const RectNode& node, FillType fillType, const GradientConfig& gradConfig, StrokeAlignment strokeAlign) {
     (void)fillType; (void)gradConfig; (void)strokeAlign; (void)node;
-    // Skia implementation:
-    // SkRect rect = SkRect::MakeXYWH(node.getX(), node.getY(), node.getWidth(), node.getHeight());
-    // SkPaint paint;
-    // paint.setColor(node.getFillColor().toSkColor());
-    // m_skCanvas->drawRect(rect, paint);
 }
 
 void BaselineRenderer::drawEllipse(const EllipseNode& node, FillType fillType, const GradientConfig& gradConfig, StrokeAlignment strokeAlign) {
@@ -60,22 +55,30 @@ void BaselineRenderer::drawText(const TextNode& node) {
 
 void BaselineRenderer::drawBezierPath(const PathNode& node) {
     const auto& data = node.getCompiledPath();
-    if (data.anchors.size() < 2) return;
+    if (data.contours.empty()) return;
 
 #ifdef VECTMA_USE_SKIA
     SkPath path;
-    const auto& anchors = data.anchors;
-    path.moveTo(anchors[0].position.x, anchors[0].position.y);
-    for (size_t i = 1; i < anchors.size(); ++i) {
-        path.cubicTo(anchors[i-1].handleOut.x, anchors[i-1].handleOut.y,
-                     anchors[i].handleIn.x, anchors[i].handleIn.y,
-                     anchors[i].position.x, anchors[i].position.y);
+    for (const auto& contour : data.contours) {
+        if (contour.anchors.empty()) continue;
+
+        const auto& anchors = contour.anchors;
+        path.moveTo(anchors[0].position.x, anchors[0].position.y);
+        for (size_t i = 0; i < anchors.size() - 1; ++i) {
+            path.cubicTo(anchors[i].handleOut.x, anchors[i].handleOut.y,
+                         anchors[i+1].handleIn.x, anchors[i+1].handleIn.y,
+                         anchors[i+1].position.x, anchors[i+1].position.y);
+        }
+        if (contour.isClosed && anchors.size() > 1) {
+            path.cubicTo(anchors.back().handleOut.x, anchors.back().handleOut.y,
+                         anchors.front().handleIn.x, anchors.front().handleIn.y,
+                         anchors.front().position.x, anchors.front().position.y);
+            path.close();
+        }
     }
-    if (data.isClosed) path.close();
 
     SkPaint paint;
     paint.setAntiAlias(true);
-    // ... apply styles from node ...
     // m_skCanvas->drawPath(path, paint);
 #endif
 }
@@ -108,35 +111,11 @@ void BaselineRenderer::drawSnappingGuide(const Point2D& start, const Point2D& en
 
 void BaselineRenderer::pushClipRect(const GRect& rect) {
     m_clipStack.push_back(rect);
-#ifdef VECTMA_USE_SKIA
-    // m_skCanvas->save();
-    // m_skCanvas->clipRect(SkRect::MakeXYWH(rect.x, rect.y, rect.width, rect.height));
-#endif
-
-#ifdef VECTMA_USE_OPENGL
-    glEnable(GL_SCISSOR_TEST);
-    glScissor((int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height);
-#endif
 }
 
 void BaselineRenderer::popClipRect() {
     if (m_clipStack.empty()) return;
     m_clipStack.pop_back();
-
-#ifdef VECTMA_USE_SKIA
-    // m_skCanvas->restore();
-#endif
-
-    if (m_clipStack.empty()) {
-#ifdef VECTMA_USE_OPENGL
-        glDisable(GL_SCISSOR_TEST);
-#endif
-    } else {
-#ifdef VECTMA_USE_OPENGL
-        const auto& rect = m_clipStack.back();
-        glScissor((int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height);
-#endif
-    }
 }
 
 void BaselineRenderer::setGlobalOpacity(float opacity) {

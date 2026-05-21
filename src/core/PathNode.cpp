@@ -8,15 +8,49 @@ namespace vectma {
 PathNode::PathNode() = default;
 
 PathNode::PathNode(const std::vector<BezierAnchor>& anchors)
-    : m_anchors(anchors) {}
+    : m_anchors(anchors) {
+    m_baseContours.emplace_back(anchors, m_isClosed);
+}
+
+PathNode::PathNode(const std::vector<Contour>& contours)
+    : m_baseContours(contours) {
+    if (!m_baseContours.empty()) {
+        m_anchors = m_baseContours[0].anchors;
+        m_isClosed = m_baseContours[0].isClosed;
+    }
+}
 
 void PathNode::setAnchors(const std::vector<BezierAnchor>& anchors) {
     m_anchors = anchors;
+    m_baseContours.clear();
+    m_baseContours.emplace_back(anchors, m_isClosed);
     m_geometry_dirty = true;
+}
+
+void PathNode::setBaseContours(const std::vector<Contour>& contours) {
+    m_baseContours = contours;
+    if (!m_baseContours.empty()) {
+        m_anchors = m_baseContours[0].anchors;
+        m_isClosed = m_baseContours[0].isClosed;
+    }
+    m_geometry_dirty = true;
+}
+
+void PathNode::setClosed(bool closed) {
+    if (m_isClosed != closed) {
+        m_isClosed = closed;
+        if (!m_baseContours.empty()) m_baseContours[0].isClosed = closed;
+        m_geometry_dirty = true;
+    }
 }
 
 void PathNode::addAnchor(const BezierAnchor& anchor) {
     m_anchors.push_back(anchor);
+    if (!m_baseContours.empty()) {
+        m_baseContours[0].anchors.push_back(anchor);
+    } else {
+        m_baseContours.emplace_back(m_anchors, m_isClosed);
+    }
     m_geometry_dirty = true;
 }
 
@@ -37,8 +71,8 @@ void PathNode::updatePipelineCache() const {
         return;
     }
 
-    // Start with base geometry
-    auto current_data = std::make_unique<PathData>(m_anchors, m_isClosed);
+    auto current_data = std::make_unique<PathData>();
+    current_data->contours = m_baseContours;
 
     // Apply modifier stack
     for (const auto& mod : m_modifier_stack) {
@@ -56,8 +90,6 @@ const PathData& PathNode::getCompiledPath() const {
 
 void PathNode::render(RenderPipeline& pipeline) const {
     updatePipelineCache();
-    // In a real implementation, we might pass the compiled path to the pipeline
-    // Dispatch active node to the render pipeline
     pipeline.drawPath(*this, getFillType(), getGradientConfig(), getStrokeAlignment());
 }
 
@@ -67,25 +99,33 @@ bool PathNode::containsPoint(const GPoint& point) const {
 
 GRect PathNode::computeBoundingBox() const {
     const auto& data = getCompiledPath();
-    if (data.anchors.empty()) return GRect(0, 0, 0, 0);
+    if (data.contours.empty()) return GRect(0, 0, 0, 0);
 
-    double minX = data.anchors[0].position.x;
-    double minY = data.anchors[0].position.y;
-    double maxX = minX;
-    double maxY = minY;
+    bool first = true;
+    double minX = 0, minY = 0, maxX = 0, maxY = 0;
 
     auto update = [&](const Point2D& p) {
-        minX = std::min(minX, p.x);
-        minY = std::min(minY, p.y);
-        maxX = std::max(maxX, p.x);
-        maxY = std::max(maxY, p.y);
+        if (first) {
+            minX = maxX = p.x;
+            minY = maxY = p.y;
+            first = false;
+        } else {
+            minX = std::min(minX, p.x);
+            minY = std::min(minY, p.y);
+            maxX = std::max(maxX, p.x);
+            maxY = std::max(maxY, p.y);
+        }
     };
 
-    for (const auto& anchor : data.anchors) {
-        update(anchor.position);
-        update(anchor.handleIn);
-        update(anchor.handleOut);
+    for (const auto& contour : data.contours) {
+        for (const auto& anchor : contour.anchors) {
+            update(anchor.position);
+            update(anchor.handleIn);
+            update(anchor.handleOut);
+        }
     }
+
+    if (first) return GRect(0, 0, 0, 0);
 
     double x = minX;
     double y = minY;
@@ -128,17 +168,34 @@ int PathNode::hitTestAnchors(const Point2D& canvasPos, float toleranceRadius) co
 
 std::string PathNode::toSVG() const {
     const auto& data = getCompiledPath();
-    if (data.anchors.empty()) return "";
-    std::string d = "M " + std::to_string(data.anchors[0].position.x) + " " + std::to_string(data.anchors[0].position.y);
-    for (size_t i = 0; i < data.anchors.size() - 1; ++i) {
-        const auto& p1 = data.anchors[i].handleOut;
-        const auto& p2 = data.anchors[i+1].handleIn;
-        const auto& p3 = data.anchors[i+1].position;
-        d += " C " + std::to_string(p1.x) + " " + std::to_string(p1.y) + ", " +
-             std::to_string(p2.x) + " " + std::to_string(p2.y) + ", " +
-             std::to_string(p3.x) + " " + std::to_string(p3.y);
+    if (data.contours.empty()) return "";
+
+    std::string full_d = "";
+    for (const auto& contour : data.contours) {
+        if (contour.anchors.empty()) continue;
+
+        std::string d = "M " + std::to_string(contour.anchors[0].position.x) + " " + std::to_string(contour.anchors[0].position.y);
+        for (size_t i = 0; i < contour.anchors.size() - 1; ++i) {
+            const auto& p1 = contour.anchors[i].handleOut;
+            const auto& p2 = contour.anchors[i+1].handleIn;
+            const auto& p3 = contour.anchors[i+1].position;
+            d += " C " + std::to_string(p1.x) + " " + std::to_string(p1.y) + ", " +
+                 std::to_string(p2.x) + " " + std::to_string(p2.y) + ", " +
+                 std::to_string(p3.x) + " " + std::to_string(p3.y);
+        }
+        if (contour.isClosed && contour.anchors.size() > 1) {
+            const auto& p1 = contour.anchors.back().handleOut;
+            const auto& p2 = contour.anchors.front().handleIn;
+            const auto& p3 = contour.anchors.front().position;
+             d += " C " + std::to_string(p1.x) + " " + std::to_string(p1.y) + ", " +
+                 std::to_string(p2.x) + " " + std::to_string(p2.y) + ", " +
+                 std::to_string(p3.x) + " " + std::to_string(p3.y);
+            d += " Z";
+        }
+        full_d += d + " ";
     }
-    return "<path d=\"" + d + "\" />";
+
+    return "<path d=\"" + full_d + "\" />";
 }
 
 } // namespace vectma

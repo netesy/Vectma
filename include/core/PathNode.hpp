@@ -14,6 +14,7 @@ class PathNode : public CanvasNode {
 public:
     PathNode();
     PathNode(const std::vector<BezierAnchor>& anchors);
+    PathNode(const std::vector<Contour>& contours);
 
     std::string getClassName() const override { return "PathNode"; }
 
@@ -25,6 +26,12 @@ public:
 
     const std::vector<BezierAnchor>& getAnchors() const { return m_anchors; }
     void setAnchors(const std::vector<BezierAnchor>& anchors);
+
+    const std::vector<Contour>& getBaseContours() const { return m_baseContours; }
+    void setBaseContours(const std::vector<Contour>& contours);
+
+    bool isClosed() const { return m_isClosed; }
+    void setClosed(bool closed);
 
     void addAnchor(const BezierAnchor& anchor);
 
@@ -46,7 +53,8 @@ public:
     const PathData& getCompiledPath() const;
 
 private:
-    std::vector<BezierAnchor> m_anchors;
+    std::vector<BezierAnchor> m_anchors; // Legacy support
+    std::vector<Contour> m_baseContours;
     bool m_isClosed = false;
 
     // Modifier Stack

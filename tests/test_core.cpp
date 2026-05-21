@@ -76,10 +76,10 @@ void testModifiers() {
     auto roundModPtr = roundMod.get();
     path.addModifier(std::move(roundMod));
 
-    assert(path.getCompiledPath().anchors.size() == 2);
+    assert(path.getCompiledPath().contours[0].anchors.size() == 2);
     roundModPtr->setRadius(20.0f);
     assert(roundModPtr->isDirty());
-    assert(path.getCompiledPath().anchors.size() == 2);
+    assert(path.getCompiledPath().contours[0].anchors.size() == 2);
     std::cout << "Modifier Pipeline tests passed." << std::endl;
 }
 
@@ -146,6 +146,7 @@ void testStatusReporting() {
 int main() {
     testSnapping();
     testModifiers();
+    std::cout << "Starting Layers test..." << std::endl;
     testLayersAndArtboards();
     testStatusReporting();
     std::cout << "All Phase 19 tests passed!" << std::endl;
