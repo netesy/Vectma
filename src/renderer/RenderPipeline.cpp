@@ -59,4 +59,8 @@ void BaselineRenderer::setStrokeStyle(const std::vector<float>& dashPattern, flo
     (void)dashPattern; (void)offset;
 }
 
+void BaselineRenderer::drawSnappingGuide(const Point2D& start, const Point2D& end) {
+    (void)start; (void)end;
+}
+
 } // namespace vectma

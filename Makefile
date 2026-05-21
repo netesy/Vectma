@@ -4,7 +4,7 @@ LDFLAGS = -lGL -lGLEW -lglfw
 
 IMGUI_OBJS = vendor/imgui/imgui.o
 
-SRC_DIRS = src src/core src/core/spatial src/renderer src/ui
+SRC_DIRS = src src/core src/core/spatial src/core/snap src/renderer src/ui
 SRCS = $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))
 OBJS = $(SRCS:.cpp=.o) $(IMGUI_OBJS)
 

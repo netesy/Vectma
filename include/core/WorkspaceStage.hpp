@@ -4,8 +4,10 @@
 #include "core/GTransform.hpp"
 #include "core/Geometry.hpp"
 #include "core/HistoryManager.hpp"
+#include "core/snap/SnappingEngine.hpp"
 #include <memory>
 #include <vector>
+#include <optional>
 
 namespace vectma {
 
@@ -48,6 +50,9 @@ public:
     bool canRedo() const { return m_history.canRedo(); }
     void executeCommand(std::unique_ptr<Command> cmd) { m_history.executeCommand(std::move(cmd)); }
 
+    // Snapping
+    std::optional<SnapResult> getActiveSnap() const { return m_activeSnap; }
+
     // Viewport
     void setViewMatrix(const GTransform& matrix) { m_viewMatrix = matrix; }
     GTransform getViewMatrix() const { return m_viewMatrix; }
@@ -78,6 +83,9 @@ private:
     bool m_subSelectionMode = false;
     int m_activeAnchorIndex = -1;
     int m_activeHandleId = -1; // 0: pos, 1: handleIn, 2: handleOut
+
+    // Snapping state
+    std::optional<SnapResult> m_activeSnap;
 
     void updateMarquee(const Point2D& currentCanvasPos);
     void performSelection(const GRect& rect);

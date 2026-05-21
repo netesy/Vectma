@@ -1,16 +1,16 @@
 # Vectma Core Development Roadmap
 
-## Phase 15: Spatial Indexing & Frustum Culling [ACTIVE]
-- [ ] Adaptive 2D Quadtree/BVH engine in `src/core/spatial/`
-- [ ] View-frustum tracking for non-visible node culling
-- [ ] O(log N) canvas sub-selection and hit-testing
+## Phase 15: Spatial Indexing & Frustum Culling [DONE]
+- [x] Adaptive 2D Quadtree/BVH engine in `src/core/spatial/`
+- [x] View-frustum tracking for non-visible node culling
+- [x] O(log N) canvas sub-selection and hit-testing
 
-## Phase 16: Precision Snapping & Proximity Engine [NEXT]
+## Phase 16: Precision Snapping & Proximity Engine [ACTIVE]
 - [ ] Proximity lookup indices
 - [ ] Real-time vector alignment & snap-grids
 - [ ] Smart construction guides
 
-## Phase 17: Non-Destructive Modifier Pipeline
+## Phase 17: Non-Destructive Modifier Pipeline [NEXT]
 - [ ] Dynamic modifier evaluation engine
 - [ ] Cascading live path operations (Corner rounding, offsets, dashing)
 

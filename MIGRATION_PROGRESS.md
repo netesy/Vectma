@@ -26,7 +26,8 @@
 - [x] Advanced Path Effects (Phase 12)
 - [x] Command Pattern & State History (Phase 13)
 - [x] Dynamic Component Instances & Symbols (Phase 14)
-- [ ] **Spatial Indexing & Frustum Culling** (Phase 15)
+- [x] Spatial Indexing & Frustum Culling (Phase 15)
+- [ ] **Precision Snapping & Proximity Engine** (Phase 16)
 
 ## Verification
 - [x] Baseline Functional Compilation
@@ -39,21 +40,8 @@
 - [x] Path Effects Integrity Tests
 - [x] Undo/Redo State Delta Tests
 - [x] Symbol Instance & Override Stability Tests
-- [ ] **Spatial Range Query Performance Benchmarks**
-
-### UI Layer (Legacy -> Native)
-- [x] Premium Dark Theme
-- [x] Floating Modality Toolbar
-- [x] Adaptive Inspector Window
-- [x] Hardware Viewport Integration
-- [x] Vector Path Overlays
-- [x] Gradient Ramp Editor
-- [x] Typography Suite & Text Tool
-- [x] Asset Export Dashboard
-- [x] Dynamic Locale Switcher
-- [x] Advanced Geometry Controls
-- [x] Undo/Redo History Buttons
-- [x] Symbol Asset Palette
+- [x] Spatial Range Query Performance Benchmarks
+- [ ] **Alignment & Snap-Point Accuracy Tests**
 
 ---
-**Core Native Engineering Migration Roadmap: Phases 1-14 COMPLETE**
+**Core Native Engineering Migration Roadmap: Phases 1-15 COMPLETE**
