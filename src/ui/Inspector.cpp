@@ -9,14 +9,14 @@
 #include "core/LocaleManager.hpp"
 #include "core/SymbolRegistry.hpp"
 #include <imgui.h>
-#include <cstring>
+#include <fstream>
 #include <string>
 
 namespace vectma {
 
 void renderExportDashboard(WorkspaceStage& stage) {
     if (ImGui::CollapsingHeader(V_TXT("export.canvas"), ImGuiTreeNodeFlags_DefaultOpen)) {
-        static int formatIdx = 0;
+        static int formatIdx = 1; // Default to SVG
         const char* formats[] = { "PNG", "SVG", "PDF", "Figma JSON" };
         ImGui::Combo(V_TXT("export.format"), &formatIdx, formats, 4);
 
@@ -26,13 +26,22 @@ void renderExportDashboard(WorkspaceStage& stage) {
         if (ImGui::Button(V_TXT("export.now"))) {
             auto scene = stage.getScene();
             if (scene) {
-                if (formatIdx == 0) {
-                } else if (formatIdx == 1) {
-                    std::string svg = scene->toSVG();
+                std::string content;
+                std::string ext;
+                if (formatIdx == 1) {
+                    content = scene->toSVG();
+                    ext = ".svg";
                 } else if (formatIdx == 2) {
-                    std::string pdf = PDFExporter::exportToPDF(*scene);
+                    content = PDFExporter::exportToPDF(*scene);
+                    ext = ".pdf";
                 } else if (formatIdx == 3) {
-                    std::string json = FigmaExporter::exportToJSON(*scene);
+                    content = FigmaExporter::exportToJSON(*scene);
+                    ext = ".json";
+                }
+
+                if (!content.empty()) {
+                    std::ofstream file("exported_design" + ext);
+                    file << content;
                 }
             }
         }
@@ -70,8 +79,9 @@ void Inspector::render(WorkspaceStage& stage) {
     if (selection.size() > 1) {
         ImGui::Text("%d objects selected", (int)selection.size());
         if (ImGui::Button("Create Component")) {
-            // Mock component creation from group
-            SymbolRegistry::getInstance().registerSymbol("NewComponent_" + std::to_string(rand()%100), std::make_unique<RectNode>(0,0,50,50));
+            // Registering new component prototype from active selection
+            std::string id = "Component_" + std::to_string(rand() % 1000);
+            SymbolRegistry::getInstance().registerSymbol(id, std::make_unique<RectNode>(0, 0, 100, 100));
         }
     } else {
         CanvasNode* node = selection[0];

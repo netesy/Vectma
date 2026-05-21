@@ -57,7 +57,7 @@ const PathData& PathNode::getCompiledPath() const {
 void PathNode::render(RenderPipeline& pipeline) const {
     updatePipelineCache();
     // In a real implementation, we might pass the compiled path to the pipeline
-    // For now, we still pass 'this' but the pipeline will use getCompiledPath() if needed
+    // Dispatch active node to the render pipeline
     pipeline.drawPath(*this, getFillType(), getGradientConfig(), getStrokeAlignment());
 }
 
