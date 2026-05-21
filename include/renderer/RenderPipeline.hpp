@@ -4,6 +4,7 @@
 #include <vector>
 #include "core/GPoint.hpp"
 #include "core/GColor.hpp"
+#include "core/GRect.hpp"
 
 namespace vectma {
 
@@ -41,6 +42,11 @@ public:
 
     // Phase 16: Snapping Guides
     virtual void drawSnappingGuide(const Point2D& start, const Point2D& end) = 0;
+
+    // Phase 18: Clipping and Layer Support
+    virtual void pushClipRect(const GRect& rect) = 0;
+    virtual void popClipRect() = 0;
+    virtual void setGlobalOpacity(float opacity) = 0;
 };
 
 class BaselineRenderer : public RenderPipeline {
@@ -63,6 +69,14 @@ public:
     void setStrokeStyle(const std::vector<float>& dashPattern, float offset) override;
 
     void drawSnappingGuide(const Point2D& start, const Point2D& end) override;
+
+    void pushClipRect(const GRect& rect) override;
+    void popClipRect() override;
+    void setGlobalOpacity(float opacity) override;
+
+private:
+    float m_globalOpacity = 1.0f;
+    std::vector<GRect> m_clipStack;
 };
 
 } // namespace vectma

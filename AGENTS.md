@@ -67,7 +67,7 @@ $$P_{canvas} = M^{-1} \cdot P_{screen}$$
 
 ---
 
-## 5. Active Execution Phase: Phase 17 — Non-Destructive Modifier Pipeline
+## 5. Active Execution Phase: Phase 18 — Enhanced Layer Management & Infinite Canvas Artboards
 
-Your immediate goal is to implement a non-destructive modifier architecture for path manipulations, featuring lazy evaluation and render-time caching.
+Your immediate goal is to implement a hierarchical layer system and infinite canvas artboards with hardware-accelerated clipping bounds.
 

@@ -290,3 +290,13 @@ Output goes to the `releases/` directory. Cross-compilation notes:
 ## License
 
 This project is intended for **educational and personal use only**. Gravit Designer / Corel Vector is proprietary software owned by Alludo (formerly Corel Corporation). All rights to the original application remain with their respective owners.
+
+---
+
+## Vectma Core Engine Migration
+
+The project is currently undergoing a complete native C++20 engine migration.
+
+### Progress Tracking
+- **Phase 17: Non-Destructive Modifier Pipeline [DONE]**
+- **Phase 18: Enhanced Layer Management & Infinite Canvas Artboards [ACTIVE]**

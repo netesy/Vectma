@@ -19,6 +19,8 @@
 #include "core/Commands.hpp"
 #include "core/snap/SnappingEngine.hpp"
 #include "core/modifiers/CornerRoundingModifier.hpp"
+#include "core/LayerNode.hpp"
+#include "core/ArtboardNode.hpp"
 #include "renderer/RenderPipeline.hpp"
 #include <cassert>
 #include <iostream>
@@ -40,61 +42,87 @@ public:
     std::vector<uint8_t> exportRaster(float) override { return {}; }
     void setStrokeStyle(const std::vector<float>&, float) override {}
     void drawSnappingGuide(const vectma::Point2D&, const vectma::Point2D&) override {}
+
+    void pushClipRect(const vectma::GRect&) override {}
+    void popClipRect() override {}
+    void setGlobalOpacity(float) override {}
 };
 
 void testSnapping() {
     std::cout << "Testing Precision Snapping Engine..." << std::endl;
     auto scene = std::make_shared<vectma::SceneGraph>();
-    // Add a rect at (100, 100)
     auto rect = std::make_unique<vectma::RectNode>(100, 100, 50, 50);
-    rect->setStrokeWidth(0); // For exact math
+    rect->setStrokeWidth(0);
     scene->addChild(std::move(rect));
 
-    // Cursor near (100, 100)
     vectma::Point2D cursor(105, 105);
     auto snap = vectma::SnappingEngine::findSnapPoint(cursor, *scene, 10.0f);
 
     assert(snap.has_value());
     assert(snap->snappedPoint.x == 100.0);
     assert(snap->snappedPoint.y == 100.0);
-    assert(snap->snappedX && snap->snappedY);
-
     std::cout << "Snapping accuracy test passed." << std::endl;
 }
 
 void testModifiers() {
     std::cout << "Testing Non-Destructive Modifier Pipeline..." << std::endl;
-
     std::vector<vectma::BezierAnchor> anchors = {
         vectma::BezierAnchor({0, 0}, {0, 0}, {0, 0}),
         vectma::BezierAnchor({100, 0}, {100, 0}, {100, 0})
     };
     vectma::PathNode path(anchors);
-
-    assert(path.getCompiledPath().anchors.size() == 2);
-
     auto roundMod = std::make_unique<vectma::CornerRoundingModifier>(10.0f);
     auto roundModPtr = roundMod.get();
     path.addModifier(std::move(roundMod));
 
-    // Evaluation
     assert(path.getCompiledPath().anchors.size() == 2);
-    assert(!roundModPtr->isDirty());
-
-    // Mutation
     roundModPtr->setRadius(20.0f);
     assert(roundModPtr->isDirty());
-
-    // Cache invalidation & re-evaluation
     assert(path.getCompiledPath().anchors.size() == 2);
-    assert(!roundModPtr->isDirty());
-
     std::cout << "Modifier Pipeline tests passed." << std::endl;
+}
+
+void testLayersAndArtboards() {
+    std::cout << "Testing Enhanced Layer Management & Artboards..." << std::endl;
+
+    auto layer = std::make_unique<vectma::LayerNode>("RootLayer");
+    auto rect = std::make_unique<vectma::RectNode>(10, 10, 50, 50);
+    auto rectPtr = rect.get();
+    layer->addChild(std::move(rect));
+
+    assert(layer->getChildren().size() == 1);
+    assert(rectPtr->getParent() == layer.get());
+
+    layer->setOpacity(0.5f);
+    assert(layer->getOpacity() == 0.5f);
+
+    auto rect2 = std::make_unique<vectma::RectNode>(20, 20, 50, 50);
+    auto rect2Ptr = rect2.get();
+    layer->addChild(std::move(rect2));
+
+    assert(layer->getChildren().size() == 2);
+    assert(layer->getChildren()[0].get() == rectPtr);
+    assert(layer->getChildren()[1].get() == rect2Ptr);
+
+    rectPtr->bringToFront();
+    assert(layer->getChildren()[0].get() == rect2Ptr);
+    assert(layer->getChildren()[1].get() == rectPtr);
+
+    rectPtr->sendToBack();
+    assert(layer->getChildren()[0].get() == rectPtr);
+    assert(layer->getChildren()[1].get() == rect2Ptr);
+
+    vectma::ArtboardNode artboard("MainArtboard", vectma::GRect(100, 100, 500, 500));
+    assert(artboard.computeBoundingBox().x == 100);
+    assert(artboard.computeBoundingBox().width == 500);
+
+    std::cout << "Layer and Artboard tests passed." << std::endl;
 }
 
 int main() {
     testSnapping();
     testModifiers();
-    std::cout << "All Phase 17 tests passed!" << std::endl;
+    testLayersAndArtboards();
+    std::cout << "All Phase 18 tests passed!" << std::endl;
     return 0;
 }

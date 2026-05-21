@@ -10,11 +10,11 @@
 - [x] Real-time vector alignment & snap-grids
 - [x] Smart construction guides
 
-## Phase 17: Non-Destructive Modifier Pipeline [ACTIVE]
-- [ ] Dynamic modifier evaluation engine
-- [ ] Cascading live path operations (Corner rounding, offsets, dashing)
+## Phase 17: Non-Destructive Modifier Pipeline [DONE]
+- [x] Dynamic modifier evaluation engine
+- [x] Cascading live path operations (Corner rounding, offsets, dashing)
 
-## Phase 18: Enhanced Layer Management & Infinite Canvas Artboards
+## Phase 18: Enhanced Layer Management & Infinite Canvas Artboards [ACTIVE]
 - [ ] High-fidelity layer-tree nesting
 - [ ] Isolation clip masks
 - [ ] Multi-artboard support

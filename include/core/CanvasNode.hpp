@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <algorithm>
 #include "core/GPoint.hpp"
 #include "core/GRect.hpp"
 #include "core/GColor.hpp"
@@ -31,10 +32,19 @@ public:
 
     void addChild(std::unique_ptr<CanvasNode> child);
     const std::vector<std::unique_ptr<CanvasNode>>& getChildren() const;
+    std::vector<std::unique_ptr<CanvasNode>>& getChildrenMutable();
 
     // Visibility
     bool isVisible() const { return m_visible; }
     void setVisibility(bool visible) { m_visible = visible; }
+
+    // Locking
+    bool isLocked() const { return m_locked; }
+    void setLocked(bool locked) { m_locked = locked; }
+
+    // Opacity
+    float getOpacity() const { return m_opacity; }
+    void setOpacity(float opacity) { m_opacity = std::clamp(opacity, 0.0f, 1.0f); }
 
     // Styling Properties
     FillType getFillType() const { return m_fillType; }
@@ -62,10 +72,18 @@ public:
     // Phase 10: Asset Export
     virtual std::string toSVG() const = 0;
 
+    // Z-Order Manipulation
+    void bringToFront();
+    void sendToBack();
+    void raiseNode();
+    void lowerNode();
+
 protected:
     CanvasNode* m_parent = nullptr;
     std::vector<std::unique_ptr<CanvasNode>> m_children;
     bool m_visible = true;
+    bool m_locked = false;
+    float m_opacity = 1.0f;
 
     // Style data
     FillType m_fillType = FillType::Solid;
