@@ -5,6 +5,7 @@
 #include "core/TextNode.hpp"
 #include "core/GeometryEngine.hpp"
 #include "core/Commands.hpp"
+#include "core/snap/SnappingEngine.hpp"
 #include <algorithm>
 #include <cmath>
 
@@ -66,7 +67,6 @@ void WorkspaceStage::handleMouseDown(const GPoint& screenPos) {
     m_dragStart = screenToCanvas(screenPos);
     m_marqueeRect = GRect(m_dragStart.x, m_dragStart.y, 0, 0);
 
-    // Optimized point selection via spatial index
     if (m_tool == ToolType::Select && m_scene) {
         clearSelection();
         auto hits = m_scene->queryVisible(GRect(m_dragStart.x - 1, m_dragStart.y - 1, 2, 2));
@@ -97,6 +97,16 @@ void WorkspaceStage::handleMouseMove(const GPoint& screenPos) {
     if (!m_isDragging) return;
 
     GPoint canvasPos = screenToCanvas(screenPos);
+
+    // Snapping Logic
+    m_activeSnap = std::nullopt;
+    if (m_scene) {
+        auto snap = SnappingEngine::findSnapPoint(canvasPos, *m_scene, 10.0f);
+        if (snap) {
+            m_activeSnap = snap;
+            canvasPos = snap->snappedPoint;
+        }
+    }
 
     if (m_subSelectionMode && m_activeAnchorIndex != -1) {
         PathNode* path = dynamic_cast<PathNode*>(m_selection[0]);
@@ -138,7 +148,7 @@ void WorkspaceStage::handleMouseMove(const GPoint& screenPos) {
 
             path->setAnchors(anchors);
             m_dragStart = canvasPos;
-            m_scene->rebuildIndex(); // Keep index in sync
+            m_scene->rebuildIndex();
             return;
         }
     }
@@ -149,6 +159,7 @@ void WorkspaceStage::handleMouseMove(const GPoint& screenPos) {
 void WorkspaceStage::handleMouseUp() {
     if (!m_isDragging) return;
     m_isDragging = false;
+    m_activeSnap = std::nullopt;
 
     if (!m_scene) return;
 
@@ -193,7 +204,6 @@ void WorkspaceStage::performSelection(const GRect& rect) {
     clearSelection();
     if (!m_scene) return;
 
-    // Optimized region selection
     auto hits = m_scene->queryVisible(rect);
     for (auto node : hits) {
         GRect bbox = node->computeBoundingBox();

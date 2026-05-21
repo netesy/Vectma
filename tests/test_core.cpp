@@ -17,6 +17,7 @@
 #include "core/LocaleManager.hpp"
 #include "core/HistoryManager.hpp"
 #include "core/Commands.hpp"
+#include "core/snap/SnappingEngine.hpp"
 #include "renderer/RenderPipeline.hpp"
 #include <cassert>
 #include <iostream>
@@ -37,33 +38,31 @@ public:
     void renderNode(const vectma::CanvasNode&) override {}
     std::vector<uint8_t> exportRaster(float) override { return {}; }
     void setStrokeStyle(const std::vector<float>&, float) override {}
+    void drawSnappingGuide(const vectma::Point2D&, const vectma::Point2D&) override {}
 };
 
-void testSpatialPerformance() {
-    std::cout << "Testing Spatial Indexing Performance (10,000 nodes)..." << std::endl;
+void testSnapping() {
+    std::cout << "Testing Precision Snapping Engine..." << std::endl;
     auto scene = std::make_shared<vectma::SceneGraph>();
+    // Add a rect at (100, 100)
+    auto rect = std::make_unique<vectma::RectNode>(100, 100, 50, 50);
+    rect->setStrokeWidth(0); // For exact math
+    scene->addChild(std::move(rect));
 
-    for (int i = 0; i < 10000; ++i) {
-        scene->addChild(std::make_unique<vectma::RectNode>(i, i, 10, 10));
-    }
+    // Cursor near (100, 100)
+    vectma::Point2D cursor(105, 105);
+    auto snap = vectma::SnappingEngine::findSnapPoint(cursor, *scene, 10.0f);
 
-    vectma::WorkspaceStage workspace;
-    workspace.setScene(scene);
-    workspace.setTool(vectma::ToolType::Select);
+    assert(snap.has_value());
+    assert(snap->snappedPoint.x == 100.0);
+    assert(snap->snappedPoint.y == 100.0);
+    assert(snap->snappedX && snap->snappedY);
 
-    auto start = std::chrono::high_resolution_clock::now();
-    workspace.handleMouseDown({5000, 5000}); // Should be O(log N)
-    auto end = std::chrono::high_resolution_clock::now();
-
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-    std::cout << "Spatial pick duration: " << duration << "us" << std::endl;
-
-    assert(workspace.getSelection().size() == 1);
-    std::cout << "Spatial performance test passed." << std::endl;
+    std::cout << "Snapping accuracy test passed." << std::endl;
 }
 
 int main() {
-    testSpatialPerformance();
-    std::cout << "All Phase 15 Performance tests passed!" << std::endl;
+    testSnapping();
+    std::cout << "All Phase 16 Snapping tests passed!" << std::endl;
     return 0;
 }

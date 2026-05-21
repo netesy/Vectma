@@ -63,6 +63,7 @@ void EditorUI::renderViewport() {
         m_stage.getScene()->render(m_renderer);
     }
 
+    // Render Sub-Selection Overlays
     if (m_stage.isSubSelectionMode()) {
         for (auto node : m_stage.getSelection()) {
             PathNode* path = dynamic_cast<PathNode*>(node);
@@ -73,6 +74,14 @@ void EditorUI::renderViewport() {
                     m_renderer.drawAnchorOverlay(path->getAnchors()[i], (int)i == activeIdx, ((int)i == activeIdx) ? activeHandle : -1);
                 }
             }
+        }
+    }
+
+    // Render Snapping Guides
+    auto snap = m_stage.getActiveSnap();
+    if (snap) {
+        for (size_t i = 0; i + 1 < snap->guideLines.size(); i += 2) {
+            m_renderer.drawSnappingGuide(snap->guideLines[i], snap->guideLines[i+1]);
         }
     }
 

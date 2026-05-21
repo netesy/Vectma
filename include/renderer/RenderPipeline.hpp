@@ -38,6 +38,9 @@ public:
 
     // Phase 12: Advanced Stroke Support
     virtual void setStrokeStyle(const std::vector<float>& dashPattern, float offset) = 0;
+
+    // Phase 16: Snapping Guides
+    virtual void drawSnappingGuide(const Point2D& start, const Point2D& end) = 0;
 };
 
 class BaselineRenderer : public RenderPipeline {
@@ -58,6 +61,8 @@ public:
     std::vector<uint8_t> exportRaster(float scale) override;
 
     void setStrokeStyle(const std::vector<float>& dashPattern, float offset) override;
+
+    void drawSnappingGuide(const Point2D& start, const Point2D& end) override;
 };
 
 } // namespace vectma
