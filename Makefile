@@ -1,6 +1,14 @@
 CXX = g++
 CXXFLAGS = -std=c++20 -Iinclude -I. -Ivendor -Ivendor/imgui -Ivendor/imgui/backends -Ivendor/glfw/include -Wall -Wextra -Werror
 
+# Skia Configuration
+VECTMA_USE_SKIA = 0
+ifeq ($(VECTMA_USE_SKIA), 1)
+    CXXFLAGS += -DVECTMA_USE_SKIA -DSK_SHAPER_HARFBUZZ_AVAILABLE -DSK_GL
+    # In a real environment, we would link against Skia libraries here.
+    # LDFLAGS += -Lvendor/skia/out/Static -lskia -lskshaper -lskparagraph
+endif
+
 # Centralized vendor objects
 VENDOR_SRCS = vendor/imgui/imgui.cpp
 VENDOR_OBJS = $(VENDOR_SRCS:.cpp=.o)

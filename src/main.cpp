@@ -11,6 +11,13 @@
 #include "core/EllipseNode.hpp"
 #include "renderer/RenderPipeline.hpp"
 #include "ui/EditorUI.hpp"
+
+#ifdef VECTMA_USE_SKIA
+#include "renderer/SkiaRenderPipeline.hpp"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkSurface.h"
+#endif
+
 #include <imgui.h>
 #include <iostream>
 #include <memory>
@@ -57,7 +64,16 @@ int main() {
         workspace->setScene(scene);
         seed_scene(scene);
 
-        auto renderer = std::make_unique<vectma::BaselineRenderer>();
+        std::unique_ptr<vectma::RenderPipeline> renderer;
+
+#ifdef VECTMA_USE_SKIA
+        // In a real app, this surface would be backed by the OpenGL context
+        auto surface = SkSurfaces::Raster(SkImageInfo::MakeN32Premul(1280, 720));
+        renderer = std::make_unique<vectma::SkiaRenderPipeline>(surface->getCanvas());
+#else
+        renderer = std::make_unique<vectma::BaselineRenderer>();
+#endif
+
         auto ui = std::make_unique<vectma::EditorUI>(*workspace, *renderer);
 
 #ifdef VECTMA_USE_OPENGL

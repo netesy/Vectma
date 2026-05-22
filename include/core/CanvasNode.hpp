@@ -7,6 +7,7 @@
 #include "core/GPoint.hpp"
 #include "core/GRect.hpp"
 #include "core/GColor.hpp"
+#include "core/Geometry.hpp"
 
 namespace vectma {
 
@@ -45,6 +46,8 @@ public:
     // Opacity
     float getOpacity() const { return m_opacity; }
     void setOpacity(float opacity) { m_opacity = std::clamp(opacity, 0.0f, 1.0f); }
+    BlendMode getBlendMode() const { return m_blendMode; }
+    void setBlendMode(BlendMode mode) { m_blendMode = mode; }
 
     // Styling Properties
     FillType getFillType() const { return m_fillType; }
@@ -84,6 +87,7 @@ protected:
     bool m_visible = true;
     bool m_locked = false;
     float m_opacity = 1.0f;
+    BlendMode m_blendMode = BlendMode::Normal;
 
     // Style data
     FillType m_fillType = FillType::Solid;

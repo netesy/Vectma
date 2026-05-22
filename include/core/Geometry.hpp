@@ -10,3 +10,18 @@ enum class BooleanOp {
 };
 
 } // namespace vectma
+
+enum class BlendMode {
+    Normal,
+    Multiply,
+    Screen,
+    Overlay,
+    Darken,
+    Lighten,
+    ColorDodge,
+    ColorBurn,
+    HardLight,
+    SoftLight,
+    Difference,
+    Exclusion
+};

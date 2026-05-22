@@ -28,6 +28,7 @@ public:
     virtual void drawEllipse(const EllipseNode& node, FillType fillType, const GradientConfig& gradConfig, StrokeAlignment strokeAlign) = 0;
     virtual void drawPath(const PathNode& node, FillType fillType, const GradientConfig& gradConfig, StrokeAlignment strokeAlign) = 0;
     virtual void drawText(const TextNode& node) = 0;
+    virtual void drawImage(const class ImageNode& node) = 0;
 
     virtual void drawBezierPath(const PathNode& node) = 0;
     virtual void drawAnchorOverlay(const BezierAnchor& anchor, bool selected, int activeHandle) = 0;
@@ -58,6 +59,7 @@ public:
     void drawEllipse(const EllipseNode& node, FillType fillType, const GradientConfig& gradConfig, StrokeAlignment strokeAlign) override;
     void drawPath(const PathNode& node, FillType fillType, const GradientConfig& gradConfig, StrokeAlignment strokeAlign) override;
     void drawText(const TextNode& node) override;
+    void drawImage(const class ImageNode& node) override;
 
     void drawBezierPath(const PathNode& node) override;
     void drawAnchorOverlay(const BezierAnchor& anchor, bool selected, int activeHandle) override;

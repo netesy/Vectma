@@ -3,6 +3,7 @@
 #include "core/EllipseNode.hpp"
 #include "core/PathNode.hpp"
 #include "core/TextNode.hpp"
+#include "core/ImageNode.hpp"
 #include "core/modifiers/DashGeneratorModifier.hpp"
 
 #ifdef VECTMA_USE_OPENGL
@@ -53,6 +54,10 @@ void BaselineRenderer::drawText(const TextNode& node) {
     (void)node;
 }
 
+void BaselineRenderer::drawImage(const ImageNode& node) {
+    (void)node;
+}
+
 void BaselineRenderer::drawBezierPath(const PathNode& node) {
     const auto& data = node.getCompiledPath();
     if (data.contours.empty()) return;
@@ -79,7 +84,6 @@ void BaselineRenderer::drawBezierPath(const PathNode& node) {
 
     SkPaint paint;
     paint.setAntiAlias(true);
-    // m_skCanvas->drawPath(path, paint);
 #endif
 }
 

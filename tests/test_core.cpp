@@ -5,6 +5,7 @@
 #include "core/EllipseNode.hpp"
 #include "core/PathNode.hpp"
 #include "core/TextNode.hpp"
+#include "core/ImageNode.hpp"
 #include "core/InstanceNode.hpp"
 #include "core/SymbolRegistry.hpp"
 #include "core/GPoint.hpp"
@@ -37,6 +38,7 @@ public:
     void drawEllipse(const vectma::EllipseNode&, vectma::FillType, const vectma::GradientConfig&, vectma::StrokeAlignment) override {}
     void drawPath(const vectma::PathNode&, vectma::FillType, const vectma::GradientConfig&, vectma::StrokeAlignment) override {}
     void drawText(const vectma::TextNode&) override {}
+    void drawImage(const vectma::ImageNode&) override {}
     void drawBezierPath(const vectma::PathNode&) override {}
     void drawAnchorOverlay(const vectma::BezierAnchor&, bool, int) override {}
     void renderNode(const vectma::CanvasNode&) override {}
@@ -69,21 +71,25 @@ void testModifiers() {
     std::cout << "Testing Non-Destructive Modifier Pipeline..." << std::endl;
     std::vector<vectma::BezierAnchor> anchors = {
         vectma::BezierAnchor({0, 0}, {0, 0}, {0, 0}),
-        vectma::BezierAnchor({100, 0}, {100, 0}, {100, 0})
+        vectma::BezierAnchor({100, 0}, {100, 0}, {100, 0}),
+        vectma::BezierAnchor({100, 100}, {100, 100}, {100, 100})
     };
     vectma::PathNode path(anchors);
+    path.setClosed(true);
+
     auto roundMod = std::make_unique<vectma::CornerRoundingModifier>(10.0f);
     auto roundModPtr = roundMod.get();
     path.addModifier(std::move(roundMod));
 
-    assert(path.getCompiledPath().contours[0].anchors.size() == 2);
+    assert(path.getCompiledPath().contours[0].anchors.size() == 6);
     roundModPtr->setRadius(20.0f);
     assert(roundModPtr->isDirty());
-    assert(path.getCompiledPath().contours[0].anchors.size() == 2);
+    assert(path.getCompiledPath().contours[0].anchors.size() == 6);
     std::cout << "Modifier Pipeline tests passed." << std::endl;
 }
 
 void testLayersAndArtboards() {
+    std::cout << "Starting Layers test..." << std::endl;
     std::cout << "Testing Enhanced Layer Management & Artboards..." << std::endl;
 
     auto layer = std::make_unique<vectma::LayerNode>("RootLayer");
@@ -127,17 +133,13 @@ void testStatusReporting() {
     auto scene = std::make_shared<vectma::SceneGraph>();
     stage.setScene(scene);
 
-    // Test node count
     scene->addChild(std::make_unique<vectma::RectNode>(0, 0, 100, 100));
-    assert(stage.getSceneNodeCount() == 2); // SceneGraph (1) + RectNode (1)
+    assert(stage.getSceneNodeCount() == 2);
 
-    // Test scale
-    stage.setViewMatrix(vectma::GTransform(2.0, 0, 0, 2.0, 0, 0)); // 2x zoom
+    stage.setViewMatrix(vectma::GTransform(2.0, 0, 0, 2.0, 0, 0));
     assert(std::abs(stage.getScale() - 2.0) < 1e-6);
 
-    // Test cursor tracking
-    stage.handleMouseMove(vectma::Point2D(100, 100)); // Screen pos
-    // Screen to canvas: (100 - 0) / 2 = 50
+    stage.handleMouseMove(vectma::Point2D(100, 100));
     assert(std::abs(stage.getCursorCanvasPos().x - 50.0) < 1e-6);
 
     std::cout << "Status Reporting tests passed." << std::endl;
@@ -146,7 +148,6 @@ void testStatusReporting() {
 int main() {
     testSnapping();
     testModifiers();
-    std::cout << "Starting Layers test..." << std::endl;
     testLayersAndArtboards();
     testStatusReporting();
     std::cout << "All Phase 19 tests passed!" << std::endl;
