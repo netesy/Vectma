@@ -19,29 +19,42 @@ public:
 
     std::string toSVG() const override;
 
-    // Text specific
-    std::string text_buffer;
-    std::string font_family = "Inter";
-    float font_size;
-    float tracking = 0.0f;
-    float leading = 1.0f;
+    float getX() const { return m_position.value.x; }
+    void setX(float x) { m_position.update({x, getY()}, LamportClock::getInstance().tick()); }
+    float getY() const { return m_position.value.y; }
+    void setY(float y) { m_position.update({getX(), y}, LamportClock::getInstance().tick()); }
 
-    float getX() const { return m_position.x; }
-    void setX(float x) { m_position.x = x; }
-    float getY() const { return m_position.y; }
-    void setY(float y) { m_position.y = y; }
+    void setXRemote(float x, LamportTimestamp ts) { m_position.update({x, getY()}, ts); }
+    void setYRemote(float y, LamportTimestamp ts) { m_position.update({getX(), y}, ts); }
 
-    float getFontSize() const { return font_size; }
-    void setFontSize(float size) { font_size = size; }
+    float getFontSize() const { return m_fontSize.value; }
+    void setFontSize(float size) { m_fontSize.update(size, LamportClock::getInstance().tick()); }
+    void setFontSizeRemote(float size, LamportTimestamp ts) { m_fontSize.update(size, ts); }
 
-    std::string getText() const { return text_buffer; }
-    void setText(const std::string& text) { text_buffer = text; }
+    std::string getText() const { return m_textBuffer.value; }
+    void setText(const std::string& text) { m_textBuffer.update(text, LamportClock::getInstance().tick()); }
+    void setTextRemote(const std::string& text, LamportTimestamp ts) { m_textBuffer.update(text, ts); }
+
+    std::string getFontFamily() const { return m_fontFamily.value; }
+    void setFontFamily(const std::string& family) { m_fontFamily.update(family, LamportClock::getInstance().tick()); }
+    void setFontFamilyRemote(const std::string& family, LamportTimestamp ts) { m_fontFamily.update(family, ts); }
+
+    float getTracking() const { return m_tracking.value; }
+    void setTracking(float t) { m_tracking.update(t, LamportClock::getInstance().tick()); }
+
+    float getLeading() const { return m_leading.value; }
+    void setLeading(float l) { m_leading.update(l, LamportClock::getInstance().tick()); }
 
     std::unique_ptr<PathNode> toPathNode() const;
     void bindToPath(const PathNode& target_path);
 
 private:
-    GPoint m_position;
+    LWWProperty<GPoint> m_position;
+    LWWProperty<std::string> m_textBuffer;
+    LWWProperty<std::string> m_fontFamily;
+    LWWProperty<float> m_fontSize;
+    LWWProperty<float> m_tracking;
+    LWWProperty<float> m_leading;
 };
 
 } // namespace vectma

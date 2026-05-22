@@ -1,47 +1,48 @@
 CXX = g++
-CXXFLAGS = -std=c++20 -Iinclude -I. -Ivendor -Ivendor/imgui -Ivendor/imgui/backends -Ivendor/glfw/include -Wall -Wextra -Werror
-
-# Skia Configuration
-VECTMA_USE_SKIA = 0
-ifeq ($(VECTMA_USE_SKIA), 1)
-    CXXFLAGS += -DVECTMA_USE_SKIA -DSK_SHAPER_HARFBUZZ_AVAILABLE -DSK_GL
-    # In a real environment, we would link against Skia libraries here.
-    # LDFLAGS += -Lvendor/skia/out/Static -lskia -lskshaper -lskparagraph
-endif
+CXXFLAGS = -std=c++20 -Iinclude -I. -Ivendor -Ivendor/imgui -Ivendor/imgui/backends -Ivendor/glfw/include -Wall -Wextra -Wpedantic -Werror
 
 # Centralized vendor objects
 VENDOR_SRCS = vendor/imgui/imgui.cpp
 VENDOR_OBJS = $(VENDOR_SRCS:.cpp=.o)
 
-SRC_DIRS = src src/core src/core/spatial src/core/snap src/core/modifiers src/renderer src/ui
+SRC_DIRS = src src/core src/core/spatial src/core/snap src/core/modifiers src/renderer src/ui src/sync
 SRCS = $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))
 OBJS = $(SRCS:.cpp=.o) $(VENDOR_OBJS)
 
 TARGET = vectma
 
-TEST_SRCS = tests/test_core.cpp
-TEST_OBJS = $(TEST_SRCS:.cpp=.o)
 CORE_OBJS = $(filter-out src/main.o, $(SRCS:.cpp=.o))
 TEST_TARGET = test_runner
+SYNC_TEST_TARGET = test_sync
 
 .PHONY: all clean run test
 
 all: $(TARGET)
 
-$(TARGET): $(OBJS)
+$(TARGET): $(OBJS) src/main.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
+
+src/%.o: src/%.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+vendor/%.o: vendor/%.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+tests/%.o: tests/%.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 clean:
-	rm -f $(OBJS) $(TARGET) $(TEST_OBJS) $(TEST_TARGET)
+	rm -f $(OBJS) src/main.o $(TARGET) tests/*.o $(TEST_TARGET) $(SYNC_TEST_TARGET)
 
-run: $(TARGET)
-	./$(TARGET)
-
-test: $(TEST_TARGET)
+test: $(TEST_TARGET) $(SYNC_TEST_TARGET)
 	./$(TEST_TARGET)
+	./$(SYNC_TEST_TARGET)
 
-$(TEST_TARGET): $(TEST_OBJS) $(CORE_OBJS) $(VENDOR_OBJS)
+$(TEST_TARGET): tests/test_core.o $(CORE_OBJS) $(VENDOR_OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
+$(SYNC_TEST_TARGET): tests/test_sync.o $(CORE_OBJS) $(VENDOR_OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^

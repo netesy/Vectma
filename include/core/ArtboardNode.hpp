@@ -11,11 +11,11 @@ public:
 
     std::string getClassName() const override { return "ArtboardNode"; }
 
-    std::string getName() const { return m_name; }
-    void setName(const std::string& name) { m_name = name; }
+    std::string getName() const { return m_name.value; }
+    void setName(const std::string& name) { m_name.update(name, LamportClock::getInstance().tick()); }
 
-    GRect getBounds() const { return m_bounds; }
-    void setBounds(const GRect& bounds) { m_bounds = bounds; }
+    GRect getBounds() const { return m_bounds.value; }
+    void setBounds(const GRect& bounds) { m_bounds.update(bounds, LamportClock::getInstance().tick()); }
 
     void render(RenderPipeline& pipeline) const override;
     bool containsPoint(const GPoint& point) const override;
@@ -23,8 +23,8 @@ public:
     std::string toSVG() const override;
 
 private:
-    std::string m_name;
-    GRect m_bounds;
+    LWWProperty<std::string> m_name;
+    LWWProperty<GRect> m_bounds;
 };
 
 } // namespace vectma

@@ -5,15 +5,22 @@
 
 namespace vectma {
 
-PathNode::PathNode() = default;
+PathNode::PathNode() {
+    LamportTimestamp ts{0, 0, 0};
+    m_id.update({0, 0, 0}, ts);
+}
 
 PathNode::PathNode(const std::vector<BezierAnchor>& anchors)
     : m_anchors(anchors) {
+    LamportTimestamp ts{0, 0, 0};
+    m_id.update({0, 0, 0}, ts);
     m_baseContours.emplace_back(anchors, m_isClosed);
 }
 
 PathNode::PathNode(const std::vector<Contour>& contours)
     : m_baseContours(contours) {
+    LamportTimestamp ts{0, 0, 0};
+    m_id.update({0, 0, 0}, ts);
     if (!m_baseContours.empty()) {
         m_anchors = m_baseContours[0].anchors;
         m_isClosed = m_baseContours[0].isClosed;
@@ -74,7 +81,6 @@ void PathNode::updatePipelineCache() const {
     auto current_data = std::make_unique<PathData>();
     current_data->contours = m_baseContours;
 
-    // Apply modifier stack
     for (const auto& mod : m_modifier_stack) {
         current_data = mod->apply(*current_data);
     }

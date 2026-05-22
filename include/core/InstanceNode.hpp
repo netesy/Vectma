@@ -1,14 +1,14 @@
 #pragma once
 
 #include "core/CanvasNode.hpp"
-#include "core/SymbolRegistry.hpp"
+#include "core/GTransform.hpp"
 #include <map>
 
 namespace vectma {
 
 class InstanceNode : public CanvasNode {
 public:
-    InstanceNode(SymbolID symbolId);
+    InstanceNode(const std::string& symbolId);
 
     std::string getClassName() const override { return "InstanceNode"; }
 
@@ -17,19 +17,13 @@ public:
     GRect computeBoundingBox() const override;
     std::string toSVG() const override;
 
-    void setOverride(const std::string& key, const std::string& value);
-    std::string getOverride(const std::string& key) const;
+    std::string getSymbolId() const { return m_symbolId.value; }
+    GTransform getTransform() const { return m_transform.value; }
+    void setTransform(const GTransform& t) { m_transform.update(t, LamportClock::getInstance().tick()); }
 
 private:
-    SymbolID m_symbolId;
-    std::map<std::string, std::string> m_overrides;
-    mutable bool m_dirty = true;
-    mutable GRect m_cachedBBox;
+    LWWProperty<std::string> m_symbolId;
+    LWWProperty<GTransform> m_transform;
 };
 
 } // namespace vectma
-
-namespace vectma {
-    // Helper to invalidate all instances of a symbol
-    void invalidateSymbolInstances(const SymbolID& id, CanvasNode* root);
-}

@@ -11,29 +11,53 @@ SceneGraph::SceneGraph() {
 SceneGraph::~SceneGraph() = default;
 
 void SceneGraph::addChild(std::unique_ptr<CanvasNode> child) {
+    LamportTimestamp ts = LamportClock::getInstance().tick();
+    if (child->getId() == NodeId{0,0,0}) {
+        child->setIdRemote(ts, ts);
+    }
+    addChildRemote(std::move(child), ts);
+}
+
+void SceneGraph::addChildRemote(std::unique_ptr<CanvasNode> child, LamportTimestamp ts) {
+    NodeId id = child->getId();
+    if (m_tombstones.count(id) && m_tombstones[id] >= ts) return;
+    if (m_additions.count(id) && m_additions[id] >= ts) return;
+
+    m_additions[id] = ts;
     CanvasNode::addChild(std::move(child));
     if (m_spatialIndex) m_spatialIndex->insert(m_children.back().get());
 }
 
 std::unique_ptr<CanvasNode> SceneGraph::removeChild(CanvasNode* node) {
+    LamportTimestamp ts = LamportClock::getInstance().tick();
+    NodeId id = node->getId();
+
     auto it = std::find_if(m_children.begin(), m_children.end(), [node](const auto& p) { return p.get() == node; });
     if (it != m_children.end()) {
         auto removed = std::move(*it);
         m_children.erase(it);
         if (m_spatialIndex) m_spatialIndex->remove(node);
+        m_tombstones[id] = ts;
         return removed;
     }
     return nullptr;
 }
 
+void SceneGraph::removeChildRemote(NodeId id, LamportTimestamp ts) {
+    if (m_tombstones.count(id) && m_tombstones[id] >= ts) return;
+    m_tombstones[id] = ts;
+    auto it = std::find_if(m_children.begin(), m_children.end(), [id](const auto& p) { return p->getId() == id; });
+    if (it != m_children.end()) {
+        if (m_spatialIndex) m_spatialIndex->remove(it->get());
+        m_children.erase(it);
+    }
+}
+
 void SceneGraph::render(RenderPipeline& pipeline) const {
     GRect viewport(-10000, -10000, 20000, 20000);
     auto visibleNodes = m_spatialIndex->query(viewport);
-
     for (auto node : visibleNodes) {
-        if (node && node->isVisible()) {
-            node->render(pipeline);
-        }
+        if (node && node->isVisible()) node->render(pipeline);
     }
 }
 
@@ -47,9 +71,7 @@ bool SceneGraph::containsPoint(const GPoint& point) const {
 
 GRect SceneGraph::computeBoundingBox() const {
     GRect bbox;
-    for (const auto& child : m_children) {
-        bbox = bbox.united(child->computeBoundingBox());
-    }
+    for (const auto& child : m_children) bbox = bbox.united(child->computeBoundingBox());
     return bbox;
 }
 
@@ -83,20 +105,16 @@ void SceneGraph::moveDown(size_t index) {
 
 void SceneGraph::groupNodes(const std::vector<size_t>& indices) {
     if (indices.empty()) return;
-
     std::vector<size_t> sortedIndices = indices;
     std::sort(sortedIndices.rbegin(), sortedIndices.rend());
-
     auto group = std::make_unique<SceneGraph>();
     size_t insertAt = sortedIndices.back();
-
     for (size_t idx : sortedIndices) {
         if (idx < m_children.size()) {
             group->addChild(std::move(m_children[idx]));
             m_children.erase(m_children.begin() + idx);
         }
     }
-
     std::reverse(group->m_children.begin(), group->m_children.end());
     m_children.insert(m_children.begin() + insertAt, std::move(group));
     rebuildIndex();
@@ -104,13 +122,10 @@ void SceneGraph::groupNodes(const std::vector<size_t>& indices) {
 
 void SceneGraph::ungroupNode(size_t index) {
     if (index >= m_children.size()) return;
-
     auto* group = dynamic_cast<SceneGraph*>(m_children[index].get());
     if (!group) return;
-
     auto groupNode = std::move(m_children[index]);
     m_children.erase(m_children.begin() + index);
-
     size_t insertAt = index;
     for (auto& child : group->m_children) {
         child->setParent(this);
@@ -122,29 +137,33 @@ void SceneGraph::ungroupNode(size_t index) {
 
 void SceneGraph::clear() {
     m_children.clear();
+    m_tombstones.clear();
+    m_additions.clear();
     m_spatialIndex->clear();
 }
 
 void SceneGraph::rebuildIndex() {
     m_spatialIndex->clear();
-    for (const auto& child : m_children) {
-        m_spatialIndex->insert(child.get());
-    }
+    for (const auto& child : m_children) m_spatialIndex->insert(child.get());
 }
 
 std::vector<CanvasNode*> SceneGraph::queryVisible(const GRect& viewport) const {
     return m_spatialIndex->query(viewport);
 }
 
-std::string SceneGraph::toSVG() const {
-    std::string svg = "<svg xmlns=\"http://www.w3.org/2000/svg\">\n";
-    svg += "<defs>\n";
-    svg += "</defs>\n";
+CanvasNode* SceneGraph::findNodeById(NodeId id) const {
     for (const auto& child : m_children) {
-        if (child) {
-            svg += "  " + child->toSVG() + "\n";
+        if (child->getId() == id) return child.get();
+        if (auto* sg = dynamic_cast<SceneGraph*>(child.get())) {
+            if (auto* found = sg->findNodeById(id)) return found;
         }
     }
+    return nullptr;
+}
+
+std::string SceneGraph::toSVG() const {
+    std::string svg = "<svg xmlns=\"http://www.w3.org/2000/svg\">\n";
+    for (const auto& child : m_children) if (child) svg += "  " + child->toSVG() + "\n";
     svg += "</svg>";
     return svg;
 }

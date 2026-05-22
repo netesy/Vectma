@@ -16,18 +16,26 @@ public:
 
     std::string toSVG() const override;
 
-    double getX() const { return m_x; }
-    double getY() const { return m_y; }
-    double getW() const { return m_w; }
-    double getH() const { return m_h; }
+    double getX() const { return m_x.value; }
+    double getY() const { return m_y.value; }
+    double getW() const { return m_w.value; }
+    double getH() const { return m_h.value; }
 
-    void setX(double x) { m_x = x; }
-    void setY(double y) { m_y = y; }
-    void setW(double w) { m_w = w; }
-    void setH(double h) { m_h = h; }
+    void setX(double x) { m_x.update(x, LamportClock::getInstance().tick()); }
+    void setY(double y) { m_y.update(y, LamportClock::getInstance().tick()); }
+    void setW(double w) { m_w.update(w, LamportClock::getInstance().tick()); }
+    void setH(double h) { m_h.update(h, LamportClock::getInstance().tick()); }
+
+    void setXRemote(double x, LamportTimestamp ts) { m_x.update(x, ts); }
+    void setYRemote(double y, LamportTimestamp ts) { m_y.update(y, ts); }
+    void setWRemote(double w, LamportTimestamp ts) { m_w.update(w, ts); }
+    void setHRemote(double h, LamportTimestamp ts) { m_h.update(h, ts); }
 
 private:
-    double m_x, m_y, m_w, m_h;
+    LWWProperty<double> m_x;
+    LWWProperty<double> m_y;
+    LWWProperty<double> m_w;
+    LWWProperty<double> m_h;
 };
 
 } // namespace vectma

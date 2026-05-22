@@ -16,14 +16,22 @@ public:
     std::string toSVG() const override;
 
     const std::vector<uint8_t>& getRawData() const { return m_rawData; }
-    double getX() const { return m_x; }
-    double getY() const { return m_y; }
-    double getWidth() const { return m_width; }
-    double getHeight() const { return m_height; }
+    double getX() const { return m_x.value; }
+    double getY() const { return m_y.value; }
+    double getWidth() const { return m_width.value; }
+    double getHeight() const { return m_height.value; }
+
+    void setX(double x) { m_x.update(x, LamportClock::getInstance().tick()); }
+    void setY(double y) { m_y.update(y, LamportClock::getInstance().tick()); }
+    void setWidth(double w) { m_width.update(w, LamportClock::getInstance().tick()); }
+    void setHeight(double h) { m_height.update(h, LamportClock::getInstance().tick()); }
 
 private:
     std::vector<uint8_t> m_rawData;
-    double m_x, m_y, m_width, m_height;
+    LWWProperty<double> m_x;
+    LWWProperty<double> m_y;
+    LWWProperty<double> m_width;
+    LWWProperty<double> m_height;
 };
 
 } // namespace vectma
