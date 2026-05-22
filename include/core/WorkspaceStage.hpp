@@ -5,13 +5,15 @@
 #include "core/Geometry.hpp"
 #include "core/HistoryManager.hpp"
 #include "core/snap/SnappingEngine.hpp"
+#include "core/BrushTypes.hpp"
 #include <memory>
 #include <vector>
 #include <optional>
+#include <string>
 
 namespace vectma {
 
-enum class ToolType { Select, Marquee, Rect, Ellipse, Path, Text };
+enum class ToolType { Select, Marquee, Rect, Ellipse, Path, Text, Image, Brush };
 
 /**
  * @brief State coordinator for active tools and selections.
@@ -33,6 +35,22 @@ public:
     // Tools
     void setTool(ToolType tool);
     ToolType getTool() const { return m_tool; }
+
+    // UI State / Tool Parameters
+    float getBrushSize() const { return m_brushSize; }
+    void setBrushSize(float size) { m_brushSize = size; }
+
+    float getBrushBleeding() const { return m_brushBleeding; }
+    void setBrushBleeding(float bleeding) { m_brushBleeding = bleeding; }
+
+    std::string getFontFamily() const { return m_fontFamily; }
+    void setFontFamily(const std::string& family) { m_fontFamily = family; }
+
+    float getFontSize() const { return m_fontSize; }
+    void setFontSize(float size) { m_fontSize = size; }
+
+    float getLineHeight() const { return m_lineHeight; }
+    void setLineHeight(float lh) { m_lineHeight = lh; }
 
     // Sub-Selection Mode
     void setSubSelectionMode(bool active) { m_subSelectionMode = active; }
@@ -69,6 +87,8 @@ public:
     GRect getMarqueeRect() const { return m_marqueeRect; }
     Point2D getCursorCanvasPos() const { return m_cursorCanvasPos; }
 
+    const std::vector<BrushPoint>& getActiveStroke() const { return m_activeStroke; }
+
     // Status Info
     size_t getSceneNodeCount() const;
 
@@ -80,10 +100,20 @@ private:
     ToolType m_tool = ToolType::Select;
     GTransform m_viewMatrix = GTransform::Identity();
 
+    // Tool parameters
+    float m_brushSize = 10.0f;
+    float m_brushBleeding = 0.1f;
+    std::string m_fontFamily = "Inter";
+    float m_fontSize = 14.0f;
+    float m_lineHeight = 1.2f;
+
     bool m_isDragging = false;
     Point2D m_dragStart;
     Point2D m_cursorCanvasPos;
     GRect m_marqueeRect;
+
+    // Brush state
+    std::vector<BrushPoint> m_activeStroke;
 
     // Sub-selection state
     bool m_subSelectionMode = false;

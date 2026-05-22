@@ -7,36 +7,52 @@ namespace vectma {
 void Toolbar::render(WorkspaceStage& stage) {
     ImGui::Begin("Toolbar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
 
-    auto renderButton = [&](const char* key, ToolType type) {
+    auto renderButton = [&](const char* label, ToolType type) {
         bool active = (stage.getTool() == type);
         if (active) ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]);
 
-        if (ImGui::Button(V_TXT(key))) {
+        if (ImGui::Button(label)) {
             stage.setTool(type);
         }
 
         if (active) ImGui::PopStyleColor();
     };
 
-    renderButton("toolbar.select", ToolType::Select);
+    renderButton("Select", ToolType::Select);
     ImGui::SameLine();
-    renderButton("toolbar.marquee", ToolType::Marquee);
+    renderButton("Marquee", ToolType::Marquee);
     ImGui::SameLine();
-    renderButton("toolbar.rect", ToolType::Rect);
+    renderButton("Rect", ToolType::Rect);
     ImGui::SameLine();
-    renderButton("toolbar.ellipse", ToolType::Ellipse);
+    renderButton("Ellipse", ToolType::Ellipse);
     ImGui::SameLine();
-    renderButton("toolbar.path", ToolType::Path);
+    renderButton("Path", ToolType::Path);
     ImGui::SameLine();
-    renderButton("toolbar.text", ToolType::Text);
+    renderButton("Text", ToolType::Text);
+    ImGui::SameLine();
+    renderButton("Image (I)", ToolType::Image);
+    ImGui::SameLine();
+    renderButton("Brush (B)", ToolType::Brush);
 
     ImGui::SameLine();
     ImGui::Separator();
     ImGui::SameLine();
 
+    // Contextual parameters for Brush tool
+    if (stage.getTool() == ToolType::Brush) {
+        float size = stage.getBrushSize();
+        if (ImGui::SliderFloat("Size", &size, 1, 100)) stage.setBrushSize(size);
+
+        ImGui::SameLine();
+        float bleeding = stage.getBrushBleeding();
+        if (ImGui::SliderFloat("Bleeding", &bleeding, 0, 1)) stage.setBrushBleeding(bleeding);
+
+        ImGui::SameLine();
+    }
+
     bool subSel = stage.isSubSelectionMode();
     if (subSel) ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]);
-    if (ImGui::Button(V_TXT("toolbar.subselection"))) {
+    if (ImGui::Button("SubSelect")) {
         stage.setSubSelectionMode(!subSel);
     }
     if (subSel) ImGui::PopStyleColor();

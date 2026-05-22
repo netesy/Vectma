@@ -9,6 +9,7 @@
 #include "ui/ThemeTokens.hpp"
 #include "core/PathNode.hpp"
 #include "core/LocaleManager.hpp"
+#include "renderer/SkiaRenderPipeline.hpp"
 #include <imgui.h>
 
 #ifdef VECTMA_USE_OPENGL
@@ -108,6 +109,20 @@ void EditorUI::renderViewport() {
         m_stage.getScene()->render(m_renderer);
     }
 
+    // TASK 4: Live Brush Rendering
+    if (m_stage.getTool() == ToolType::Brush && !m_stage.getActiveStroke().empty()) {
+#ifdef VECTMA_USE_SKIA
+        SkiaRenderPipeline* skRenderer = dynamic_cast<SkiaRenderPipeline*>(&m_renderer);
+        if (skRenderer) {
+            BrushSettings settings;
+            settings.size = m_stage.getBrushSize();
+            settings.bleeding = m_stage.getBrushBleeding();
+            settings.color = tokens::colors::Primary;
+            skRenderer->drawBrushStroke(m_stage.getActiveStroke(), settings);
+        }
+#endif
+    }
+
     if (m_stage.isSubSelectionMode()) {
         for (auto node : m_stage.getSelection()) {
             PathNode* path = dynamic_cast<PathNode*>(node);
@@ -161,8 +176,20 @@ void EditorUI::renderStatusBar() {
     size_t layerCount = m_stage.getSceneNodeCount();
     size_t selectionCount = m_stage.getSelection().size();
 
-    ImGui::Text("X: %.1f Y: %.1f | Zoom: %.0f%% | Layers: %zu | Selection: %zu",
-                cursor.x, cursor.y, scale, layerCount, selectionCount);
+    const char* toolName = "Select";
+    switch(m_stage.getTool()) {
+        case ToolType::Select: toolName = "Select"; break;
+        case ToolType::Marquee: toolName = "Marquee"; break;
+        case ToolType::Rect: toolName = "Rect"; break;
+        case ToolType::Ellipse: toolName = "Ellipse"; break;
+        case ToolType::Path: toolName = "Path"; break;
+        case ToolType::Text: toolName = "Text"; break;
+        case ToolType::Image: toolName = "Image"; break;
+        case ToolType::Brush: toolName = "Brush"; break;
+    }
+
+    ImGui::Text("Tool: %s | X: %.1f Y: %.1f | Zoom: %.0f%% | Layers: %zu | Selection: %zu",
+                toolName, cursor.x, cursor.y, scale, layerCount, selectionCount);
 
     ImGui::End();
 }

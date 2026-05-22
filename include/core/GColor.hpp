@@ -20,6 +20,7 @@ struct GColor {
     static GColor Black() { return GColor(0, 0, 0); }
     static GColor White() { return GColor(255, 255, 255); }
     static GColor Transparent() { return GColor(0, 0, 0, 0); }
+    static GColor Primary() { return FromHex("#ddb7ff"); }
 
     static GColor FromHex(const std::string& hex) {
         if (hex.empty()) return Black();

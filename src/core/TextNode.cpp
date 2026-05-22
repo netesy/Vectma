@@ -4,8 +4,8 @@
 
 namespace vectma {
 
-TextNode::TextNode(const std::string& text, std::shared_ptr<FontAsset> font, float size)
-    : text_buffer(text), active_font(font), font_size(size), m_position(0, 0) {}
+TextNode::TextNode(const std::string& text, float x, float y, float size)
+    : text_buffer(text), font_size(size), m_position(x, y) {}
 
 void TextNode::render(RenderPipeline& pipeline) const {
     pipeline.drawText(*this);

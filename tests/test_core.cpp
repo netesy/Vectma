@@ -89,7 +89,6 @@ void testModifiers() {
 }
 
 void testLayersAndArtboards() {
-    std::cout << "Starting Layers test..." << std::endl;
     std::cout << "Testing Enhanced Layer Management & Artboards..." << std::endl;
 
     auto layer = std::make_unique<vectma::LayerNode>("RootLayer");
@@ -145,11 +144,34 @@ void testStatusReporting() {
     std::cout << "Status Reporting tests passed." << std::endl;
 }
 
+void testUIState() {
+    std::cout << "Testing UI State tracking..." << std::endl;
+    vectma::WorkspaceStage stage;
+
+    stage.setTool(vectma::ToolType::Brush);
+    assert(stage.getTool() == vectma::ToolType::Brush);
+
+    stage.setBrushSize(25.5f);
+    assert(std::abs(stage.getBrushSize() - 25.5f) < 1e-6);
+
+    stage.setBrushBleeding(0.75f);
+    assert(std::abs(stage.getBrushBleeding() - 0.75f) < 1e-6);
+
+    stage.setFontFamily("Poppins");
+    assert(stage.getFontFamily() == "Poppins");
+
+    stage.setFontSize(42.0f);
+    assert(std::abs(stage.getFontSize() - 42.0f) < 1e-6);
+
+    std::cout << "UI State tests passed." << std::endl;
+}
+
 int main() {
     testSnapping();
     testModifiers();
     testLayersAndArtboards();
     testStatusReporting();
+    testUIState();
     std::cout << "All Phase 19 tests passed!" << std::endl;
     return 0;
 }
