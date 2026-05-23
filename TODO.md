@@ -12,10 +12,10 @@
 - [x] Modal Pen tool interaction state machine
 - [x] Cross-platform build path hardening (Windows/Linux)
 
-## Phase 22: Non-Destructive Live Boolean Operations & Compound Path Finder
-- [ ] Adaptive polygon clipping for complex CSG operations
-- [ ] Compound path grouping and mask evaluation
-- [ ] Real-time Boolean preview hierarchy
+## Phase 22: Non-Destructive Live Boolean Operations & Compound Path Finder [DONE] [ACTIVE]
+- [x] Adaptive polygon clipping via Skia PathOps
+- [x] Compound path grouping and live evaluation
+- [x] Real-time Boolean preview hierarchy
 
 ## Phase 23: Reusable Component Architecture, Nested Instances & Property Overrides
 - [ ] Component master/instance mapping logic

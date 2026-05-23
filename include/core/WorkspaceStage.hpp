@@ -58,6 +58,7 @@ public:
 
     // Boolean Operations
     void applyBooleanOperation(BooleanOp op);
+    void flattenCompoundShape(class CompoundShapeNode* compound);
 
     // History
     void undo() { m_history.undo(); }

@@ -33,6 +33,7 @@ TARGET = vectma$(EXE_EXT)
 CORE_OBJS = $(filter-out src/main.o, $(SRCS:.cpp=.o))
 TEST_TARGET = test_runner$(EXE_EXT)
 SYNC_TEST_TARGET = test_sync$(EXE_EXT)
+BOOL_TEST_TARGET = test_boolean$(EXE_EXT)
 GEOM_TEST_TARGET = test_geometry$(EXE_EXT)
 
 .PHONY: all clean run test
@@ -57,10 +58,11 @@ tests/%.o: tests/%.cpp
 clean:
 	rm -f $(OBJS) src/main.o $(TARGET) tests/*.o $(TEST_TARGET) $(SYNC_TEST_TARGET) $(GEOM_TEST_TARGET)
 
-test: $(TEST_TARGET) $(SYNC_TEST_TARGET) $(GEOM_TEST_TARGET)
+test: $(TEST_TARGET) $(SYNC_TEST_TARGET) $(GEOM_TEST_TARGET) $(BOOL_TEST_TARGET)
 	./$(TEST_TARGET)
 	./$(SYNC_TEST_TARGET)
 	./$(GEOM_TEST_TARGET)
+	./$(BOOL_TEST_TARGET)
 
 $(TEST_TARGET): tests/test_core.o $(CORE_OBJS) $(VENDOR_OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
@@ -69,4 +71,7 @@ $(SYNC_TEST_TARGET): tests/test_sync.o $(CORE_OBJS) $(VENDOR_OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 $(GEOM_TEST_TARGET): tests/test_geometry.o $(CORE_OBJS) $(VENDOR_OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
+$(BOOL_TEST_TARGET): tests/test_boolean.o $(CORE_OBJS) $(VENDOR_OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^

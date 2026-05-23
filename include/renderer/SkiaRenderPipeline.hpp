@@ -29,6 +29,7 @@ public:
     void drawPath(const PathNode& node, FillType fillType, const GradientConfig& gradConfig, StrokeAlignment strokeAlign) override;
     void drawText(const TextNode& node) override;
     void drawImage(const class ImageNode& node) override;
+    void drawCompoundShape(const class CompoundShapeNode& node) override;
 
     void drawBezierPath(const PathNode& node) override;
     void drawAnchorOverlay(const BezierAnchor& anchor, bool selected, int activeHandle) override;

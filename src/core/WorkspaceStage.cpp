@@ -4,6 +4,7 @@
 #include "core/PathNode.hpp"
 #include "core/TextNode.hpp"
 #include "core/ImageNode.hpp"
+#include "core/CompoundShapeNode.hpp"
 #include "core/GeometryEngine.hpp"
 #include "core/Commands.hpp"
 #include "core/snap/SnappingEngine.hpp"
@@ -58,12 +59,33 @@ GPoint WorkspaceStage::screenToCanvas(const GPoint& screenPos) const {
 
 void WorkspaceStage::applyBooleanOperation(BooleanOp op) {
     if (m_selection.size() < 2) return;
-    PathNode* target = dynamic_cast<PathNode*>(m_selection[0]);
-    PathNode* source = dynamic_cast<PathNode*>(m_selection[1]);
-    if (target && source) {
-        auto result = GeometryEngine::combinePaths(*target, *source, op);
-        executeCommand(std::make_unique<AddNodeCommand>(m_scene.get(), std::move(result)));
+
+    BooleanOpType opType;
+    switch(op) {
+        case BooleanOp::Union:     opType = BooleanOpType::Union; break;
+        case BooleanOp::Subtract:  opType = BooleanOpType::Subtract; break;
+        case BooleanOp::Intersect: opType = BooleanOpType::Intersect; break;
+        case BooleanOp::Exclude:   opType = BooleanOpType::Exclude; break;
+        default:                   opType = BooleanOpType::Union; break;
     }
+
+    auto compound = std::make_unique<CompoundShapeNode>(opType);
+    std::vector<CanvasNode*> nodesToMove = m_selection;
+
+    for (auto* node : nodesToMove) {
+        if (node->getParent()) {
+            auto* parent = dynamic_cast<SceneGraph*>(node->getParent());
+            if (parent) {
+                auto removed = parent->removeChild(node);
+                if (removed) compound->addChild(std::move(removed));
+            }
+        }
+    }
+
+    auto* compoundPtr = compound.get();
+    executeCommand(std::make_unique<AddNodeCommand>(m_scene.get(), std::move(compound)));
+    clearSelection();
+    addToSelection(compoundPtr);
 }
 
 void WorkspaceStage::handleMouseDown(const Point2D& screenPos, bool altPressed) {
@@ -78,16 +100,14 @@ void WorkspaceStage::handleMouseDown(const Point2D& screenPos, bool altPressed) 
             executeCommand(std::make_unique<AddNodeCommand>(m_scene.get(), std::move(newNode)));
             addToSelection(m_activePathNode);
         }
-
         geometry::AnchorPoint newPoint;
         newPoint.position = m_dragStart;
         newPoint.handleInOffset = {0, 0};
         newPoint.handleOutOffset = {0, 0};
         newPoint.relation = altPressed ? geometry::HandleRelation::Disconnected : geometry::HandleRelation::Symmetric;
-
         m_activePathNode->addAnchor(newPoint);
         m_activeAnchorIndex = m_activePathNode->getTopology().points.size() - 1;
-        m_activeHandleId = 2; // dragging out handleOut
+        m_activeHandleId = 2;
     } else if (m_tool == ToolType::Rect) {
         auto rect = std::make_unique<RectNode>(m_dragStart.x, m_dragStart.y, 0, 0);
         executeCommand(std::make_unique<AddNodeCommand>(m_scene.get(), std::move(rect)));
@@ -153,3 +173,41 @@ size_t WorkspaceStage::countNodesRecursive(const CanvasNode* node) const {
 }
 
 } // namespace vectma
+#include "core/WorkspaceStage.hpp"
+#include "core/CompoundShapeNode.hpp"
+#include "core/PathNode.hpp"
+#include "core/Commands.hpp"
+
+namespace vectma {
+
+void WorkspaceStage::flattenCompoundShape(CompoundShapeNode* compound) {
+    if (!compound) return;
+
+    // Ideally, we'd get the resolved PathData from the compound shape.
+    // Since our implementation delegates to Skia for drawing,
+    // for a real "flatten" we would need to capture that SkPath or have a generic resolver.
+
+    // For now, we'll implement a placeholder that creates a new PathNode
+    // from the children's combined anchors (simulating a flatten Union).
+    std::vector<BezierAnchor> allAnchors;
+    for (const auto& child : compound->getChildren()) {
+        if (auto* path = dynamic_cast<const PathNode*>(child.get())) {
+            const auto& anchors = path->getAnchors();
+            allAnchors.insert(allAnchors.end(), anchors.begin(), anchors.end());
+        }
+    }
+
+    auto flatPath = std::make_unique<PathNode>(allAnchors);
+    flatPath->setFillColor(compound->getFillColor());
+
+    if (compound->getParent()) {
+        auto* parent = dynamic_cast<SceneGraph*>(compound->getParent());
+        if (parent) {
+            parent->removeChild(compound);
+            executeCommand(std::make_unique<AddNodeCommand>(m_scene.get(), std::move(flatPath)));
+        }
+    }
+    clearSelection();
+}
+
+}
