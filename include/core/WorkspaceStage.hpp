@@ -6,6 +6,7 @@
 #include "core/HistoryManager.hpp"
 #include "core/snap/SnappingEngine.hpp"
 #include "core/BrushTypes.hpp"
+#include "geometry/BezierMath.hpp"
 #include <memory>
 #include <vector>
 #include <optional>
@@ -13,12 +14,11 @@
 
 namespace vectma {
 
-enum class ToolType { Select, Marquee, Rect, Ellipse, Path, Text, Image, Brush };
+class PathNode;
 
-/**
- * @brief State coordinator for active tools and selections.
- * Replaces the legacy GEditor.
- */
+enum class ToolType { Select, Marquee, Rect, Ellipse, Path, Text, Image, Brush, Pen };
+enum class CanvasEditingMode { Normal, PathEdit };
+
 class WorkspaceStage {
 public:
     WorkspaceStage();
@@ -32,29 +32,27 @@ public:
     void clearSelection();
     const std::vector<CanvasNode*>& getSelection() const;
 
-    // Tools
+    // Tools & Modes
     void setTool(ToolType tool);
     ToolType getTool() const { return m_tool; }
+
+    void setEditingMode(CanvasEditingMode mode) { m_editingMode = mode; }
+    CanvasEditingMode getEditingMode() const { return m_editingMode; }
 
     // UI State / Tool Parameters
     float getBrushSize() const { return m_brushSize; }
     void setBrushSize(float size) { m_brushSize = size; }
-
     float getBrushBleeding() const { return m_brushBleeding; }
     void setBrushBleeding(float bleeding) { m_brushBleeding = bleeding; }
 
     std::string getFontFamily() const { return m_fontFamily; }
     void setFontFamily(const std::string& family) { m_fontFamily = family; }
-
     float getFontSize() const { return m_fontSize; }
     void setFontSize(float size) { m_fontSize = size; }
-
     float getLineHeight() const { return m_lineHeight; }
     void setLineHeight(float lh) { m_lineHeight = lh; }
 
-    // Sub-Selection Mode
-    void setSubSelectionMode(bool active) { m_subSelectionMode = active; }
-    bool isSubSelectionMode() const { return m_subSelectionMode; }
+    // Sub-Selection State
     int getActiveAnchorIndex() const { return m_activeAnchorIndex; }
     int getActiveHandleId() const { return m_activeHandleId; }
 
@@ -77,8 +75,8 @@ public:
     double getScale() const { return std::sqrt(m_viewMatrix.a * m_viewMatrix.d - m_viewMatrix.b * m_viewMatrix.c); }
     Point2D screenToCanvas(const Point2D& screenPos) const;
 
-    // Mouse Lifecycle
-    void handleMouseDown(const Point2D& screenPos);
+    // Pointer Interaction
+    void handleMouseDown(const Point2D& screenPos, bool altPressed = false);
     void handleMouseMove(const Point2D& screenPos);
     void handleMouseUp();
 
@@ -89,7 +87,6 @@ public:
 
     const std::vector<BrushPoint>& getActiveStroke() const { return m_activeStroke; }
 
-    // Status Info
     size_t getSceneNodeCount() const;
 
 private:
@@ -98,6 +95,7 @@ private:
     HistoryManager m_history;
 
     ToolType m_tool = ToolType::Select;
+    CanvasEditingMode m_editingMode = CanvasEditingMode::Normal;
     GTransform m_viewMatrix = GTransform::Identity();
 
     // Tool parameters
@@ -112,13 +110,13 @@ private:
     Point2D m_cursorCanvasPos;
     GRect m_marqueeRect;
 
+    // Pen Tool / Path Edit state
+    PathNode* m_activePathNode = nullptr;
+    int m_activeAnchorIndex = -1;
+    int m_activeHandleId = -1;
+
     // Brush state
     std::vector<BrushPoint> m_activeStroke;
-
-    // Sub-selection state
-    bool m_subSelectionMode = false;
-    int m_activeAnchorIndex = -1;
-    int m_activeHandleId = -1; // 0: pos, 1: handleIn, 2: handleOut
 
     // Snapping state
     std::optional<SnapResult> m_activeSnap;

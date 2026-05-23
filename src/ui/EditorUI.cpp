@@ -50,32 +50,26 @@ void EditorUI::render() {
         float toolbarHeight = tokens::spacing::ToolbarHeight;
         float statusBarHeight = tokens::spacing::StatusBarHeight;
 
-        // Sidebar Left: Layer Panel
         ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x, viewport->Pos.y + toolbarHeight));
         ImGui::SetNextWindowSize(ImVec2(sidebarWidth, viewport->Size.y - toolbarHeight - statusBarHeight));
         m_layerPanel->render();
 
-        // Sidebar Right: Inspector
         ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x + viewport->Size.x - sidebarWidth, viewport->Pos.y + toolbarHeight));
         ImGui::SetNextWindowSize(ImVec2(sidebarWidth, viewport->Size.y - toolbarHeight - statusBarHeight));
         Inspector::render(m_stage);
 
-        // Toolbar
         ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x, viewport->Pos.y));
         ImGui::SetNextWindowSize(ImVec2(viewport->Size.x, toolbarHeight));
         Toolbar::render(m_stage);
 
-        // Status Bar
         ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x, viewport->Pos.y + viewport->Size.y - statusBarHeight));
         ImGui::SetNextWindowSize(ImVec2(viewport->Size.x, statusBarHeight));
         renderStatusBar();
 
-        // Central Viewport
         ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x + sidebarWidth, viewport->Pos.y + toolbarHeight));
         ImGui::SetNextWindowSize(ImVec2(viewport->Size.x - 2 * sidebarWidth, viewport->Size.y - toolbarHeight - statusBarHeight));
         renderViewport();
 
-        // Overlays
         ExportDashboard::render(m_stage, m_renderer, m_showExport);
         renderSettingsMenu();
     }
@@ -88,9 +82,10 @@ void EditorUI::handleInputs() {
 
     if (!io.WantCaptureMouse) {
         Point2D mousePos(io.MousePos.x, io.MousePos.y);
+        bool altPressed = false; // io.KeyAlt (Mock)
 
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-            m_stage.handleMouseDown(mousePos);
+            m_stage.handleMouseDown(mousePos, altPressed);
         } else if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
             m_stage.handleMouseUp();
         }
@@ -109,7 +104,6 @@ void EditorUI::renderViewport() {
         m_stage.getScene()->render(m_renderer);
     }
 
-    // TASK 4: Live Brush Rendering
     if (m_stage.getTool() == ToolType::Brush && !m_stage.getActiveStroke().empty()) {
 #ifdef VECTMA_USE_SKIA
         SkiaRenderPipeline* skRenderer = dynamic_cast<SkiaRenderPipeline*>(&m_renderer);
@@ -123,14 +117,15 @@ void EditorUI::renderViewport() {
 #endif
     }
 
-    if (m_stage.isSubSelectionMode()) {
+    // TASK 2: Render Path Edit Handles
+    if (m_stage.getEditingMode() == CanvasEditingMode::PathEdit) {
         for (auto node : m_stage.getSelection()) {
             PathNode* path = dynamic_cast<PathNode*>(node);
             if (path) {
-                int activeIdx = m_stage.getActiveAnchorIndex();
-                int activeHandle = m_stage.getActiveHandleId();
-                for (size_t i = 0; i < path->getAnchors().size(); ++i) {
-                    m_renderer.drawAnchorOverlay(path->getAnchors()[i], (int)i == activeIdx, ((int)i == activeIdx) ? activeHandle : -1);
+                const auto& topology = path->getTopology();
+                for (size_t i = 0; i < topology.points.size(); ++i) {
+                    const auto& pt = topology.points[i];
+                    m_renderer.drawAnchorOverlay(BezierAnchor(pt.position, pt.handleIn, pt.handleOut), (int)i == m_stage.getActiveAnchorIndex(), m_stage.getActiveHandleId());
                 }
             }
         }
@@ -149,33 +144,22 @@ void EditorUI::renderViewport() {
 
 void EditorUI::renderSettingsMenu() {
     ImGui::Begin("System Settings");
-
     const char* locales[] = { "English (US)", "Français (FR)" };
     int currentLocale = (int)LocaleManager::getInstance().getLocale();
-
     if (ImGui::Combo("Language", &currentLocale, locales, 2)) {
         LocaleManager::getInstance().setLocale((Locale)currentLocale);
     }
-
-    if (ImGui::Button("Welcome Screen")) {
-        m_showWelcome = true;
-    }
-
-    if (ImGui::Button("Export Hub")) {
-        m_showExport = true;
-    }
-
+    if (ImGui::Button("Welcome Screen")) m_showWelcome = true;
+    if (ImGui::Button("Export Hub")) m_showExport = true;
     ImGui::End();
 }
 
 void EditorUI::renderStatusBar() {
     ImGui::Begin("Status Bar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs);
-
     Point2D cursor = m_stage.getCursorCanvasPos();
     double scale = m_stage.getScale() * 100.0;
     size_t layerCount = m_stage.getSceneNodeCount();
     size_t selectionCount = m_stage.getSelection().size();
-
     const char* toolName = "Select";
     switch(m_stage.getTool()) {
         case ToolType::Select: toolName = "Select"; break;
@@ -186,11 +170,10 @@ void EditorUI::renderStatusBar() {
         case ToolType::Text: toolName = "Text"; break;
         case ToolType::Image: toolName = "Image"; break;
         case ToolType::Brush: toolName = "Brush"; break;
+        case ToolType::Pen: toolName = "Pen"; break;
     }
-
     ImGui::Text("Tool: %s | X: %.1f Y: %.1f | Zoom: %.0f%% | Layers: %zu | Selection: %zu",
                 toolName, cursor.x, cursor.y, scale, layerCount, selectionCount);
-
     ImGui::End();
 }
 

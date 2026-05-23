@@ -3,38 +3,45 @@
 
 namespace vectma {
 
-ArtboardNode::ArtboardNode(const std::string& name, const GRect& bounds) {
-    LamportTimestamp ts{0, 0, 0};
-    m_name.update(name, ts);
-    m_bounds.update(bounds, ts);
-}
+ArtboardNode::ArtboardNode(const std::string& name, const GRect& bounds)
+    : m_name(name), m_bounds(bounds) {}
 
 void ArtboardNode::render(RenderPipeline& pipeline) const {
     if (!isVisible()) return;
-    pipeline.pushClipRect(getBounds());
+
+    pipeline.pushClipRect(m_bounds);
+
+    // Draw background/canvas for artboard if needed
+
+
     for (const auto& child : m_children) {
         child->render(pipeline);
     }
+
     pipeline.popClipRect();
 }
 
 bool ArtboardNode::containsPoint(const GPoint& point) const {
+    // Artboard itself can be hit tested by its bounds
     if (!isVisible() || isLocked()) return false;
+
+    // First check children
     for (auto it = m_children.rbegin(); it != m_children.rend(); ++it) {
         if ((*it)->containsPoint(point)) return true;
     }
-    return getBounds().contains(point.x, point.y);
+
+    return m_bounds.contains(point.x, point.y);
 }
 
 GRect ArtboardNode::computeBoundingBox() const {
-    return getBounds();
+    return m_bounds;
 }
 
 std::string ArtboardNode::toSVG() const {
-    std::string svg = "<svg id=\"" + getName() + "\" x=\"" + std::to_string(getBounds().x) +
-                      "\" y=\"" + std::to_string(getBounds().y) +
-                      "\" width=\"" + std::to_string(getBounds().width) +
-                      "\" height=\"" + std::to_string(getBounds().height) + "\">";
+    std::string svg = "<svg id=\"" + m_name + "\" x=\"" + std::to_string(m_bounds.x) +
+                      "\" y=\"" + std::to_string(m_bounds.y) +
+                      "\" width=\"" + std::to_string(m_bounds.width) +
+                      "\" height=\"" + std::to_string(m_bounds.height) + "\">";
     for (const auto& child : m_children) {
         svg += child->toSVG();
     }

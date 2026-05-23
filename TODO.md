@@ -1,36 +1,58 @@
 # Vectma Core Development Roadmap
 
-## Phase 15: Spatial Indexing & Frustum Culling [DONE]
-- [x] Adaptive 2D Quadtree/BVH engine in `src/core/spatial/`
-- [x] View-frustum tracking for non-visible node culling
-- [x] O(log N) canvas sub-selection and hit-testing
-
-## Phase 16: Precision Snapping & Proximity Engine [DONE]
-- [x] Proximity lookup indices
-- [x] Real-time vector alignment & snap-grids
-- [x] Smart construction guides
-
-## Phase 17: Non-Destructive Modifier Pipeline [DONE]
-- [x] Dynamic modifier evaluation engine
-- [x] Cascading live path operations (Corner rounding, offsets, dashing)
-
-## Phase 18: Enhanced Layer Management & Infinite Canvas Artboards [DONE] [ACTIVE]
-- [x] High-fidelity layer-tree nesting
-- [x] Isolation clip masks
-- [x] Multi-artboard support
-
-## Phase 19: UI/UX Refinement via Stitch Integration [DONE]
-- [x] High-fidelity interface layouts from Stitch
-- [x] Flawless alignment with structural designs
-- [x] Complete third-party vendor source population
-
-## Phase 20: CRDT Collaborative Real-Time Sync
-- [ ] Decentralized document sync layer
-- [ ] Lamport vector clocks & Protocol Buffers
-- [ ] Transient multiplayer cursor telemetry
-
 ## Phase 20: CRDT Collaborative Real-Time Sync [DONE]
 - [x] LWW-Element-Set based SceneGraph convergence
 - [x] Deterministic CRDT identifiers with Lamport Clocks
 - [x] Binary delta frame codec for lightweight structural mutations
 - [x] Non-blocking background network reconciliation engine
+
+## Phase 21: Production-Grade Vector Pen Tool & Path Editor [DONE]
+- [x] Vector network engine with branching path topology
+- [x] Analytical Bezier math inner loops (distance, intersection)
+- [x] Modal Pen tool interaction state machine
+- [x] Cross-platform build path hardening (Windows/Linux)
+
+## Phase 22: Non-Destructive Live Boolean Operations & Compound Path Finder
+- [ ] Adaptive polygon clipping for complex CSG operations
+- [ ] Compound path grouping and mask evaluation
+- [ ] Real-time Boolean preview hierarchy
+
+## Phase 23: Reusable Component Architecture, Nested Instances & Property Overrides
+- [ ] Component master/instance mapping logic
+- [ ] Property override tracking per instance
+- [ ] Nested symbol resolution and cyclic dependency detection
+
+## Phase 24: Smart Layout Engine (Flexbox-style Auto-Layout & Dynamic Resizing Constraints)
+- [ ] 1D/2D Flexbox solver for canvas elements
+- [ ] Resizing constraints (Fix, Hug, Fill)
+- [ ] Relative positioning and auto-spacing
+
+## Phase 25: Infinite Canvas Artboard Management, Target Device Presets & Workspace Waypoints
+- [ ] Dynamic artboard coordinate system
+- [ ] Device preset library (Mobile, Web, Print)
+- [ ] Viewport navigation history and waypoints
+
+## Phase 26: Cross-Node Bulk Style Syncing, Global Color/Typography Variables & Token Aliasing
+- [ ] Global design token registry
+- [ ] Style aliasing and dependency propagation
+- [ ] Bulk property selection and mass-mutation
+
+## Phase 27: Multi-Selection Smart Distribution, Relative Spacer Guides & Tidy-Up Grid Alignments
+- [ ] Distribution algorithms (Linear, Grid)
+- [ ] Real-time smart distance guides
+- [ ] Grid snapping and layout alignment anchors
+
+## Phase 28: Micro-Interaction Animation Graph, Hotspot Prototyping Wires & Live Preview Player
+- [ ] State-based transition graph
+- [ ] Interaction hotspots and prototyping wires
+- [ ] Headless animation player with Skia interpolation
+
+## Phase 29: Advanced Asset Library Browser, Native SVG/PDF Multi-Format Export Pipelines & Code Gen
+- [ ] Integrated asset management UI
+- [ ] High-fidelity PDF/SVG backend exporters
+- [ ] Dynamic code generation (CSS, SwiftUI, Flutter)
+
+## Phase 30: Multi-User Collaboration UI & Real-Time Presence Canvas Overlay
+- [ ] Multiplayer cursor telemetry
+- [ ] Collaborative selection highlighting
+- [ ] Real-time activity stream and conflict HUD

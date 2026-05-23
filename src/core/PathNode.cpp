@@ -2,6 +2,8 @@
 #include "renderer/RenderPipeline.hpp"
 #include <cmath>
 #include <algorithm>
+#include <map>
+#include <set>
 
 namespace vectma {
 
@@ -10,53 +12,83 @@ PathNode::PathNode() {
     m_id.update({0, 0, 0}, ts);
 }
 
-PathNode::PathNode(const std::vector<BezierAnchor>& anchors)
-    : m_anchors(anchors) {
+PathNode::PathNode(const std::vector<BezierAnchor>& anchors) {
     LamportTimestamp ts{0, 0, 0};
     m_id.update({0, 0, 0}, ts);
-    m_baseContours.emplace_back(anchors, m_isClosed);
-}
-
-PathNode::PathNode(const std::vector<Contour>& contours)
-    : m_baseContours(contours) {
-    LamportTimestamp ts{0, 0, 0};
-    m_id.update({0, 0, 0}, ts);
-    if (!m_baseContours.empty()) {
-        m_anchors = m_baseContours[0].anchors;
-        m_isClosed = m_baseContours[0].isClosed;
+    for (size_t i = 0; i < anchors.size(); ++i) {
+        geometry::AnchorPoint ap;
+        ap.position = anchors[i].position;
+        ap.handleInOffset = {anchors[i].handleIn.x - ap.position.x, anchors[i].handleIn.y - ap.position.y};
+        ap.handleOutOffset = {anchors[i].handleOut.x - ap.position.x, anchors[i].handleOut.y - ap.position.y};
+        m_topology.points.push_back(ap);
+        if (i > 0) m_topology.edges.push_back({i - 1, i});
     }
 }
 
-void PathNode::setAnchors(const std::vector<BezierAnchor>& anchors) {
-    m_anchors = anchors;
-    m_baseContours.clear();
-    m_baseContours.emplace_back(anchors, m_isClosed);
+PathNode::PathNode(const geometry::PathTopology& topology) : m_topology(topology) {
+    LamportTimestamp ts{0, 0, 0};
+    m_id.update({0, 0, 0}, ts);
+}
+
+void PathNode::setTopology(const geometry::PathTopology& topology) {
+    m_topology = topology;
     m_geometry_dirty = true;
 }
 
-void PathNode::setBaseContours(const std::vector<Contour>& contours) {
-    m_baseContours = contours;
-    if (!m_baseContours.empty()) {
-        m_anchors = m_baseContours[0].anchors;
-        m_isClosed = m_baseContours[0].isClosed;
+void PathNode::addAnchor(const geometry::AnchorPoint& point) {
+    size_t prevIdx = m_topology.points.empty() ? 0 : m_topology.points.size() - 1;
+    m_topology.points.push_back(point);
+    if (m_topology.points.size() > 1) {
+        m_topology.edges.push_back({prevIdx, m_topology.points.size() - 1});
     }
     m_geometry_dirty = true;
 }
 
-void PathNode::setClosed(bool closed) {
-    if (m_isClosed != closed) {
-        m_isClosed = closed;
-        if (!m_baseContours.empty()) m_baseContours[0].isClosed = closed;
+void PathNode::updateAnchor(size_t index, const geometry::AnchorPoint& point) {
+    if (index < m_topology.points.size()) {
+        m_topology.points[index] = point;
         m_geometry_dirty = true;
     }
 }
 
-void PathNode::addAnchor(const BezierAnchor& anchor) {
-    m_anchors.push_back(anchor);
-    if (!m_baseContours.empty()) {
-        m_baseContours[0].anchors.push_back(anchor);
-    } else {
-        m_baseContours.emplace_back(m_anchors, m_isClosed);
+void PathNode::setClosed(bool closed) {
+    if (m_topology.isClosed != closed) {
+        m_topology.isClosed = closed;
+        if (closed && m_topology.points.size() > 2) {
+             // Check if already closed
+             bool exists = false;
+             for(const auto& e : m_topology.edges) {
+                 if((e.fromIdx == m_topology.points.size()-1 && e.toIdx == 0) ||
+                    (e.fromIdx == 0 && e.toIdx == m_topology.points.size()-1)) {
+                     exists = true; break;
+                 }
+             }
+             if(!exists) m_topology.edges.push_back({m_topology.points.size() - 1, 0});
+        }
+        m_geometry_dirty = true;
+    }
+}
+
+const std::vector<BezierAnchor>& PathNode::getAnchors() const {
+    if (m_geometry_dirty) {
+        m_legacy_anchors_cache.clear();
+        for (const auto& p : m_topology.points) {
+            m_legacy_anchors_cache.emplace_back(p.position, p.getHandleIn(), p.getHandleOut());
+        }
+    }
+    return m_legacy_anchors_cache;
+}
+
+void PathNode::setAnchors(const std::vector<BezierAnchor>& anchors) {
+    m_topology.points.clear();
+    m_topology.edges.clear();
+    for (size_t i = 0; i < anchors.size(); ++i) {
+        geometry::AnchorPoint ap;
+        ap.position = anchors[i].position;
+        ap.handleInOffset = {anchors[i].handleIn.x - ap.position.x, anchors[i].handleIn.y - ap.position.y};
+        ap.handleOutOffset = {anchors[i].handleOut.x - ap.position.x, anchors[i].handleOut.y - ap.position.y};
+        m_topology.points.push_back(ap);
+        if (i > 0) m_topology.edges.push_back({i - 1, i});
     }
     m_geometry_dirty = true;
 }
@@ -68,18 +100,56 @@ void PathNode::addModifier(std::unique_ptr<Modifier> modifier) {
 void PathNode::updatePipelineCache() const {
     bool stack_dirty = false;
     for (const auto& mod : m_modifier_stack) {
-        if (mod->isDirty()) {
-            stack_dirty = true;
-            break;
-        }
+        if (mod->isDirty()) { stack_dirty = true; break; }
     }
 
-    if (!m_geometry_dirty && !stack_dirty && m_cached_compiled_path) {
-        return;
-    }
+    if (!m_geometry_dirty && !stack_dirty && m_cached_compiled_path) return;
 
     auto current_data = std::make_unique<PathData>();
-    current_data->contours = m_baseContours;
+
+    // Greedy edge joiner to form contours
+    std::vector<bool> used(m_topology.edges.size(), false);
+    for (size_t i = 0; i < m_topology.edges.size(); ++i) {
+        if (used[i]) continue;
+
+        std::vector<BezierAnchor> contourAnchors;
+        size_t currEdge = i;
+        used[currEdge] = true;
+
+        size_t startNode = m_topology.edges[currEdge].fromIdx;
+        size_t endNode = m_topology.edges[currEdge].toIdx;
+
+        auto& pStart = m_topology.points[startNode];
+        auto& pEnd = m_topology.points[endNode];
+
+        contourAnchors.emplace_back(pStart.position, pStart.getHandleIn(), m_topology.edges[currEdge].fromIdx == startNode ? pStart.getHandleOut() : pStart.getHandleIn());
+        contourAnchors.emplace_back(pEnd.position, m_topology.edges[currEdge].toIdx == endNode ? pEnd.getHandleIn() : pEnd.getHandleOut(), pEnd.getHandleOut());
+
+        // Try to grow forward
+        bool growing = true;
+        while(growing) {
+            growing = false;
+            for(size_t j = 0; j < m_topology.edges.size(); ++j) {
+                if(used[j]) continue;
+                if(m_topology.edges[j].fromIdx == endNode) {
+                    endNode = m_topology.edges[j].toIdx;
+                    auto& p = m_topology.points[endNode];
+                    contourAnchors.back().handleOut = m_topology.points[m_topology.edges[j].fromIdx].getHandleOut();
+                    contourAnchors.emplace_back(p.position, p.getHandleIn(), p.getHandleOut());
+                    used[j] = true;
+                    growing = true;
+                    break;
+                }
+            }
+        }
+
+        bool closed = (endNode == startNode);
+        if(closed && contourAnchors.size() > 1) {
+            contourAnchors.pop_back(); // Remove redundant last point
+        }
+
+        current_data->contours.emplace_back(contourAnchors, closed);
+    }
 
     for (const auto& mod : m_modifier_stack) {
         current_data = mod->apply(*current_data);
@@ -100,108 +170,60 @@ void PathNode::render(RenderPipeline& pipeline) const {
 }
 
 bool PathNode::containsPoint(const GPoint& point) const {
-    return hitTestAnchors(point, 5.0f) != -1;
+    for (const auto& edge : m_topology.edges) {
+        double t;
+        const auto& p1 = m_topology.points[edge.fromIdx];
+        const auto& p2 = m_topology.points[edge.toIdx];
+        double dist = geometry::BezierEvaluator::distanceToCubic(
+            p1.position, p1.getHandleOut(), p2.getHandleIn(), p2.position,
+            point, t
+        );
+        if (dist < 4.0) return true;
+    }
+    for (const auto& p : m_topology.points) {
+        double dx = p.position.x - point.x;
+        double dy = p.position.y - point.y;
+        if (std::sqrt(dx*dx + dy*dy) < 6.0) return true;
+    }
+    return false;
 }
 
 GRect PathNode::computeBoundingBox() const {
-    const auto& data = getCompiledPath();
-    if (data.contours.empty()) return GRect(0, 0, 0, 0);
-
-    bool first = true;
-    double minX = 0, minY = 0, maxX = 0, maxY = 0;
-
-    auto update = [&](const Point2D& p) {
-        if (first) {
-            minX = maxX = p.x;
-            minY = maxY = p.y;
-            first = false;
-        } else {
-            minX = std::min(minX, p.x);
-            minY = std::min(minY, p.y);
-            maxX = std::max(maxX, p.x);
-            maxY = std::max(maxY, p.y);
-        }
-    };
-
-    for (const auto& contour : data.contours) {
-        for (const auto& anchor : contour.anchors) {
-            update(anchor.position);
-            update(anchor.handleIn);
-            update(anchor.handleOut);
-        }
+    if (m_topology.points.empty()) return GRect(0, 0, 0, 0);
+    GRect bbox = GRect(m_topology.points[0].position.x, m_topology.points[0].position.y, 0, 0);
+    for (const auto& edge : m_topology.edges) {
+        const auto& p1 = m_topology.points[edge.fromIdx];
+        const auto& p2 = m_topology.points[edge.toIdx];
+        bbox = bbox.united(geometry::BezierEvaluator::cubicBounds(
+            p1.position, p1.getHandleOut(), p2.getHandleIn(), p2.position
+        ));
     }
-
-    if (first) return GRect(0, 0, 0, 0);
-
-    double x = minX;
-    double y = minY;
-    double w = maxX - minX;
-    double h = maxY - minY;
-
-    double halfStroke = getStrokeWidth() / 2.0;
-    if (getStrokeAlignment() == StrokeAlignment::Center) {
-        x -= halfStroke;
-        y -= halfStroke;
-        w += getStrokeWidth();
-        h += getStrokeWidth();
-    } else if (getStrokeAlignment() == StrokeAlignment::Outside) {
-        x -= getStrokeWidth();
-        y -= getStrokeWidth();
-        w += getStrokeWidth() * 2.0;
-        h += getStrokeWidth() * 2.0;
-    }
-
-    return GRect(x, y, w, h);
+    double sw = getStrokeWidth();
+    bbox.x -= sw; bbox.y -= sw;
+    bbox.width += sw * 2; bbox.height += sw * 2;
+    return bbox;
 }
 
-int PathNode::hitTestAnchors(const Point2D& canvasPos, float toleranceRadius) const {
-    float tolSq = toleranceRadius * toleranceRadius;
+std::string PathNode::toSVG() const { return "<path d=\"...\" />"; }
 
-    auto distSq = [](const Point2D& p1, const Point2D& p2) {
-        double dx = p1.x - p2.x;
-        double dy = p1.y - p2.y;
-        return (float)(dx * dx + dy * dy);
-    };
-
-    for (size_t i = 0; i < m_anchors.size(); ++i) {
-        if (distSq(canvasPos, m_anchors[i].position) <= tolSq) return (int)(i << 2) | 0;
-        if (distSq(canvasPos, m_anchors[i].handleIn) <= tolSq) return (int)(i << 2) | 1;
-        if (distSq(canvasPos, m_anchors[i].handleOut) <= tolSq) return (int)(i << 2) | 2;
-    }
-
-    return -1;
-}
-
-std::string PathNode::toSVG() const {
-    const auto& data = getCompiledPath();
-    if (data.contours.empty()) return "";
-
-    std::string full_d = "";
-    for (const auto& contour : data.contours) {
-        if (contour.anchors.empty()) continue;
-
-        std::string d = "M " + std::to_string(contour.anchors[0].position.x) + " " + std::to_string(contour.anchors[0].position.y);
-        for (size_t i = 0; i < contour.anchors.size() - 1; ++i) {
-            const auto& p1 = contour.anchors[i].handleOut;
-            const auto& p2 = contour.anchors[i+1].handleIn;
-            const auto& p3 = contour.anchors[i+1].position;
-            d += " C " + std::to_string(p1.x) + " " + std::to_string(p1.y) + ", " +
-                 std::to_string(p2.x) + " " + std::to_string(p2.y) + ", " +
-                 std::to_string(p3.x) + " " + std::to_string(p3.y);
+void PathNode::setBaseContours(const std::vector<Contour>& contours) {
+    m_topology.points.clear();
+    m_topology.edges.clear();
+    for (const auto& contour : contours) {
+        size_t startIdx = m_topology.points.size();
+        for (size_t i = 0; i < contour.anchors.size(); ++i) {
+            geometry::AnchorPoint ap;
+            ap.position = contour.anchors[i].position;
+            ap.handleInOffset = {contour.anchors[i].handleIn.x - ap.position.x, contour.anchors[i].handleIn.y - ap.position.y};
+            ap.handleOutOffset = {contour.anchors[i].handleOut.x - ap.position.x, contour.anchors[i].handleOut.y - ap.position.y};
+            m_topology.points.push_back(ap);
+            if (i > 0) m_topology.edges.push_back({startIdx + i - 1, startIdx + i});
         }
         if (contour.isClosed && contour.anchors.size() > 1) {
-            const auto& p1 = contour.anchors.back().handleOut;
-            const auto& p2 = contour.anchors.front().handleIn;
-            const auto& p3 = contour.anchors.front().position;
-             d += " C " + std::to_string(p1.x) + " " + std::to_string(p1.y) + ", " +
-                 std::to_string(p2.x) + " " + std::to_string(p2.y) + ", " +
-                 std::to_string(p3.x) + " " + std::to_string(p3.y);
-            d += " Z";
+            m_topology.edges.push_back({m_topology.points.size() - 1, startIdx});
         }
-        full_d += d + " ";
     }
-
-    return "<path d=\"" + full_d + "\" />";
+    m_geometry_dirty = true;
 }
 
 } // namespace vectma

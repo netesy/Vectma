@@ -10,11 +10,9 @@ void Toolbar::render(WorkspaceStage& stage) {
     auto renderButton = [&](const char* label, ToolType type) {
         bool active = (stage.getTool() == type);
         if (active) ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]);
-
         if (ImGui::Button(label)) {
             stage.setTool(type);
         }
-
         if (active) ImGui::PopStyleColor();
     };
 
@@ -33,31 +31,29 @@ void Toolbar::render(WorkspaceStage& stage) {
     renderButton("Image (I)", ToolType::Image);
     ImGui::SameLine();
     renderButton("Brush (B)", ToolType::Brush);
+    ImGui::SameLine();
+    renderButton("Pen (P)", ToolType::Pen);
 
     ImGui::SameLine();
     ImGui::Separator();
     ImGui::SameLine();
 
-    // Contextual parameters for Brush tool
     if (stage.getTool() == ToolType::Brush) {
         float size = stage.getBrushSize();
         if (ImGui::SliderFloat("Size", &size, 1, 100)) stage.setBrushSize(size);
-
         ImGui::SameLine();
         float bleeding = stage.getBrushBleeding();
         if (ImGui::SliderFloat("Bleeding", &bleeding, 0, 1)) stage.setBrushBleeding(bleeding);
-
         ImGui::SameLine();
     }
 
-    bool subSel = stage.isSubSelectionMode();
-    if (subSel) ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]);
-    if (ImGui::Button("SubSelect")) {
-        stage.setSubSelectionMode(!subSel);
+    bool pathEdit = (stage.getEditingMode() == CanvasEditingMode::PathEdit);
+    if (pathEdit) ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]);
+    if (ImGui::Button("Path Edit")) {
+        stage.setEditingMode(pathEdit ? CanvasEditingMode::Normal : CanvasEditingMode::PathEdit);
     }
-    if (subSel) ImGui::PopStyleColor();
+    if (pathEdit) ImGui::PopStyleColor();
 
-    // Undo / Redo
     ImGui::SameLine();
     ImGui::Separator();
     ImGui::SameLine();

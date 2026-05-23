@@ -34,6 +34,7 @@ void WorkspaceStage::clearSelection() {
     m_selection.clear();
     m_activeAnchorIndex = -1;
     m_activeHandleId = -1;
+    m_activePathNode = nullptr;
 }
 
 const std::vector<CanvasNode*>& WorkspaceStage::getSelection() const {
@@ -44,7 +45,11 @@ void WorkspaceStage::setTool(ToolType tool) {
     m_tool = tool;
     m_isDragging = false;
     m_activeStroke.clear();
-    clearSelection();
+    if (tool == ToolType::Pen) {
+        setEditingMode(CanvasEditingMode::PathEdit);
+    } else {
+        setEditingMode(CanvasEditingMode::Normal);
+    }
 }
 
 GPoint WorkspaceStage::screenToCanvas(const GPoint& screenPos) const {
@@ -61,30 +66,34 @@ void WorkspaceStage::applyBooleanOperation(BooleanOp op) {
     }
 }
 
-void WorkspaceStage::handleMouseDown(const Point2D& screenPos) {
+void WorkspaceStage::handleMouseDown(const Point2D& screenPos, bool altPressed) {
     m_isDragging = true;
     m_dragStart = screenToCanvas(screenPos);
     m_cursorCanvasPos = m_dragStart;
 
-    if (m_tool == ToolType::Rect) {
+    if (m_editingMode == CanvasEditingMode::PathEdit) {
+        if (!m_activePathNode) {
+            auto newNode = std::make_unique<PathNode>();
+            m_activePathNode = newNode.get();
+            executeCommand(std::make_unique<AddNodeCommand>(m_scene.get(), std::move(newNode)));
+            addToSelection(m_activePathNode);
+        }
+
+        geometry::AnchorPoint newPoint;
+        newPoint.position = m_dragStart;
+        newPoint.handleInOffset = {0, 0};
+        newPoint.handleOutOffset = {0, 0};
+        newPoint.relation = altPressed ? geometry::HandleRelation::Disconnected : geometry::HandleRelation::Symmetric;
+
+        m_activePathNode->addAnchor(newPoint);
+        m_activeAnchorIndex = m_activePathNode->getTopology().points.size() - 1;
+        m_activeHandleId = 2; // dragging out handleOut
+    } else if (m_tool == ToolType::Rect) {
         auto rect = std::make_unique<RectNode>(m_dragStart.x, m_dragStart.y, 0, 0);
         executeCommand(std::make_unique<AddNodeCommand>(m_scene.get(), std::move(rect)));
-    } else if (m_tool == ToolType::Ellipse) {
-        auto ellipse = std::make_unique<EllipseNode>(m_dragStart.x, m_dragStart.y, 0, 0);
-        executeCommand(std::make_unique<AddNodeCommand>(m_scene.get(), std::move(ellipse)));
     } else if (m_tool == ToolType::Brush) {
         m_activeStroke.clear();
         m_activeStroke.push_back({m_dragStart, 1.0f, 0.0f});
-    } else if (m_tool == ToolType::Image) {
-        // Placeholder for image placement logic
-        std::vector<uint8_t> dummyData(100 * 100 * 4, 255);
-        auto image = std::make_unique<ImageNode>(dummyData, m_dragStart.x, m_dragStart.y, 100, 100);
-        executeCommand(std::make_unique<AddNodeCommand>(m_scene.get(), std::move(image)));
-    } else if (m_tool == ToolType::Text) {
-        auto text = std::make_unique<TextNode>("New Text", m_dragStart.x, m_dragStart.y);
-        text->setFontSize(m_fontSize);
-        // text->setFontFamily(m_fontFamily);
-        executeCommand(std::make_unique<AddNodeCommand>(m_scene.get(), std::move(text)));
     }
 }
 
@@ -92,29 +101,22 @@ void WorkspaceStage::handleMouseMove(const Point2D& screenPos) {
     m_cursorCanvasPos = screenToCanvas(screenPos);
     if (!m_isDragging) return;
 
-    if (m_tool == ToolType::Marquee) {
+    if (m_editingMode == CanvasEditingMode::PathEdit && m_activePathNode) {
+        auto topology = m_activePathNode->getTopology();
+        if (m_activeAnchorIndex >= 0 && (size_t)m_activeAnchorIndex < topology.points.size()) {
+            topology.points[m_activeAnchorIndex].setHandleOut(m_cursorCanvasPos);
+            m_activePathNode->setTopology(topology);
+        }
+    } else if (m_tool == ToolType::Marquee) {
         updateMarquee(m_cursorCanvasPos);
     } else if (m_tool == ToolType::Brush) {
-        m_activeStroke.push_back({m_cursorCanvasPos, 1.0f, 0.0f}); // Simplified pressure/velocity
+        m_activeStroke.push_back({m_cursorCanvasPos, 1.0f, 0.0f});
     }
 }
 
 void WorkspaceStage::handleMouseUp() {
     if (m_tool == ToolType::Marquee) {
         performSelection(m_marqueeRect);
-    } else if (m_tool == ToolType::Brush) {
-        if (m_activeStroke.size() >= 2) {
-            // Bake brush stroke into a PathNode (as requested by TASK 4)
-            std::vector<BezierAnchor> anchors;
-            for (const auto& pt : m_activeStroke) {
-                anchors.emplace_back(pt.position, pt.position, pt.position);
-            }
-            auto path = std::make_unique<PathNode>(anchors);
-            path->setStrokeWidth(m_brushSize);
-            // In a real implementation, we might use a specialized BrushNode
-            executeCommand(std::make_unique<AddNodeCommand>(m_scene.get(), std::move(path)));
-        }
-        m_activeStroke.clear();
     }
     m_isDragging = false;
     m_activeSnap = std::nullopt;

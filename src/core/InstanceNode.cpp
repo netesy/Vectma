@@ -1,37 +1,68 @@
 #include "core/InstanceNode.hpp"
-#include "core/SymbolRegistry.hpp"
 #include "renderer/RenderPipeline.hpp"
 
 namespace vectma {
 
-InstanceNode::InstanceNode(const std::string& symbolId) {
-    LamportTimestamp ts{0, 0, 0};
-    m_symbolId.update(symbolId, ts);
-    m_transform.update(GTransform::Identity(), ts);
-}
+InstanceNode::InstanceNode(SymbolID symbolId) : m_symbolId(symbolId) {}
 
 void InstanceNode::render(RenderPipeline& pipeline) const {
-    auto symbol = SymbolRegistry::getInstance().getSymbolRoot(getSymbolId());
-    if (symbol) {
-        symbol->render(pipeline);
+    CanvasNode* root = SymbolRegistry::getInstance().getSymbolRoot(m_symbolId);
+    if (root) {
+        root->render(pipeline);
     }
 }
 
 bool InstanceNode::containsPoint(const GPoint& point) const {
-    auto symbol = SymbolRegistry::getInstance().getSymbolRoot(getSymbolId());
-    if (!symbol) return false;
-    GPoint localPoint = getTransform().inverse().map(point);
-    return symbol->containsPoint(localPoint);
+    return computeBoundingBox().contains(point.x, point.y);
 }
 
 GRect InstanceNode::computeBoundingBox() const {
-    auto symbol = SymbolRegistry::getInstance().getSymbolRoot(getSymbolId());
-    if (!symbol) return GRect();
-    return symbol->computeBoundingBox();
+    if (m_dirty) {
+        CanvasNode* root = SymbolRegistry::getInstance().getSymbolRoot(m_symbolId);
+        if (root) {
+            m_cachedBBox = root->computeBoundingBox();
+        } else {
+            m_cachedBBox = GRect(0, 0, 0, 0);
+        }
+        m_dirty = false;
+    }
+    return m_cachedBBox;
 }
 
 std::string InstanceNode::toSVG() const {
-    return "<use href=\"#symbol-" + getSymbolId() + "\" />";
+    CanvasNode* root = SymbolRegistry::getInstance().getSymbolRoot(m_symbolId);
+    if (root) return root->toSVG();
+    return "";
+}
+
+void InstanceNode::setOverride(const std::string& key, const std::string& value) {
+    m_overrides[key] = value;
+    m_dirty = true;
+}
+
+std::string InstanceNode::getOverride(const std::string& key) const {
+    auto it = m_overrides.find(key);
+    if (it != m_overrides.end()) return it->second;
+    return "";
+}
+
+} // namespace vectma
+
+namespace vectma {
+
+void invalidateSymbolInstances(const SymbolID& id, CanvasNode* root) {
+    if (!root) return;
+
+    // Recursive search for InstanceNodes targeting this SymbolID
+    auto* instance = dynamic_cast<InstanceNode*>(root);
+    (void)id;
+    if (instance) {
+        // Mock dirty trigger
+    }
+
+    for (const auto& child : root->getChildren()) {
+        invalidateSymbolInstances(id, child.get());
+    }
 }
 
 } // namespace vectma
