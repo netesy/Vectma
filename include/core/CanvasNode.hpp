@@ -9,6 +9,7 @@
 #include "core/GColor.hpp"
 #include "core/Geometry.hpp"
 #include "sync/CRDTTypes.hpp"
+#include "layout/LayoutSolver.hpp"
 
 namespace vectma {
 
@@ -27,7 +28,7 @@ public:
     void setParent(CanvasNode* parent);
     CanvasNode* getParent() const;
 
-    void addChild(std::unique_ptr<CanvasNode> child);
+    virtual void addChild(std::unique_ptr<CanvasNode> child);
     virtual std::unique_ptr<CanvasNode> removeChild(CanvasNode* node);
     const std::vector<std::unique_ptr<CanvasNode>>& getChildren() const;
     std::vector<std::unique_ptr<CanvasNode>>& getChildrenMutable();
@@ -69,8 +70,31 @@ public:
     void setStrokeAlignmentRemote(StrokeAlignment alignment, LamportTimestamp ts) { m_strokeAlignment.update(alignment, ts); }
 
     double getStrokeWidth() const { return m_strokeWidth.value; }
-    void setStrokeWidth(double width) { m_strokeWidth.update(width, LamportClock::getInstance().tick()); }
-    void setStrokeWidthRemote(double width, LamportTimestamp ts) { m_strokeWidth.update(width, ts); }
+    void setStrokeWidth(double width) { m_strokeWidth.update(width, LamportClock::getInstance().tick()); markLayoutDirty(); }
+    void setStrokeWidthRemote(double width, LamportTimestamp ts) { m_strokeWidth.update(width, ts); markLayoutDirty(); }
+
+    const LayoutProperties& getLayoutProps() const { return m_layoutProps; }
+    void setLayoutProps(const LayoutProperties& props) { m_layoutProps = props; markLayoutDirty(); }
+
+    SizingRule getHorizontalSizing() const { return m_hSizing; }
+    void setHorizontalSizing(SizingRule rule) { m_hSizing = rule; markLayoutDirty(); }
+
+    SizingRule getVerticalSizing() const { return m_vSizing; }
+    void setVerticalSizing(SizingRule rule) { m_vSizing = rule; markLayoutDirty(); }
+
+    void markLayoutDirty();
+    bool isLayoutDirty() const { return m_layoutDirty; }
+    void clearLayoutDirty() { m_layoutDirty = false; }
+
+    virtual double getX() const { return 0; }
+    virtual double getY() const { return 0; }
+    virtual double getWidth() const { return 0; }
+    virtual double getHeight() const { return 0; }
+    virtual void setPositionRemote(double x, double y, LamportTimestamp ts) { (void)x; (void)y; (void)ts; }
+    virtual void setSizeRemote(double w, double h, LamportTimestamp ts) { (void)w; (void)h; (void)ts; }
+
+    float m_prefWidth = 0;
+    float m_prefHeight = 0;
 
     virtual void render(RenderPipeline& pipeline) const = 0;
     virtual bool containsPoint(const GPoint& point) const = 0;
@@ -98,6 +122,11 @@ protected:
     LWWProperty<GColor> m_fillColor;
     LWWProperty<StrokeAlignment> m_strokeAlignment;
     LWWProperty<double> m_strokeWidth;
+
+    LayoutProperties m_layoutProps;
+    SizingRule m_hSizing = SizingRule::Fixed;
+    SizingRule m_vSizing = SizingRule::Fixed;
+    bool m_layoutDirty = true;
 };
 
 } // namespace vectma

@@ -1,50 +1,53 @@
 #include "core/RectNode.hpp"
 #include "renderer/RenderPipeline.hpp"
+#include "core/CompoundShapeNode.hpp"
 
 namespace vectma {
 
-RectNode::RectNode(double x, double y, double w, double h)
-    : m_x(x), m_y(y), m_w(w), m_h(h) {}
+RectNode::RectNode(double x, double y, double w, double h) : CanvasNode() {
+    LamportTimestamp ts{0, 0, 0};
+    m_x.update(x, ts);
+    m_y.update(y, ts);
+    m_w.update(w, ts);
+    m_h.update(h, ts);
+}
 
 void RectNode::render(RenderPipeline& pipeline) const {
     pipeline.drawRect(*this, getFillType(), getGradientConfig(), getStrokeAlignment());
 }
 
 bool RectNode::containsPoint(const GPoint& point) const {
-    return point.x >= m_x && point.x <= m_x + m_w &&
-           point.y >= m_y && point.y <= m_y + m_h;
+    return point.x >= getX() && point.x <= getX() + getWidth() &&
+           point.y >= getY() && point.y <= getY() + getHeight();
 }
 
 GRect RectNode::computeBoundingBox() const {
-    double halfStroke = getStrokeWidth() / 2.0;
-    double x = m_x;
-    double y = m_y;
-    double w = m_w;
-    double h = m_h;
-
-    if (getStrokeAlignment() == StrokeAlignment::Center) {
-        x -= halfStroke;
-        y -= halfStroke;
-        w += getStrokeWidth();
-        h += getStrokeWidth();
-    } else if (getStrokeAlignment() == StrokeAlignment::Outside) {
-        x -= getStrokeWidth();
-        y -= getStrokeWidth();
-        w += getStrokeWidth() * 2.0;
-        h += getStrokeWidth() * 2.0;
-    }
-
-    return GRect(x, y, w, h);
+    double sw = getStrokeWidth();
+    return GRect(getX() - sw, getY() - sw, getWidth() + sw*2, getHeight() + sw*2);
 }
 
 std::unique_ptr<CanvasNode> RectNode::clone() const {
-    auto copy = std::make_unique<RectNode>(getX(), getY(), getW(), getH());
+    auto copy = std::make_unique<RectNode>(getX(), getY(), getWidth(), getHeight());
     CanvasNode::CloneBaseProperties(*this, *copy);
     return copy;
 }
+
 std::string RectNode::toSVG() const {
-    return "<rect x=\"" + std::to_string(m_x) + "\" y=\"" + std::to_string(m_y) +
-           "\" width=\"" + std::to_string(m_w) + "\" height=\"" + std::to_string(m_h) + "\" />";
+    return "<rect x=\"" + std::to_string(getX()) + "\" y=\"" + std::to_string(getY()) +
+           "\" width=\"" + std::to_string(getWidth()) + "\" height=\"" + std::to_string(getHeight()) + "\" />";
+}
+
+void RectNode::setX(double x) { m_x.update(x, LamportClock::getInstance().tick()); markLayoutDirty(); notifyDirty(); }
+void RectNode::setY(double y) { m_y.update(y, LamportClock::getInstance().tick()); markLayoutDirty(); notifyDirty(); }
+void RectNode::setW(double w) { m_w.update(w, LamportClock::getInstance().tick()); markLayoutDirty(); notifyDirty(); }
+void RectNode::setH(double h) { m_h.update(h, LamportClock::getInstance().tick()); markLayoutDirty(); notifyDirty(); }
+
+void RectNode::notifyDirty() {
+    if (m_parent) {
+        if (auto* cs = dynamic_cast<CompoundShapeNode*>(m_parent)) {
+            cs->markDirty();
+        }
+    }
 }
 
 } // namespace vectma

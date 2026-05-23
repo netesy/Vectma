@@ -3,38 +3,31 @@
 
 namespace vectma {
 
-ArtboardNode::ArtboardNode(const std::string& name, const GRect& bounds)
-    : m_name(name), m_bounds(bounds) {}
+ArtboardNode::ArtboardNode(const std::string& name, const GRect& bounds) : CanvasNode() {
+    LamportTimestamp ts{0, 0, 0};
+    m_name.update(name, ts);
+    m_bounds.update(bounds, ts);
+}
 
 void ArtboardNode::render(RenderPipeline& pipeline) const {
     if (!isVisible()) return;
-
-    pipeline.pushClipRect(m_bounds);
-
-    // Draw background/canvas for artboard if needed
-
-
+    pipeline.pushClipRect(getBounds());
     for (const auto& child : m_children) {
-        child->render(pipeline);
+        if (child->isVisible()) child->render(pipeline);
     }
-
     pipeline.popClipRect();
 }
 
 bool ArtboardNode::containsPoint(const GPoint& point) const {
-    // Artboard itself can be hit tested by its bounds
     if (!isVisible() || isLocked()) return false;
-
-    // First check children
     for (auto it = m_children.rbegin(); it != m_children.rend(); ++it) {
         if ((*it)->containsPoint(point)) return true;
     }
-
-    return m_bounds.contains(point.x, point.y);
+    return getBounds().contains(point.x, point.y);
 }
 
 GRect ArtboardNode::computeBoundingBox() const {
-    return m_bounds;
+    return getBounds();
 }
 
 std::unique_ptr<CanvasNode> ArtboardNode::clone() const {
@@ -43,14 +36,14 @@ std::unique_ptr<CanvasNode> ArtboardNode::clone() const {
     CanvasNode::CloneBaseProperties(*this, *copy);
     return copy;
 }
+
 std::string ArtboardNode::toSVG() const {
-    std::string svg = "<svg id=\"" + m_name + "\" x=\"" + std::to_string(m_bounds.x) +
-                      "\" y=\"" + std::to_string(m_bounds.y) +
-                      "\" width=\"" + std::to_string(m_bounds.width) +
-                      "\" height=\"" + std::to_string(m_bounds.height) + "\">";
-    for (const auto& child : m_children) {
-        svg += child->toSVG();
-    }
+    GRect b = getBounds();
+    std::string svg = "<svg id=\"" + getName() + "\" x=\"" + std::to_string(b.x) +
+                      "\" y=\"" + std::to_string(b.y) +
+                      "\" width=\"" + std::to_string(b.width) +
+                      "\" height=\"" + std::to_string(b.height) + "\">";
+    for (const auto& child : m_children) svg += child->toSVG();
     svg += "</svg>";
     return svg;
 }

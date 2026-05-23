@@ -3,7 +3,7 @@
 
 namespace vectma {
 
-CompoundShapeNode::CompoundShapeNode(BooleanOpType op) {
+CompoundShapeNode::CompoundShapeNode(BooleanOpType op) : CanvasNode() {
     m_opType.update(op, LamportClock::getInstance().tick());
 }
 
@@ -27,8 +27,6 @@ void CompoundShapeNode::render(RenderPipeline& pipeline) const {
 }
 
 bool CompoundShapeNode::containsPoint(const GPoint& point) const {
-    // For hit testing in a production engine, we'd use the resolved path cache.
-    // As a fallback, we check children if Union, or first child if Subtract.
     for (const auto& child : m_children) {
         if (child->containsPoint(point)) return true;
     }
@@ -54,6 +52,11 @@ std::string CompoundShapeNode::toSVG() const {
     for (const auto& child : m_children) svg += child->toSVG();
     svg += "</g>";
     return svg;
+}
+
+void CompoundShapeNode::addChild(std::unique_ptr<CanvasNode> child) {
+    CanvasNode::addChild(std::move(child));
+    markDirty();
 }
 
 } // namespace vectma

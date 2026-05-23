@@ -22,8 +22,7 @@ void Inspector::render(WorkspaceStage& stage) {
 
     const auto& selection = stage.getSelection();
 
-    // TASK 3: Component Actions
-    if (ImGui::CollapsingHeader("COMPONENTS", 1)) {
+    if (ImGui::CollapsingHeader("COMPONENTS", ImGuiTreeNodeFlags_DefaultOpen)) {
         if (!selection.empty()) {
             if (ImGui::Button("Create Component")) stage.createComponentFromSelection();
 
@@ -51,7 +50,7 @@ void Inspector::render(WorkspaceStage& stage) {
     }
 
     if (selection.size() > 1) {
-        if (ImGui::CollapsingHeader("PATH FINDER", 1)) {
+        if (ImGui::CollapsingHeader("PATH FINDER", ImGuiTreeNodeFlags_DefaultOpen)) {
             if (ImGui::Button("Union"))    stage.applyBooleanOperation(BooleanOp::Union);
             ImGui::SameLine();
             if (ImGui::Button("Subtract")) stage.applyBooleanOperation(BooleanOp::Subtract);
@@ -64,34 +63,46 @@ void Inspector::render(WorkspaceStage& stage) {
 
     CanvasNode* node = selection[0];
 
-    if (ImGui::CollapsingHeader("GEOMETRY", 1)) {
-        if (RectNode* rect = dynamic_cast<RectNode*>(node)) {
-            float x = (float)rect->getX();
-            float y = (float)rect->getY();
-            float w = (float)rect->getW();
-            float h = (float)rect->getH();
-            if (ImGui::SliderFloat("X", &x, -5000, 5000)) rect->setX(x);
-            if (ImGui::SliderFloat("Y", &y, -5000, 5000)) rect->setY(y);
-            if (ImGui::SliderFloat("W", &w, 1, 5000)) rect->setW(w);
-            if (ImGui::SliderFloat("H", &h, 1, 5000)) rect->setH(h);
-        }
+    if (ImGui::CollapsingHeader("GEOMETRY", ImGuiTreeNodeFlags_DefaultOpen)) {
+        float x = (float)node->getX();
+        float y = (float)node->getY();
+        float w = (float)node->getWidth();
+        float h = (float)node->getHeight();
+
+        bool posChanged = false;
+        if (ImGui::SliderFloat("X", &x, -5000, 5000)) posChanged = true;
+        if (ImGui::SliderFloat("Y", &y, -5000, 5000)) posChanged = true;
+        if (posChanged) node->setPositionRemote(x, y, LamportClock::getInstance().tick());
+
+        bool sizeChanged = false;
+        if (ImGui::SliderFloat("W", &w, 1, 5000)) sizeChanged = true;
+        if (ImGui::SliderFloat("H", &h, 1, 5000)) sizeChanged = true;
+        if (sizeChanged) node->setSizeRemote(w, h, LamportClock::getInstance().tick());
     }
 
     if (TextNode* textNode = dynamic_cast<TextNode*>(node)) {
-        if (ImGui::CollapsingHeader("TYPOGRAPHY", 1)) {
+        if (ImGui::CollapsingHeader("TYPOGRAPHY", ImGuiTreeNodeFlags_DefaultOpen)) {
+            float fontSize = textNode->getFontSize();
+            if (ImGui::SliderFloat("Size", &fontSize, 4, 256)) textNode->setFontSize(fontSize);
+
+            std::string text = textNode->getText();
             char buf[1024];
-            std::strncpy(buf, textNode->getText().c_str(), sizeof(buf));
-            if (ImGui::SliderFloat("Size", &textNode->font_size, 4, 256)) textNode->setFontSize(textNode->font_size);
+            std::strncpy(buf, text.c_str(), sizeof(buf));
+            if (ImGui::InputTextMultiline("Content", buf, sizeof(buf))) {
+                textNode->setText(std::string(buf));
+            }
         }
     }
 
-    if (ImGui::CollapsingHeader("APPEARANCE", 1)) {
+    if (ImGui::CollapsingHeader("APPEARANCE", ImGuiTreeNodeFlags_DefaultOpen)) {
         float opacity = node->getOpacity();
         if (ImGui::SliderFloat("Opacity", &opacity, 0.0f, 1.0f)) node->setOpacity(opacity);
 
         GColor fill = node->getFillColor();
         float col[4] = { (float)fill.r / 255.0f, (float)fill.g / 255.0f, (float)fill.b / 255.0f, (float)fill.a / 255.0f };
-        [[maybe_unused]] float* pCol = col;
+        if (ImGui::ColorEdit4("Fill", col)) {
+            node->setFillColor(GColor((uint8_t)(col[0]*255), (uint8_t)(col[1]*255), (uint8_t)(col[2]*255), (uint8_t)(col[3]*255)));
+        }
     }
 
     ImGui::End();

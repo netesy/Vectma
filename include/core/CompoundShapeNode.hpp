@@ -1,5 +1,4 @@
 #pragma once
-
 #include "core/CanvasNode.hpp"
 #include "core/PathData.hpp"
 #include <vector>
@@ -31,11 +30,16 @@ public:
     BooleanOpType getOpType() const { return m_opType.value; }
 
     void markDirty();
+    void addChild(std::unique_ptr<CanvasNode> child) override;
 
-    // Cache management for the resolved geometry
     bool isDirty() const { return m_pathDirty; }
     void setResolvedPath(std::unique_ptr<PathData> path) const { m_resolvedPath = std::move(path); m_pathDirty = false; }
     const PathData* getResolvedPath() const { return m_resolvedPath.get(); }
+
+    double getX() const override { return computeBoundingBox().x; }
+    double getY() const override { return computeBoundingBox().y; }
+    double getWidth() const override { return computeBoundingBox().width; }
+    double getHeight() const override { return computeBoundingBox().height; }
 
 private:
     LWWProperty<BooleanOpType> m_opType;

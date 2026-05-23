@@ -8,6 +8,13 @@ struct GPoint {
 
     GPoint() = default;
     GPoint(double x, double y) : x(x), y(y) {}
+
+    bool operator==(const GPoint& other) const {
+        return x == other.x && y == other.y;
+    }
+    bool operator!=(const GPoint& other) const {
+        return !(*this == other);
+    }
 };
 
 using Point2D = GPoint;

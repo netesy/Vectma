@@ -4,39 +4,27 @@
 
 namespace vectma {
 
-EllipseNode::EllipseNode(double cx, double cy, double rx, double ry)
-    : m_cx(cx), m_cy(cy), m_rx(rx), m_ry(ry) {}
+EllipseNode::EllipseNode(double cx, double cy, double rx, double ry) : CanvasNode() {
+    LamportTimestamp ts{0, 0, 0};
+    m_cx.update(cx, ts);
+    m_cy.update(cy, ts);
+    m_rx.update(rx, ts);
+    m_ry.update(ry, ts);
+}
 
 void EllipseNode::render(RenderPipeline& pipeline) const {
     pipeline.drawEllipse(*this, getFillType(), getGradientConfig(), getStrokeAlignment());
 }
 
 bool EllipseNode::containsPoint(const GPoint& point) const {
-    double dx = (point.x - m_cx) / m_rx;
-    double dy = (point.y - m_cy) / m_ry;
+    double dx = (point.x - getCX()) / getRX();
+    double dy = (point.y - getCY()) / getRY();
     return (dx * dx + dy * dy) <= 1.0;
 }
 
 GRect EllipseNode::computeBoundingBox() const {
-    double halfStroke = getStrokeWidth() / 2.0;
-    double x = m_cx - m_rx;
-    double y = m_cy - m_ry;
-    double w = m_rx * 2.0;
-    double h = m_ry * 2.0;
-
-    if (getStrokeAlignment() == StrokeAlignment::Center) {
-        x -= halfStroke;
-        y -= halfStroke;
-        w += getStrokeWidth();
-        h += getStrokeWidth();
-    } else if (getStrokeAlignment() == StrokeAlignment::Outside) {
-        x -= getStrokeWidth();
-        y -= getStrokeWidth();
-        w += getStrokeWidth() * 2.0;
-        h += getStrokeWidth() * 2.0;
-    }
-
-    return GRect(x, y, w, h);
+    double sw = getStrokeWidth();
+    return GRect(getCX() - getRX() - sw, getCY() - getRY() - sw, getRX() * 2 + sw * 2, getRY() * 2 + sw * 2);
 }
 
 std::unique_ptr<CanvasNode> EllipseNode::clone() const {
@@ -44,9 +32,10 @@ std::unique_ptr<CanvasNode> EllipseNode::clone() const {
     CanvasNode::CloneBaseProperties(*this, *copy);
     return copy;
 }
+
 std::string EllipseNode::toSVG() const {
-    return "<ellipse cx=\"" + std::to_string(m_cx) + "\" cy=\"" + std::to_string(m_cy) +
-           "\" rx=\"" + std::to_string(m_rx) + "\" ry=\"" + std::to_string(m_ry) + "\" />";
+    return "<ellipse cx=\"" + std::to_string(getCX()) + "\" cy=\"" + std::to_string(getCY()) +
+           "\" rx=\"" + std::to_string(getRX()) + "\" ry=\"" + std::to_string(getRY()) + "\" />";
 }
 
 } // namespace vectma

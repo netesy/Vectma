@@ -22,12 +22,12 @@
 - [x] Property override tracking per instance
 - [x] Nested symbol resolution and cyclic dependency detection
 
-## Phase 24: Smart Layout Engine (Flexbox-style Auto-Layout & Dynamic Resizing Constraints) [ACTIVE]
-- [ ] 1D/2D Flexbox solver for canvas elements
-- [ ] Resizing constraints (Fix, Hug, Fill)
-- [ ] Relative positioning and auto-spacing
+## Phase 24: Smart Layout Engine (Flexbox-style Auto-Layout & Dynamic Resizing Constraints) [DONE]
+- [x] 1D/2D Flexbox solver for canvas elements
+- [x] Resizing constraints (Fix, Hug, Fill)
+- [x] Relative positioning and auto-spacing
 
-## Phase 25: Infinite Canvas Artboard Management, Target Device Presets & Workspace Waypoints
+## Phase 25: Infinite Canvas Artboard Management, Target Device Presets & Workspace Waypoints [ACTIVE]
 - [ ] Dynamic artboard coordinate system
 - [ ] Device preset library (Mobile, Web, Print)
 - [ ] Viewport navigation history and waypoints

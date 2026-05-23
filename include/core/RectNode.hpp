@@ -1,5 +1,4 @@
 #pragma once
-
 #include "core/CanvasNode.hpp"
 
 namespace vectma {
@@ -17,18 +16,44 @@ public:
     std::string toSVG() const override;
     std::unique_ptr<CanvasNode> clone() const override;
 
-    double getX() const { return m_x; }
-    double getY() const { return m_y; }
-    double getW() const { return m_w; }
-    double getH() const { return m_h; }
+    double getX() const override { return m_x.value; }
+    double getY() const override { return m_y.value; }
+    double getWidth() const override { return m_w.value; }
+    double getHeight() const override { return m_h.value; }
 
-    void setX(double x) { m_x = x; }
-    void setY(double y) { m_y = y; }
-    void setW(double w) { m_w = w; }
-    void setH(double h) { m_h = h; }
+    double getW() const { return m_w.value; }
+    double getH() const { return m_h.value; }
+
+    void setX(double x);
+    void setY(double y);
+    void setW(double w);
+    void setH(double h);
+
+    void setPositionRemote(double x, double y, LamportTimestamp ts) override {
+        m_x.update(x, ts);
+        m_y.update(y, ts);
+        markLayoutDirty();
+        notifyDirty();
+    }
+    void setSizeRemote(double w, double h, LamportTimestamp ts) override {
+        m_w.update(w, ts);
+        m_h.update(h, ts);
+        markLayoutDirty();
+        notifyDirty();
+    }
+
+    void setXRemote(double x, LamportTimestamp ts) { m_x.update(x, ts); markLayoutDirty(); notifyDirty(); }
+    void setYRemote(double y, LamportTimestamp ts) { m_y.update(y, ts); markLayoutDirty(); notifyDirty(); }
+    void setWRemote(double w, LamportTimestamp ts) { m_w.update(w, ts); markLayoutDirty(); notifyDirty(); }
+    void setHRemote(double h, LamportTimestamp ts) { m_h.update(h, ts); markLayoutDirty(); notifyDirty(); }
 
 private:
-    double m_x, m_y, m_w, m_h;
+    void notifyDirty();
+
+    LWWProperty<double> m_x;
+    LWWProperty<double> m_y;
+    LWWProperty<double> m_w;
+    LWWProperty<double> m_h;
 };
 
 } // namespace vectma

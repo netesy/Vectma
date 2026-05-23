@@ -1,5 +1,4 @@
 #pragma once
-
 #include "core/CanvasNode.hpp"
 #include "core/PropertyOverride.hpp"
 #include <string>
@@ -25,6 +24,11 @@ public:
 
     void setOverride(const std::string& path, PropertyVariant value);
     const OverrideMap& getOverrides() const { return m_overrides; }
+
+    double getX() const override { return computeBoundingBox().x; }
+    double getY() const override { return computeBoundingBox().y; }
+    double getWidth() const override { return computeBoundingBox().width; }
+    double getHeight() const override { return computeBoundingBox().height; }
 
 private:
     MasterComponentNode* m_master;

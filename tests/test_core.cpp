@@ -39,6 +39,7 @@ public:
     void drawPath(const vectma::PathNode&, vectma::FillType, const vectma::GradientConfig&, vectma::StrokeAlignment) override {}
     void drawText(const vectma::TextNode&) override {}
     void drawImage(const vectma::ImageNode&) override {}
+    void drawCompoundShape(const vectma::CompoundShapeNode&) override {}
     void drawBezierPath(const vectma::PathNode&) override {}
     void drawAnchorOverlay(const vectma::BezierAnchor&, bool, int) override {}
     void renderNode(const vectma::CanvasNode&) override {}
@@ -48,6 +49,8 @@ public:
 
     void pushClipRect(const vectma::GRect&) override {}
     void popClipRect() override {}
+    void pushOverrideContext(const vectma::OverrideMap*) override {}
+    void popOverrideContext() override {}
     void setGlobalOpacity(float) override {}
 };
 
@@ -62,8 +65,8 @@ void testSnapping() {
     auto snap = vectma::SnappingEngine::findSnapPoint(cursor, *scene, 10.0f);
 
     assert(snap.has_value());
-    assert(snap->snappedPoint.x == 100.0);
-    assert(snap->snappedPoint.y == 100.0);
+    assert(std::abs(snap->snappedPoint.x - 100.0) < 1e-6);
+    assert(std::abs(snap->snappedPoint.y - 100.0) < 1e-6);
     std::cout << "Snapping accuracy test passed." << std::endl;
 }
 

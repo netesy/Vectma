@@ -3,7 +3,9 @@
 
 namespace vectma {
 
-MasterComponentNode::MasterComponentNode(const std::string& name) : m_name(name) {}
+MasterComponentNode::MasterComponentNode(const std::string& name) : CanvasNode() {
+    m_name.update(name, {0, 0, 0});
+}
 
 void MasterComponentNode::render(RenderPipeline& pipeline) const {
     if (!isVisible()) return;
@@ -30,13 +32,13 @@ GRect MasterComponentNode::computeBoundingBox() const {
 }
 
 std::unique_ptr<CanvasNode> MasterComponentNode::clone() const {
-    auto copy = std::make_unique<MasterComponentNode>(m_name);
+    auto copy = std::make_unique<MasterComponentNode>(getName());
     for(const auto& child : m_children) copy->addChild(child->clone());
     CanvasNode::CloneBaseProperties(*this, *copy);
     return copy;
 }
 std::string MasterComponentNode::toSVG() const {
-    std::string svg = "<g id=\"" + m_name + "\">";
+    std::string svg = "<g id=\"" + getName() + "\">";
     for (const auto& child : m_children) svg += child->toSVG();
     svg += "</g>";
     return svg;

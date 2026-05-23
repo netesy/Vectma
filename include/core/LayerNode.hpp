@@ -1,5 +1,4 @@
 #pragma once
-
 #include "core/CanvasNode.hpp"
 
 namespace vectma {
@@ -9,8 +8,8 @@ public:
     LayerNode(const std::string& name = "Layer");
 
     std::string getClassName() const override { return "LayerNode"; }
-    std::string getName() const { return m_name; }
-    void setName(const std::string& name) { m_name = name; }
+    const std::string& getName() const { return m_name.value; }
+    void setName(const std::string& name) { m_name.update(name, LamportClock::getInstance().tick()); }
 
     void render(RenderPipeline& pipeline) const override;
     bool containsPoint(const GPoint& point) const override;
@@ -19,7 +18,7 @@ public:
     std::unique_ptr<CanvasNode> clone() const override;
 
 private:
-    std::string m_name;
+    LWWProperty<std::string> m_name;
 };
 
 } // namespace vectma

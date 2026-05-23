@@ -9,9 +9,9 @@
 namespace vectma {
 
 struct GColor {
-    uint8_t r = 0;
-    uint8_t g = 0;
-    uint8_t b = 0;
+    uint8_t r = 255;
+    uint8_t g = 255;
+    uint8_t b = 255;
     uint8_t a = 255;
 
     GColor() = default;
@@ -22,15 +22,21 @@ struct GColor {
     static GColor Transparent() { return GColor(0, 0, 0, 0); }
     static GColor Primary() { return FromHex("#ddb7ff"); }
 
+    bool operator==(const GColor& other) const {
+        return r == other.r && g == other.g && b == other.b && a == other.a;
+    }
+
     static GColor FromHex(const std::string& hex) {
         if (hex.empty()) return Black();
         size_t start = (hex[0] == '#') ? 1 : 0;
-        uint32_t val = std::stoul(hex.substr(start), nullptr, 16);
-        if (hex.length() - start == 6) {
-            return GColor((val >> 16) & 0xFF, (val >> 8) & 0xFF, val & 0xFF);
-        } else if (hex.length() - start == 8) {
-            return GColor((val >> 24) & 0xFF, (val >> 16) & 0xFF, (val >> 8) & 0xFF, val & 0xFF);
-        }
+        try {
+            uint32_t val = std::stoul(hex.substr(start), nullptr, 16);
+            if (hex.length() - start == 6) {
+                return GColor((val >> 16) & 0xFF, (val >> 8) & 0xFF, val & 0xFF);
+            } else if (hex.length() - start == 8) {
+                return GColor((val >> 24) & 0xFF, (val >> 16) & 0xFF, (val >> 8) & 0xFF, val & 0xFF);
+            }
+        } catch (...) {}
         return Black();
     }
 };
