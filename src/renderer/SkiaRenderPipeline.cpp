@@ -6,6 +6,7 @@
 #include "core/ImageNode.hpp"
 #include "core/CompoundShapeNode.hpp"
 #include "core/ImageEngine.hpp"
+#include "core/PropertyOverride.hpp"
 
 #ifdef VECTMA_USE_SKIA
 #include "include/core/SkCanvas.h"
@@ -66,8 +67,23 @@ SkiaRenderPipeline::SkiaRenderPipeline(SkCanvas* canvas) : m_canvas(canvas) {
     if (effect) m_brushEffect = effect;
 }
 
-void SkiaRenderPipeline::beginFrame() { m_globalOpacity = 1.0f; }
+void SkiaRenderPipeline::beginFrame() { m_globalOpacity = 1.0f; m_overrideStack.clear(); }
 void SkiaRenderPipeline::endFrame() {}
+
+void SkiaRenderPipeline::pushOverrideContext(const OverrideMap* overrides) { m_overrideStack.push_back(overrides); }
+void SkiaRenderPipeline::popOverrideContext() { if (!m_overrideStack.empty()) m_overrideStack.pop_back(); }
+
+template <typename T>
+T SkiaRenderPipeline_Resolve(const std::vector<const OverrideMap*>& stack, NodeId id, const std::string& prop, T val) {
+    std::string key = std::to_string(id.timestamp) + "." + prop;
+    for (auto it = stack.rbegin(); it != stack.rend(); ++it) {
+        auto found = (*it)->find(key);
+        if (found != (*it)->end()) {
+            if (auto pval = std::get_if<T>(&found->second)) return *pval;
+        }
+    }
+    return val;
+}
 
 SkPath SkiaRenderPipeline::TranslateToSkPath(const PathData& nativePath) {
     SkPath path;
@@ -91,42 +107,54 @@ SkPath SkiaRenderPipeline::TranslateToSkPath(const PathData& nativePath) {
 }
 
 void SkiaRenderPipeline::drawRect(const RectNode& node, FillType, const GradientConfig&, StrokeAlignment) {
+    GColor fill = SkiaRenderPipeline_Resolve(m_overrideStack, node.getId(), "fill_color", node.getFillColor());
+    float opacity = SkiaRenderPipeline_Resolve(m_overrideStack, node.getId(), "opacity", node.getOpacity());
+
     SkPaint paint;
-    paint.setColor(node.getFillColor().toSkColor());
-    paint.setAlphaf(m_globalOpacity * node.getOpacity());
+    paint.setColor(fill.toSkColor());
+    paint.setAlphaf(m_globalOpacity * opacity);
     paint.setBlendMode(MapBlendMode(node.getBlendMode()));
     m_canvas->drawRect(SkRect::MakeXYWH(node.getX(), node.getY(), node.getW(), node.getH()), paint);
 }
 
 void SkiaRenderPipeline::drawEllipse(const EllipseNode& node, FillType, const GradientConfig&, StrokeAlignment) {
+    GColor fill = SkiaRenderPipeline_Resolve(m_overrideStack, node.getId(), "fill_color", node.getFillColor());
+    float opacity = SkiaRenderPipeline_Resolve(m_overrideStack, node.getId(), "opacity", node.getOpacity());
+
     SkPaint paint;
-    paint.setColor(node.getFillColor().toSkColor());
-    paint.setAlphaf(m_globalOpacity * node.getOpacity());
+    paint.setColor(fill.toSkColor());
+    paint.setAlphaf(m_globalOpacity * opacity);
     paint.setBlendMode(MapBlendMode(node.getBlendMode()));
     m_canvas->drawOval(SkRect::MakeXYWH(node.getCX() - node.getRX(), node.getCY() - node.getRY(),
                                       node.getRX() * 2, node.getRY() * 2), paint);
 }
 
 void SkiaRenderPipeline::drawPath(const PathNode& node, FillType, const GradientConfig&, StrokeAlignment) {
+    GColor fill = SkiaRenderPipeline_Resolve(m_overrideStack, node.getId(), "fill_color", node.getFillColor());
+    float opacity = SkiaRenderPipeline_Resolve(m_overrideStack, node.getId(), "opacity", node.getOpacity());
+
     SkPath path = TranslateToSkPath(node.getCompiledPath());
     SkPaint paint;
     paint.setAntiAlias(true);
-    paint.setColor(node.getFillColor().toSkColor());
-    paint.setAlphaf(m_globalOpacity * node.getOpacity());
+    paint.setColor(fill.toSkColor());
+    paint.setAlphaf(m_globalOpacity * opacity);
     paint.setBlendMode(MapBlendMode(node.getBlendMode()));
     m_canvas->drawPath(path, paint);
 }
 
 void SkiaRenderPipeline::drawText(const TextNode& node) {
+    std::string text = SkiaRenderPipeline_Resolve(m_overrideStack, node.getId(), "text", node.getText());
+    GColor fill = SkiaRenderPipeline_Resolve(m_overrideStack, node.getId(), "fill_color", node.getFillColor());
+
     sk_sp<skia::textlayout::FontCollection> fontCollection = sk_make_sp<skia::textlayout::FontCollection>();
     fontCollection->setDefaultFontManager(SkFontMgr::RefDefault());
     skia::textlayout::ParagraphStyle paraStyle;
     skia::textlayout::TextStyle textStyle;
     textStyle.setFontSize(node.getFontSize());
-    textStyle.setColor(node.getFillColor().toSkColor());
+    textStyle.setColor(fill.toSkColor());
     auto builder = skia::textlayout::ParagraphBuilder::make(paraStyle, fontCollection);
     builder->pushStyle(textStyle);
-    builder->addText(node.getText().c_str());
+    builder->addText(text.c_str());
     builder->pop();
     auto paragraph = builder->Build();
     paragraph->layout(10000);
@@ -152,13 +180,9 @@ void SkiaRenderPipeline::drawCompoundShape(const CompoundShapeNode& node) {
         SkPath childPath;
         if (auto* pathNode = dynamic_cast<const PathNode*>(child.get())) {
             childPath = TranslateToSkPath(pathNode->getCompiledPath());
-        } else if (auto* compound = dynamic_cast<const CompoundShapeNode*>(child.get())) {
-            // Placeholder: Recurse or use cached handle
-            (void)compound;
         } else if (auto* rect = dynamic_cast<const RectNode*>(child.get())) {
             childPath.addRect(SkRect::MakeXYWH(rect->getX(), rect->getY(), rect->getW(), rect->getH()));
         }
-
         if (first) { result = childPath; first = false; }
         else { SkPath next; Op(result, childPath, MapOp(node.getOpType()), &next); result = next; }
     }

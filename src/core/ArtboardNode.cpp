@@ -37,6 +37,12 @@ GRect ArtboardNode::computeBoundingBox() const {
     return m_bounds;
 }
 
+std::unique_ptr<CanvasNode> ArtboardNode::clone() const {
+    auto copy = std::make_unique<ArtboardNode>(getName(), getBounds());
+    for(const auto& child : m_children) copy->addChild(child->clone());
+    CanvasNode::CloneBaseProperties(*this, *copy);
+    return copy;
+}
 std::string ArtboardNode::toSVG() const {
     std::string svg = "<svg id=\"" + m_name + "\" x=\"" + std::to_string(m_bounds.x) +
                       "\" y=\"" + std::to_string(m_bounds.y) +

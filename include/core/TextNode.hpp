@@ -18,6 +18,7 @@ public:
     GRect computeBoundingBox() const override;
 
     std::string toSVG() const override;
+    std::unique_ptr<CanvasNode> clone() const override;
 
     // Text specific
     std::string text_buffer;

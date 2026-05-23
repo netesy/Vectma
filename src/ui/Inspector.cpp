@@ -6,8 +6,10 @@
 #include "core/TextNode.hpp"
 #include "core/ImageNode.hpp"
 #include "core/CompoundShapeNode.hpp"
-#include "core/LocaleManager.hpp"
+#include "core/MasterComponentNode.hpp"
+#include "core/ComponentInstanceNode.hpp"
 #include "core/SymbolRegistry.hpp"
+#include "core/LocaleManager.hpp"
 #include <imgui.h>
 #include <vector>
 #include <string>
@@ -19,6 +21,29 @@ void Inspector::render(WorkspaceStage& stage) {
     ImGui::Begin("Inspector");
 
     const auto& selection = stage.getSelection();
+
+    // TASK 3: Component Actions
+    if (ImGui::CollapsingHeader("COMPONENTS", 1)) {
+        if (!selection.empty()) {
+            if (ImGui::Button("Create Component")) stage.createComponentFromSelection();
+
+            if (selection.size() == 1) {
+                if (auto* inst = dynamic_cast<ComponentInstanceNode*>(selection[0])) {
+                    if (ImGui::Button("Detach Instance")) stage.detachInstance(inst);
+                }
+            }
+        }
+
+        ImGui::Separator();
+        ImGui::Text("Asset Library");
+        auto symbols = SymbolRegistry::getInstance().getAllSymbolIDs();
+        for (const auto& id : symbols) {
+            if (ImGui::Selectable(id.c_str())) {
+                stage.placeInstance(id);
+            }
+        }
+    }
+
     if (selection.empty()) {
         ImGui::TextDisabled("No Selection");
         ImGui::End();
@@ -56,10 +81,7 @@ void Inspector::render(WorkspaceStage& stage) {
         if (ImGui::CollapsingHeader("TYPOGRAPHY", 1)) {
             char buf[1024];
             std::strncpy(buf, textNode->getText().c_str(), sizeof(buf));
-            // if (ImGui::InputTextMultiline("Text", buf, sizeof(buf))) textNode->setText(buf);
-
-            float fsize = textNode->getFontSize();
-            if (ImGui::SliderFloat("Size", &fsize, 4, 256)) textNode->setFontSize(fsize);
+            if (ImGui::SliderFloat("Size", &textNode->font_size, 4, 256)) textNode->setFontSize(textNode->font_size);
         }
     }
 
@@ -68,10 +90,8 @@ void Inspector::render(WorkspaceStage& stage) {
         if (ImGui::SliderFloat("Opacity", &opacity, 0.0f, 1.0f)) node->setOpacity(opacity);
 
         GColor fill = node->getFillColor();
-        [[maybe_unused]] float col[4] = { (float)fill.r / 255.0f, (float)fill.g / 255.0f, (float)fill.b / 255.0f, (float)fill.a / 255.0f };
-        // if (ImGui::ColorEdit4("Color", col)) {
-        //     node->setFillColor(GColor((uint8_t)(col[0] * 255.0f), (uint8_t)(col[1] * 255.0f), (uint8_t)(col[2] * 255.0f), (uint8_t)(col[3] * 255.0f)));
-        // }
+        float col[4] = { (float)fill.r / 255.0f, (float)fill.g / 255.0f, (float)fill.b / 255.0f, (float)fill.a / 255.0f };
+        [[maybe_unused]] float* pCol = col;
     }
 
     ImGui::End();

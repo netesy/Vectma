@@ -44,6 +44,8 @@ public:
 
     void pushClipRect(const GRect& rect) override;
     void popClipRect() override;
+    void pushOverrideContext(const OverrideMap* overrides) override;
+    void popOverrideContext() override;
     void setGlobalOpacity(float opacity) override;
 
     // Advanced Extensions
@@ -57,6 +59,7 @@ private:
 #endif
     SkCanvas* m_canvas;
     float m_globalOpacity = 1.0f;
+    std::vector<const OverrideMap*> m_overrideStack;
 };
 #endif
 

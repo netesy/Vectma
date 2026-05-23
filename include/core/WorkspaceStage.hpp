@@ -59,6 +59,9 @@ public:
     // Boolean Operations
     void applyBooleanOperation(BooleanOp op);
     void flattenCompoundShape(class CompoundShapeNode* compound);
+    void createComponentFromSelection();
+    void detachInstance(class ComponentInstanceNode* instance);
+    void placeInstance(const std::string& symbolId);
 
     // History
     void undo() { m_history.undo(); }

@@ -1,3 +1,4 @@
+#include "core/PropertyOverride.hpp"
 #pragma once
 
 #include <string>
@@ -48,6 +49,8 @@ public:
     // Phase 18: Clipping and Layer Support
     virtual void pushClipRect(const GRect& rect) = 0;
     virtual void popClipRect() = 0;
+    virtual void pushOverrideContext(const OverrideMap* overrides) = 0;
+    virtual void popOverrideContext() = 0;
     virtual void setGlobalOpacity(float opacity) = 0;
 };
 
@@ -76,6 +79,8 @@ public:
 
     void pushClipRect(const GRect& rect) override;
     void popClipRect() override;
+    void pushOverrideContext(const OverrideMap* overrides) override;
+    void popOverrideContext() override;
     void setGlobalOpacity(float opacity) override;
 
 private:

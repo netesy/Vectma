@@ -1,0 +1,8 @@
+*.o
+*.exe
+test_runner
+test_sync
+test_geometry
+test_boolean
+test_components
+vectma

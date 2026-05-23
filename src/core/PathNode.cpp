@@ -204,6 +204,11 @@ GRect PathNode::computeBoundingBox() const {
     return bbox;
 }
 
+std::unique_ptr<CanvasNode> PathNode::clone() const {
+    auto copy = std::make_unique<PathNode>(m_topology);
+    CanvasNode::CloneBaseProperties(*this, *copy);
+    return copy;
+}
 std::string PathNode::toSVG() const { return "<path d=\"...\" />"; }
 
 void PathNode::setBaseContours(const std::vector<Contour>& contours) {

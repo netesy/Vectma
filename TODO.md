@@ -12,17 +12,17 @@
 - [x] Modal Pen tool interaction state machine
 - [x] Cross-platform build path hardening (Windows/Linux)
 
-## Phase 22: Non-Destructive Live Boolean Operations & Compound Path Finder [DONE] [ACTIVE]
+## Phase 22: Non-Destructive Live Boolean Operations & Compound Path Finder [DONE]
 - [x] Adaptive polygon clipping via Skia PathOps
 - [x] Compound path grouping and live evaluation
 - [x] Real-time Boolean preview hierarchy
 
-## Phase 23: Reusable Component Architecture, Nested Instances & Property Overrides
-- [ ] Component master/instance mapping logic
-- [ ] Property override tracking per instance
-- [ ] Nested symbol resolution and cyclic dependency detection
+## Phase 23: Reusable Component Architecture, Nested Instances & Property Overrides [DONE]
+- [x] Component master/instance mapping logic
+- [x] Property override tracking per instance
+- [x] Nested symbol resolution and cyclic dependency detection
 
-## Phase 24: Smart Layout Engine (Flexbox-style Auto-Layout & Dynamic Resizing Constraints)
+## Phase 24: Smart Layout Engine (Flexbox-style Auto-Layout & Dynamic Resizing Constraints) [ACTIVE]
 - [ ] 1D/2D Flexbox solver for canvas elements
 - [ ] Resizing constraints (Fix, Hug, Fill)
 - [ ] Relative positioning and auto-spacing

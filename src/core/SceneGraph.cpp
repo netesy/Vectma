@@ -136,6 +136,12 @@ std::vector<CanvasNode*> SceneGraph::queryVisible(const GRect& viewport) const {
     return m_spatialIndex->query(viewport);
 }
 
+std::unique_ptr<CanvasNode> SceneGraph::clone() const {
+    auto copy = std::make_unique<SceneGraph>();
+    for(const auto& child : m_children) copy->addChild(child->clone());
+    CanvasNode::CloneBaseProperties(*this, *copy);
+    return copy;
+}
 std::string SceneGraph::toSVG() const {
     std::string svg = "<svg xmlns=\"http://www.w3.org/2000/svg\">\n";
     svg += "<defs>\n";

@@ -76,11 +76,14 @@ public:
     virtual bool containsPoint(const GPoint& point) const = 0;
     virtual GRect computeBoundingBox() const = 0;
     virtual std::string toSVG() const = 0;
+    virtual std::unique_ptr<CanvasNode> clone() const = 0;
 
     void bringToFront();
     void sendToBack();
     void raiseNode();
     void lowerNode();
+
+    static void CloneBaseProperties(const CanvasNode& src, CanvasNode& dst);
 
 protected:
     CanvasNode* m_parent = nullptr;

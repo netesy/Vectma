@@ -28,6 +28,7 @@ public:
     GRect computeBoundingBox() const override;
 
     std::string toSVG() const override;
+    std::unique_ptr<CanvasNode> clone() const override;
 
     // Z-Order Stacking Controls
     void bringToFront(size_t index);

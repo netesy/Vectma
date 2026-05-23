@@ -20,6 +20,11 @@ GRect ImageNode::computeBoundingBox() const {
     return GRect(m_x, m_y, m_width, m_height);
 }
 
+std::unique_ptr<CanvasNode> ImageNode::clone() const {
+    auto copy = std::make_unique<ImageNode>(getRawData(), getX(), getY(), getWidth(), getHeight());
+    CanvasNode::CloneBaseProperties(*this, *copy);
+    return copy;
+}
 std::string ImageNode::toSVG() const {
     return "<image href=\"...\" />";
 }

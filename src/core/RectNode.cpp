@@ -37,6 +37,11 @@ GRect RectNode::computeBoundingBox() const {
     return GRect(x, y, w, h);
 }
 
+std::unique_ptr<CanvasNode> RectNode::clone() const {
+    auto copy = std::make_unique<RectNode>(getX(), getY(), getW(), getH());
+    CanvasNode::CloneBaseProperties(*this, *copy);
+    return copy;
+}
 std::string RectNode::toSVG() const {
     return "<rect x=\"" + std::to_string(m_x) + "\" y=\"" + std::to_string(m_y) +
            "\" width=\"" + std::to_string(m_w) + "\" height=\"" + std::to_string(m_h) + "\" />";

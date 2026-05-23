@@ -43,6 +43,12 @@ GRect CompoundShapeNode::computeBoundingBox() const {
     return bbox;
 }
 
+std::unique_ptr<CanvasNode> CompoundShapeNode::clone() const {
+    auto copy = std::make_unique<CompoundShapeNode>(getOpType());
+    for(const auto& child : m_children) copy->addChild(child->clone());
+    CanvasNode::CloneBaseProperties(*this, *copy);
+    return copy;
+}
 std::string CompoundShapeNode::toSVG() const {
     std::string svg = "<g><!-- Compound Shape -->";
     for (const auto& child : m_children) svg += child->toSVG();

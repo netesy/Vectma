@@ -25,6 +25,7 @@ public:
     GRect computeBoundingBox() const override;
 
     std::string toSVG() const override;
+    std::unique_ptr<CanvasNode> clone() const override;
 
     void setOpType(BooleanOpType op);
     BooleanOpType getOpType() const { return m_opType.value; }

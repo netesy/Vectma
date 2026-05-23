@@ -125,7 +125,7 @@ void EditorUI::renderViewport() {
                 const auto& topology = path->getTopology();
                 for (size_t i = 0; i < topology.points.size(); ++i) {
                     const auto& pt = topology.points[i];
-                    m_renderer.drawAnchorOverlay(BezierAnchor(pt.position, pt.handleIn, pt.handleOut), (int)i == m_stage.getActiveAnchorIndex(), m_stage.getActiveHandleId());
+                    m_renderer.drawAnchorOverlay(BezierAnchor(pt.position, pt.getHandleIn(), pt.getHandleOut()), (int)i == m_stage.getActiveAnchorIndex(), m_stage.getActiveHandleId());
                 }
             }
         }

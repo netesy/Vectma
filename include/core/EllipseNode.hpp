@@ -15,6 +15,7 @@ public:
     GRect computeBoundingBox() const override;
 
     std::string toSVG() const override;
+    std::unique_ptr<CanvasNode> clone() const override;
 
     double getCX() const { return m_cx; }
     double getCY() const { return m_cy; }
