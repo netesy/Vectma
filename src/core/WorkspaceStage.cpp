@@ -5,6 +5,7 @@
 #include "core/TextNode.hpp"
 #include "core/ImageNode.hpp"
 #include "core/CompoundShapeNode.hpp"
+#include "core/ArtboardNode.hpp"
 #include "core/GeometryEngine.hpp"
 #include "core/Commands.hpp"
 #include "core/snap/SnappingEngine.hpp"
@@ -53,7 +54,7 @@ void WorkspaceStage::setTool(ToolType tool) {
     }
 }
 
-GPoint WorkspaceStage::screenToCanvas(const GPoint& screenPos) const {
+Point2D WorkspaceStage::screenToCanvas(const Point2D& screenPos) const {
     return m_viewMatrix.inverse().map(screenPos);
 }
 
@@ -114,6 +115,9 @@ void WorkspaceStage::handleMouseDown(const Point2D& screenPos, bool altPressed) 
     } else if (m_tool == ToolType::Brush) {
         m_activeStroke.clear();
         m_activeStroke.push_back({m_dragStart, 1.0f, 0.0f});
+    } else if (m_tool == ToolType::Artboard) {
+        auto ab = std::make_unique<ArtboardNode>("Artboard", GRect(m_dragStart.x, m_dragStart.y, 0, 0));
+        executeCommand(std::make_unique<AddNodeCommand>(m_scene.get(), std::move(ab)));
     }
 }
 
@@ -173,113 +177,3 @@ size_t WorkspaceStage::countNodesRecursive(const CanvasNode* node) const {
 }
 
 } // namespace vectma
-#include "core/WorkspaceStage.hpp"
-#include "core/CompoundShapeNode.hpp"
-#include "core/PathNode.hpp"
-#include "core/Commands.hpp"
-
-namespace vectma {
-
-void WorkspaceStage::flattenCompoundShape(CompoundShapeNode* compound) {
-    if (!compound) return;
-
-    // Ideally, we'd get the resolved PathData from the compound shape.
-    // Since our implementation delegates to Skia for drawing,
-    // for a real "flatten" we would need to capture that SkPath or have a generic resolver.
-
-    // For now, we'll implement a placeholder that creates a new PathNode
-    // from the children's combined anchors (simulating a flatten Union).
-    std::vector<BezierAnchor> allAnchors;
-    for (const auto& child : compound->getChildren()) {
-        if (auto* path = dynamic_cast<const PathNode*>(child.get())) {
-            const auto& anchors = path->getAnchors();
-            allAnchors.insert(allAnchors.end(), anchors.begin(), anchors.end());
-        }
-    }
-
-    auto flatPath = std::make_unique<PathNode>(allAnchors);
-    flatPath->setFillColor(compound->getFillColor());
-
-    if (compound->getParent()) {
-        auto* parent = dynamic_cast<SceneGraph*>(compound->getParent());
-        if (parent) {
-            parent->removeChild(compound);
-            executeCommand(std::make_unique<AddNodeCommand>(m_scene.get(), std::move(flatPath)));
-        }
-    }
-    clearSelection();
-}
-
-}
-#include "core/WorkspaceStage.hpp"
-#include "core/MasterComponentNode.hpp"
-#include "core/ComponentInstanceNode.hpp"
-#include "core/SymbolRegistry.hpp"
-#include "core/Commands.hpp"
-
-namespace vectma {
-
-void WorkspaceStage::createComponentFromSelection() {
-    if (m_selection.empty()) return;
-
-    auto master = std::make_unique<MasterComponentNode>("Component " + std::to_string(m_selection.size()));
-    std::vector<CanvasNode*> nodesToMove = m_selection;
-
-    for (auto* node : nodesToMove) {
-        if (node->getParent()) {
-            auto removed = node->getParent()->removeChild(node);
-            if (removed) master->addChild(std::move(removed));
-        }
-    }
-
-    std::string guid = "comp_" + std::to_string(LamportClock::getInstance().tick().timestamp);
-    auto* masterPtr = master.get();
-    SymbolRegistry::getInstance().registerSymbol(guid, std::move(master));
-
-    // Create an instance to replace the original selection
-    auto instance = std::make_unique<ComponentInstanceNode>(masterPtr);
-    executeCommand(std::make_unique<AddNodeCommand>(m_scene.get(), std::move(instance)));
-
-    clearSelection();
-}
-
-void WorkspaceStage::detachInstance(ComponentInstanceNode* instance) {
-    if (!instance || !instance->getMaster()) return;
-
-    auto* master = instance->getMaster();
-    auto* parent = dynamic_cast<SceneGraph*>(instance->getParent());
-    if (!parent) return;
-
-    // Clone all children from master into parent
-    for (const auto& child : master->getChildren()) {
-        auto clone = child->clone();
-        // Apply overrides if we wanted to be perfect here
-        parent->addChild(std::move(clone));
-    }
-
-    parent->removeChild(instance);
-    clearSelection();
-}
-
-}
-#include "core/WorkspaceStage.hpp"
-#include "core/ComponentInstanceNode.hpp"
-#include "core/SymbolRegistry.hpp"
-#include "core/Commands.hpp"
-
-namespace vectma {
-
-void WorkspaceStage::placeInstance(const std::string& symbolId) {
-    auto* master = dynamic_cast<MasterComponentNode*>(SymbolRegistry::getInstance().getSymbolRoot(symbolId));
-    if (!master) return;
-
-    auto instance = std::make_unique<ComponentInstanceNode>(master);
-    // Place at center of viewport or current cursor
-    (void)getCursorCanvasPos();
-    // Assuming instance has some position properties or we just wrap it in a transform
-    // For now, we'll just add it to the scene.
-
-    executeCommand(std::make_unique<AddNodeCommand>(m_scene.get(), std::move(instance)));
-}
-
-}

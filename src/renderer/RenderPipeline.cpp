@@ -22,8 +22,12 @@
 
 namespace vectma {
 
-void BaselineRenderer::beginFrame() { m_globalOpacity = 1.0f; m_clipStack.clear(); }
+void BaselineRenderer::beginFrame() { m_globalOpacity = 1.0f; m_clipStack.clear(); m_transformStack.clear(); }
 void BaselineRenderer::endFrame() {}
+
+void BaselineRenderer::pushTransform(const GTransform& transform) { m_transformStack.push_back(transform); }
+void BaselineRenderer::popTransform() { if (!m_transformStack.empty()) m_transformStack.pop_back(); }
+
 void BaselineRenderer::drawRect(const RectNode& node, FillType, const GradientConfig&, StrokeAlignment) { (void)node; }
 void BaselineRenderer::drawEllipse(const EllipseNode& node, FillType, const GradientConfig&, StrokeAlignment) { (void)node; }
 void BaselineRenderer::drawPath(const PathNode& node, FillType, const GradientConfig&, StrokeAlignment) { drawBezierPath(node); }

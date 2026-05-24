@@ -6,6 +6,7 @@
 #include "core/HistoryManager.hpp"
 #include "core/snap/SnappingEngine.hpp"
 #include "core/BrushTypes.hpp"
+#include "core/WaypointManager.hpp"
 #include "geometry/BezierMath.hpp"
 #include <memory>
 #include <vector>
@@ -16,7 +17,7 @@ namespace vectma {
 
 class PathNode;
 
-enum class ToolType { Select, Marquee, Rect, Ellipse, Path, Text, Image, Brush, Pen };
+enum class ToolType { Select, Marquee, Rect, Ellipse, Path, Text, Image, Brush, Pen, Artboard };
 enum class CanvasEditingMode { Normal, PathEdit };
 
 class WorkspaceStage {
@@ -93,6 +94,13 @@ public:
 
     size_t getSceneNodeCount() const;
 
+    // Waypoints & Animation
+    WaypointManager& getWaypointManager() { return m_waypointManager; }
+    void jumpToWaypoint(int slot);
+    void tick(double dt);
+
+    void setViewportSize(double w, double h) { m_viewportWidth = w; m_viewportHeight = h; }
+
 private:
     std::shared_ptr<SceneGraph> m_scene;
     std::vector<CanvasNode*> m_selection;
@@ -125,9 +133,22 @@ private:
     // Snapping state
     std::optional<SnapResult> m_activeSnap;
 
+    // Waypoints & Easing
+    WaypointManager m_waypointManager;
+    bool m_isAnimating = false;
+    double m_animationTime = 0.0;
+    static constexpr double ANIMATION_DURATION = 0.3; // 300ms
+
+    double m_startCenterX, m_startCenterY, m_startZoom;
+    double m_targetCenterX, m_targetCenterY, m_targetZoom;
+    double m_viewportWidth = 1920, m_viewportHeight = 1080;
+
     void updateMarquee(const Point2D& currentCanvasPos);
     void performSelection(const GRect& rect);
     size_t countNodesRecursive(const CanvasNode* node) const;
+
+    void updateViewMatrixFromCenter(double cx, double cy, double zoom);
+    Point2D getViewportCenterInCanvas() const;
 };
 
 } // namespace vectma

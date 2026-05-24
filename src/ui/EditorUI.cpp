@@ -33,6 +33,8 @@ void EditorUI::render() {
 #endif
     ImGui::NewFrame();
 
+    m_stage.tick(0.016); // Using fixed 60fps delta as mock imgui.h lacks it
+
     if (m_showSplash) {
         SplashScreen::render("logo.png");
         m_splashTimer -= 0.016f;
@@ -49,6 +51,8 @@ void EditorUI::render() {
         float sidebarWidth = tokens::spacing::SidebarWidth;
         float toolbarHeight = tokens::spacing::ToolbarHeight;
         float statusBarHeight = tokens::spacing::StatusBarHeight;
+
+        m_stage.setViewportSize(viewport->Size.x - 2 * sidebarWidth, viewport->Size.y - toolbarHeight - statusBarHeight);
 
         ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x, viewport->Pos.y + toolbarHeight));
         ImGui::SetNextWindowSize(ImVec2(sidebarWidth, viewport->Size.y - toolbarHeight - statusBarHeight));
@@ -70,6 +74,9 @@ void EditorUI::render() {
         ImGui::SetNextWindowSize(ImVec2(viewport->Size.x - 2 * sidebarWidth, viewport->Size.y - toolbarHeight - statusBarHeight));
         renderViewport();
 
+        renderWaypointHUD();
+        renderArtboardPresets();
+
         ExportDashboard::render(m_stage, m_renderer, m_showExport);
         renderSettingsMenu();
     }
@@ -82,7 +89,7 @@ void EditorUI::handleInputs() {
 
     if (!io.WantCaptureMouse) {
         Point2D mousePos(io.MousePos.x, io.MousePos.y);
-        bool altPressed = false; // io.KeyAlt (Mock)
+        bool altPressed = false;
 
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
             m_stage.handleMouseDown(mousePos, altPressed);
@@ -100,6 +107,7 @@ void EditorUI::renderViewport() {
     ImGui::Begin("Canvas", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoNav);
 
     m_renderer.beginFrame();
+    m_renderer.pushTransform(m_stage.getViewMatrix());
     if (m_stage.getScene()) {
         m_stage.getScene()->render(m_renderer);
     }
@@ -137,7 +145,7 @@ void EditorUI::renderViewport() {
             m_renderer.drawSnappingGuide(snap->guideLines[i], snap->guideLines[i+1]);
         }
     }
-
+    m_renderer.popTransform();
     m_renderer.endFrame();
     ImGui::End();
 }
@@ -171,6 +179,7 @@ void EditorUI::renderStatusBar() {
         case ToolType::Image: toolName = "Image"; break;
         case ToolType::Brush: toolName = "Brush"; break;
         case ToolType::Pen: toolName = "Pen"; break;
+        case ToolType::Artboard: toolName = "Artboard"; break;
     }
     ImGui::Text("Tool: %s | X: %.1f Y: %.1f | Zoom: %.0f%% | Layers: %zu | Selection: %zu",
                 toolName, cursor.x, cursor.y, scale, layerCount, selectionCount);

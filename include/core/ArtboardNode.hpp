@@ -1,7 +1,16 @@
 #pragma once
 #include "core/CanvasNode.hpp"
+#include <vector>
+#include <string>
 
 namespace vectma {
+
+struct DevicePreset {
+    std::string name;
+    int width;
+    int height;
+    std::string category;
+};
 
 class ArtboardNode : public CanvasNode {
 public:
@@ -37,6 +46,17 @@ public:
         b.width = w; b.height = h;
         m_bounds.update(b, ts);
         markLayoutDirty();
+    }
+
+    static const std::vector<DevicePreset>& GetPresets() {
+        static const std::vector<DevicePreset> presets = {
+            {"Desktop HD", 1440, 900, "Desktop"},
+            {"Desktop FHD", 1920, 1080, "Desktop"},
+            {"iPhone 13/14", 390, 844, "Mobile"},
+            {"Pixel 7", 412, 915, "Mobile"},
+            {"iPad Pro", 834, 1194, "Tablet"}
+        };
+        return presets;
     }
 
 private:

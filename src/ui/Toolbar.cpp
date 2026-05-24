@@ -33,6 +33,8 @@ void Toolbar::render(WorkspaceStage& stage) {
     renderButton("Brush (B)", ToolType::Brush);
     ImGui::SameLine();
     renderButton("Pen (P)", ToolType::Pen);
+    ImGui::SameLine();
+    renderButton("Artboard (A)", ToolType::Artboard);
 
     ImGui::SameLine();
     ImGui::Separator();

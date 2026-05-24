@@ -1,3 +1,4 @@
+#ifdef VECTMA_USE_SKIA
 #include "renderer/SkiaRenderPipeline.hpp"
 #include "core/RectNode.hpp"
 #include "core/EllipseNode.hpp"
@@ -5,19 +6,12 @@
 #include "core/TextNode.hpp"
 #include "core/ImageNode.hpp"
 #include "core/CompoundShapeNode.hpp"
-#include "core/ImageEngine.hpp"
-#include "core/PropertyOverride.hpp"
-
-#ifdef VECTMA_USE_SKIA
-#include "include/core/SkCanvas.h"
-#include "include/core/SkPath.h"
-#include "include/pathops/SkPathOps.h"
-#include "include/core/SkPaint.h"
-#include "include/core/SkShader.h"
-#include "include/effects/SkRuntimeEffect.h"
-#include "include/core/SkImage.h"
+#include "core/modifiers/DashGeneratorModifier.hpp"
+#include "include/core/SkColor.h"
+#include "include/core/SkMatrix.h"
 #include "include/core/SkData.h"
-#include "include/core/SkBlendMode.h"
+#include "include/core/SkImage.h"
+#include "include/effects/SkRuntimeEffect.h"
 #include "modules/skparagraph/include/ParagraphBuilder.h"
 #include "modules/skparagraph/include/ParagraphStyle.h"
 #include "modules/skparagraph/include/FontCollection.h"
@@ -69,6 +63,12 @@ SkiaRenderPipeline::SkiaRenderPipeline(SkCanvas* canvas) : m_canvas(canvas) {
 
 void SkiaRenderPipeline::beginFrame() { m_globalOpacity = 1.0f; m_overrideStack.clear(); }
 void SkiaRenderPipeline::endFrame() {}
+
+void SkiaRenderPipeline::pushTransform(const GTransform& transform) {
+    m_canvas->save();
+    m_canvas->concat(SkMatrix::MakeAll(transform.a, transform.c, transform.e, transform.b, transform.d, transform.f, 0, 0, 1));
+}
+void SkiaRenderPipeline::popTransform() { m_canvas->restore(); }
 
 void SkiaRenderPipeline::pushOverrideContext(const OverrideMap* overrides) { m_overrideStack.push_back(overrides); }
 void SkiaRenderPipeline::popOverrideContext() { if (!m_overrideStack.empty()) m_overrideStack.pop_back(); }

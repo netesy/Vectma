@@ -1,5 +1,6 @@
 #include "core/ArtboardNode.hpp"
 #include "renderer/RenderPipeline.hpp"
+#include "core/GTransform.hpp"
 
 namespace vectma {
 
@@ -11,18 +12,28 @@ ArtboardNode::ArtboardNode(const std::string& name, const GRect& bounds) : Canva
 
 void ArtboardNode::render(RenderPipeline& pipeline) const {
     if (!isVisible()) return;
-    pipeline.pushClipRect(getBounds());
+
+    pipeline.pushTransform(GTransform::Translation(getX(), getY()));
+    pipeline.pushClipRect(GRect(0, 0, getWidth(), getHeight()));
+
     for (const auto& child : m_children) {
         if (child->isVisible()) child->render(pipeline);
     }
+
     pipeline.popClipRect();
+    pipeline.popTransform();
 }
 
 bool ArtboardNode::containsPoint(const GPoint& point) const {
     if (!isVisible() || isLocked()) return false;
+
+    // Check local children first (point is in global space, need to transform to local)
+    GPoint localPoint(point.x - getX(), point.y - getY());
+
     for (auto it = m_children.rbegin(); it != m_children.rend(); ++it) {
-        if ((*it)->containsPoint(point)) return true;
+        if ((*it)->containsPoint(localPoint)) return true;
     }
+
     return getBounds().contains(point.x, point.y);
 }
 

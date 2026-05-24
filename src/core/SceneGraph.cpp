@@ -1,5 +1,6 @@
 #include "core/SceneGraph.hpp"
 #include "renderer/RenderPipeline.hpp"
+#include "core/ArtboardNode.hpp"
 #include <algorithm>
 
 namespace vectma {
@@ -27,12 +28,11 @@ std::unique_ptr<CanvasNode> SceneGraph::removeChild(CanvasNode* node) {
 }
 
 void SceneGraph::render(RenderPipeline& pipeline) const {
-    GRect viewport(-10000, -10000, 20000, 20000);
-    auto visibleNodes = m_spatialIndex->query(viewport);
-
-    for (auto node : visibleNodes) {
-        if (node && node->isVisible()) {
-            node->render(pipeline);
+    // Basic SceneGraph shouldn't use absolute clipping,
+    // it just renders what's inside the viewport
+    for (const auto& child : m_children) {
+        if (child && child->isVisible()) {
+            child->render(pipeline);
         }
     }
 }

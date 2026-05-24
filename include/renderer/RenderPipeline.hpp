@@ -1,4 +1,3 @@
-#include "core/PropertyOverride.hpp"
 #pragma once
 
 #include <string>
@@ -6,6 +5,8 @@
 #include "core/GPoint.hpp"
 #include "core/GColor.hpp"
 #include "core/GRect.hpp"
+#include "core/GTransform.hpp"
+#include "core/PropertyOverride.hpp"
 
 namespace vectma {
 
@@ -14,6 +15,7 @@ class RectNode;
 class EllipseNode;
 class PathNode;
 class TextNode;
+struct BezierAnchor;
 
 /**
  * @brief Graphics hardware abstraction interface.
@@ -47,6 +49,8 @@ public:
     virtual void drawSnappingGuide(const Point2D& start, const Point2D& end) = 0;
 
     // Phase 18: Clipping and Layer Support
+    virtual void pushTransform(const GTransform& transform) = 0;
+    virtual void popTransform() = 0;
     virtual void pushClipRect(const GRect& rect) = 0;
     virtual void popClipRect() = 0;
     virtual void pushOverrideContext(const OverrideMap* overrides) = 0;
@@ -77,6 +81,8 @@ public:
 
     void drawSnappingGuide(const Point2D& start, const Point2D& end) override;
 
+    void pushTransform(const GTransform& transform) override;
+    void popTransform() override;
     void pushClipRect(const GRect& rect) override;
     void popClipRect() override;
     void pushOverrideContext(const OverrideMap* overrides) override;
@@ -85,6 +91,7 @@ public:
 
 private:
     float m_globalOpacity = 1.0f;
+    std::vector<GTransform> m_transformStack;
     std::vector<GRect> m_clipStack;
 };
 

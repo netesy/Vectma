@@ -8,6 +8,7 @@
 #include "include/core/SkCanvas.h"
 #include "include/core/SkPath.h"
 #include "include/core/SkPaint.h"
+#include "include/effects/SkRuntimeEffect.h"
 #endif
 
 #include <memory>
@@ -42,6 +43,8 @@ public:
 
     void drawSnappingGuide(const Point2D& start, const Point2D& end) override;
 
+    void pushTransform(const GTransform& transform) override;
+    void popTransform() override;
     void pushClipRect(const GRect& rect) override;
     void popClipRect() override;
     void pushOverrideContext(const OverrideMap* overrides) override;

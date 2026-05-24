@@ -27,10 +27,10 @@
 - [x] Resizing constraints (Fix, Hug, Fill)
 - [x] Relative positioning and auto-spacing
 
-## Phase 25: Infinite Canvas Artboard Management, Target Device Presets & Workspace Waypoints [ACTIVE]
-- [ ] Dynamic artboard coordinate system
-- [ ] Device preset library (Mobile, Web, Print)
-- [ ] Viewport navigation history and waypoints
+## Phase 25: Infinite Canvas Artboard Management, Target Device Presets & Workspace Waypoints [DONE]
+- [x] Dynamic artboard coordinate system
+- [x] Device preset library (Mobile, Web, Print)
+- [x] Viewport navigation history and waypoints
 
 ## Phase 26: Cross-Node Bulk Style Syncing, Global Color/Typography Variables & Token Aliasing
 - [ ] Global design token registry

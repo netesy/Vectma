@@ -31,6 +31,10 @@ private:
     void renderViewport();
     void renderSettingsMenu();
     void renderStatusBar();
+
+    // Phase 25
+    void renderWaypointHUD();
+    void renderArtboardPresets();
 };
 
 } // namespace vectma
