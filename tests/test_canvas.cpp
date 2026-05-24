@@ -33,14 +33,9 @@ void testArtboardClippingAndRelative() {
     assert(renderer.pushTransformCount == 1);
     assert(renderer.pushClipCount == 1);
 
-    // Check hit testing with relative coordinates
-    // Global point (115, 115) is local (15, 15) in artboard (100, 100)
-    // Rect is at local (10, 10) with size 50x50, so (15, 15) should hit it.
     assert(artboard->containsPoint(GPoint(115, 115)) == true);
-    // Outside artboard
     assert(artboard->containsPoint(GPoint(50, 50)) == false);
-    // Outside rect but inside artboard
-    assert(artboard->containsPoint(GPoint(105, 105)) == true); // It hits the artboard background area
+    assert(artboard->containsPoint(GPoint(105, 105)) == true);
 
     std::cout << "testArtboardClippingAndRelative passed" << std::endl;
 }
@@ -48,10 +43,6 @@ void testArtboardClippingAndRelative() {
 void testWaypointInterpolation() {
     WorkspaceStage stage;
     stage.setViewportSize(1000, 1000);
-
-    // Set current view to (500,500) zoom 1.0 (Identity matrix means canvas origin at top-left of viewport)
-    // Actually Identity matrix: viewport(0,0) -> canvas(0,0)
-    // If viewport size is 1000x1000, then viewport center is (500,500) -> canvas(500,500)
     stage.setViewMatrix(GTransform::Identity());
 
     auto& wm = stage.getWaypointManager();
@@ -59,22 +50,17 @@ void testWaypointInterpolation() {
 
     stage.jumpToWaypoint(0);
 
-    // Initial state check
     Point2D center = stage.screenToCanvas(Point2D(500, 500));
     assert(std::abs(center.x - 500) < 1e-5);
     assert(std::abs(center.y - 500) < 1e-5);
 
-    // Tick 0.15s (halfway 300ms)
-    // easedT = 3*(0.5)^2 - 2*(0.5)^3 = 0.75 - 0.25 = 0.5
     stage.tick(0.15);
 
     Point2D midCenter = stage.screenToCanvas(Point2D(500, 500));
-    // Start (500, 500), Target (1000, 1000), t=0.5 -> expected (750, 750)
     assert(std::abs(midCenter.x - 750) < 1e-5);
     assert(std::abs(midCenter.y - 750) < 1e-5);
     assert(std::abs(stage.getScale() - 1.5) < 1e-5);
 
-    // Tick another 0.15s (completion)
     stage.tick(0.15);
     Point2D endCenter = stage.screenToCanvas(Point2D(500, 500));
     assert(std::abs(endCenter.x - 1000) < 1e-5);

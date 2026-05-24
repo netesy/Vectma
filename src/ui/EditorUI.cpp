@@ -145,6 +145,20 @@ void EditorUI::renderViewport() {
             m_renderer.drawSnappingGuide(snap->guideLines[i], snap->guideLines[i+1]);
         }
     }
+
+    // Alignment Guides & Distance Callouts
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    for (const auto& guide : m_stage.getAlignmentGuides()) {
+        m_renderer.drawAlignmentGuide(guide.start, guide.end);
+
+        if (guide.hasDistanceCallout) {
+            char buf[32];
+            sprintf(buf, "%.1fpx", guide.gapValue);
+            Point2D mid = { (guide.start.x + guide.end.x) / 2.0, (guide.start.y + guide.end.y) / 2.0 };
+            drawList->AddText(ImVec2(mid.x, mid.y), 0xFFFF00FF, buf); // Magenta: ABGR -> 0xFFFF00FF
+        }
+    }
+
     m_renderer.popTransform();
     m_renderer.endFrame();
     ImGui::End();

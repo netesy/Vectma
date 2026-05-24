@@ -8,6 +8,8 @@
 #include "core/BrushTypes.hpp"
 #include "core/WaypointManager.hpp"
 #include "geometry/BezierMath.hpp"
+#include "ui/SelectionManager.hpp"
+#include "core/AlignmentEngine.hpp"
 #include <memory>
 #include <vector>
 #include <optional>
@@ -32,6 +34,7 @@ public:
     void addToSelection(CanvasNode* node);
     void clearSelection();
     const std::vector<CanvasNode*>& getSelection() const;
+    SelectionManager& getSelectionManager() { return m_selectionManager; }
 
     // Tools & Modes
     void setTool(ToolType tool);
@@ -71,8 +74,9 @@ public:
     bool canRedo() const { return m_history.canRedo(); }
     void executeCommand(std::unique_ptr<Command> cmd) { m_history.executeCommand(std::move(cmd)); }
 
-    // Snapping
+    // Snapping & Guides
     std::optional<SnapResult> getActiveSnap() const { return m_activeSnap; }
+    const std::vector<AlignmentGuide>& getAlignmentGuides() const { return m_alignmentGuides; }
 
     // Viewport
     void setViewMatrix(const GTransform& matrix) { m_viewMatrix = matrix; }
@@ -103,7 +107,7 @@ public:
 
 private:
     std::shared_ptr<SceneGraph> m_scene;
-    std::vector<CanvasNode*> m_selection;
+    SelectionManager m_selectionManager;
     HistoryManager m_history;
 
     ToolType m_tool = ToolType::Select;
@@ -132,6 +136,7 @@ private:
 
     // Snapping state
     std::optional<SnapResult> m_activeSnap;
+    std::vector<AlignmentGuide> m_alignmentGuides;
 
     // Waypoints & Easing
     WaypointManager m_waypointManager;

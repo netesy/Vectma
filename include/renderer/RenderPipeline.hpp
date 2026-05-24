@@ -47,6 +47,7 @@ public:
 
     // Phase 16: Snapping Guides
     virtual void drawSnappingGuide(const Point2D& start, const Point2D& end) = 0;
+    virtual void drawAlignmentGuide(const Point2D& start, const Point2D& end) = 0;
 
     // Phase 18: Clipping and Layer Support
     virtual void pushTransform(const GTransform& transform) = 0;
@@ -80,6 +81,7 @@ public:
     void setStrokeStyle(const std::vector<float>& dashPattern, float offset) override;
 
     void drawSnappingGuide(const Point2D& start, const Point2D& end) override;
+    void drawAlignmentGuide(const Point2D& start, const Point2D& end) override;
 
     void pushTransform(const GTransform& transform) override;
     void popTransform() override;

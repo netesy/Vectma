@@ -23,6 +23,7 @@ void Inspector::render(WorkspaceStage& stage) {
     ImGui::Begin("Inspector");
 
     const auto& selection = stage.getSelection();
+    auto& sm = stage.getSelectionManager();
 
     if (ImGui::CollapsingHeader("THEME", ImGuiTreeNodeFlags_DefaultOpen)) {
         ThemeType currentTheme = TokenRegistry::getInstance().getActiveTheme();
@@ -30,6 +31,14 @@ void Inspector::render(WorkspaceStage& stage) {
         int activeIdx = (currentTheme == ThemeType::Light) ? 0 : 1;
         if (ImGui::Combo("Active Theme", &activeIdx, themes, 2)) {
             TokenRegistry::getInstance().switchTheme(activeIdx == 0 ? ThemeType::Light : ThemeType::Dark);
+        }
+    }
+
+    if (sm.getCount() >= 3) {
+        if (ImGui::CollapsingHeader("DISTRIBUTION", ImGuiTreeNodeFlags_DefaultOpen)) {
+            if (ImGui::Button("Distribute Horizontally")) sm.distributeHorizontally();
+            ImGui::SameLine();
+            if (ImGui::Button("Distribute Vertically")) sm.distributeVertically();
         }
     }
 

@@ -73,6 +73,7 @@ void BaselineRenderer::renderNode(const CanvasNode& node) {
 std::vector<uint8_t> BaselineRenderer::exportRaster(float) { return {}; }
 void BaselineRenderer::setStrokeStyle(const std::vector<float>&, float) {}
 void BaselineRenderer::drawSnappingGuide(const Point2D&, const Point2D&) {}
+void BaselineRenderer::drawAlignmentGuide(const Point2D&, const Point2D&) {}
 void BaselineRenderer::pushClipRect(const GRect& rect) { m_clipStack.push_back(rect); }
 void BaselineRenderer::popClipRect() { if (!m_clipStack.empty()) m_clipStack.pop_back(); }
 void BaselineRenderer::pushOverrideContext(const OverrideMap* overrides) { (void)overrides; }

@@ -37,10 +37,10 @@
 - [x] Style aliasing and dependency propagation
 - [x] Bulk property selection and mass-mutation
 
-## Phase 27: Multi-Selection Smart Distribution, Relative Spacer Guides & Tidy-Up Grid Alignments
-- [ ] Distribution algorithms (Linear, Grid)
-- [ ] Real-time smart distance guides
-- [ ] Grid snapping and layout alignment anchors
+## Phase 27: Multi-Selection Smart Distribution, Relative Spacer Guides & Tidy-Up Grid Alignments [DONE]
+- [x] Distribution algorithms (Linear, Grid)
+- [x] Real-time smart distance guides
+- [x] Grid snapping and layout alignment anchors
 
 ## Phase 28: Micro-Interaction Animation Graph, Hotspot Prototyping Wires & Live Preview Player
 - [ ] State-based transition graph

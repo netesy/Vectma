@@ -9,6 +9,7 @@
 #include "core/GeometryEngine.hpp"
 #include "core/Commands.hpp"
 #include "core/snap/SnappingEngine.hpp"
+#include "layout/LayoutSolver.hpp"
 #include <algorithm>
 #include <cmath>
 
@@ -29,18 +30,18 @@ std::shared_ptr<SceneGraph> WorkspaceStage::getScene() const {
 }
 
 void WorkspaceStage::addToSelection(CanvasNode* node) {
-    m_selection.push_back(node);
+    m_selectionManager.add(node);
 }
 
 void WorkspaceStage::clearSelection() {
-    m_selection.clear();
+    m_selectionManager.clear();
     m_activeAnchorIndex = -1;
     m_activeHandleId = -1;
     m_activePathNode = nullptr;
 }
 
 const std::vector<CanvasNode*>& WorkspaceStage::getSelection() const {
-    return m_selection;
+    return m_selectionManager.getSelection();
 }
 
 void WorkspaceStage::setTool(ToolType tool) {
@@ -59,7 +60,8 @@ Point2D WorkspaceStage::screenToCanvas(const Point2D& screenPos) const {
 }
 
 void WorkspaceStage::applyBooleanOperation(BooleanOp op) {
-    if (m_selection.size() < 2) return;
+    auto selection = getSelection();
+    if (selection.size() < 2) return;
 
     BooleanOpType opType;
     switch(op) {
@@ -71,7 +73,7 @@ void WorkspaceStage::applyBooleanOperation(BooleanOp op) {
     }
 
     auto compound = std::make_unique<CompoundShapeNode>(opType);
-    std::vector<CanvasNode*> nodesToMove = m_selection;
+    std::vector<CanvasNode*> nodesToMove = selection;
 
     for (auto* node : nodesToMove) {
         if (node->getParent()) {
@@ -122,6 +124,7 @@ void WorkspaceStage::handleMouseDown(const Point2D& screenPos, bool altPressed) 
 }
 
 void WorkspaceStage::handleMouseMove(const Point2D& screenPos) {
+    Point2D oldCanvasPos = m_cursorCanvasPos;
     m_cursorCanvasPos = screenToCanvas(screenPos);
     if (!m_isDragging) return;
 
@@ -135,6 +138,42 @@ void WorkspaceStage::handleMouseMove(const Point2D& screenPos) {
         updateMarquee(m_cursorCanvasPos);
     } else if (m_tool == ToolType::Brush) {
         m_activeStroke.push_back({m_cursorCanvasPos, 1.0f, 0.0f});
+    } else if (m_tool == ToolType::Select && m_selectionManager.getCount() > 0) {
+        double dx = m_cursorCanvasPos.x - oldCanvasPos.x;
+        double dy = m_cursorCanvasPos.y - oldCanvasPos.y;
+
+        GRect bounds = m_selectionManager.getSelectionBounds();
+        GRect targetBounds = bounds;
+        targetBounds.x += dx;
+        targetBounds.y += dy;
+
+        m_alignmentGuides = AlignmentEngine::CalculateGuides(targetBounds, m_scene.get(), m_selectionManager.getSelection());
+
+        bool snappedX = false, snappedY = false;
+        for (const auto& guide : m_alignmentGuides) {
+            if (guide.isVertical && !snappedX) {
+                double matchX = guide.start.x;
+                double d0 = std::abs(targetBounds.x - matchX);
+                double d1 = std::abs(targetBounds.x + targetBounds.width / 2.0 - matchX);
+                double d2 = std::abs(targetBounds.x + targetBounds.width - matchX);
+                if (d0 < 4.0) { dx += (matchX - targetBounds.x); snappedX = true; }
+                else if (d1 < 4.0) { dx += (matchX - (targetBounds.x + targetBounds.width / 2.0)); snappedX = true; }
+                else if (d2 < 4.0) { dx += (matchX - (targetBounds.x + targetBounds.width)); snappedX = true; }
+            } else if (!guide.isVertical && !snappedY) {
+                double matchY = guide.start.y;
+                double d0 = std::abs(targetBounds.y - matchY);
+                double d1 = std::abs(targetBounds.y + targetBounds.height / 2.0 - matchY);
+                double d2 = std::abs(targetBounds.y + targetBounds.height - matchY);
+                if (d0 < 4.0) { dy += (matchY - targetBounds.y); snappedY = true; }
+                else if (d1 < 4.0) { dy += (matchY - (targetBounds.y + targetBounds.height / 2.0)); snappedY = true; }
+                else if (d2 < 4.0) { dy += (matchY - (targetBounds.y + targetBounds.height)); snappedY = true; }
+            }
+        }
+
+        m_selectionManager.bulkTranslate(dx, dy);
+        // Update cursor so subsequent moves are relative to snapped position
+        m_cursorCanvasPos.x += (dx - (m_cursorCanvasPos.x - oldCanvasPos.x));
+        m_cursorCanvasPos.y += (dy - (m_cursorCanvasPos.y - oldCanvasPos.y));
     }
 }
 
@@ -144,6 +183,7 @@ void WorkspaceStage::handleMouseUp() {
     }
     m_isDragging = false;
     m_activeSnap = std::nullopt;
+    m_alignmentGuides.clear();
 }
 
 void WorkspaceStage::updateMarquee(const Point2D& currentCanvasPos) {

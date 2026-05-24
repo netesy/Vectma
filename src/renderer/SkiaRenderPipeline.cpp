@@ -208,6 +208,9 @@ void SkiaRenderPipeline::setStrokeStyle(const std::vector<float>&, float) {}
 void SkiaRenderPipeline::drawSnappingGuide(const Point2D& start, const Point2D& end) {
     SkPaint paint; paint.setColor(SK_ColorCYAN); m_canvas->drawLine(start.x, start.y, end.x, end.y, paint);
 }
+void SkiaRenderPipeline::drawAlignmentGuide(const Point2D& start, const Point2D& end) {
+    SkPaint paint; paint.setColor(SkColorSetRGB(255, 0, 255)); paint.setStrokeWidth(1.0f); m_canvas->drawLine(start.x, start.y, end.x, end.y, paint);
+}
 void SkiaRenderPipeline::pushClipRect(const GRect& rect) { m_canvas->save(); m_canvas->clipRect(SkRect::MakeXYWH(rect.x, rect.y, rect.width, rect.height)); }
 void SkiaRenderPipeline::popClipRect() { m_canvas->restore(); }
 void SkiaRenderPipeline::setGlobalOpacity(float opacity) { m_globalOpacity = opacity; }
