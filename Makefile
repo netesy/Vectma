@@ -2,22 +2,29 @@
 
 CXX = g++
 CC = gcc
-CXXFLAGS = -std=c++20 -Iinclude -I. -Ivendor -Ivendor/imgui -Ivendor/imgui/backends -Ivendor/glfw/include -Wall -Wextra -Wpedantic -Werror -DIMGUI_API=
-CFLAGS = -std=c11 -Iinclude -I. -Ivendor -Ivendor/imgui -Ivendor/imgui/backends -Ivendor/glfw/include -Wall -Wextra -D_GLFW_WIN32 -D_GLFW_WGL -DUNICODE
+CXXFLAGS = -std=c++20 -Iinclude -I. -Ivendor -Ivendor/imgui -Ivendor/imgui/backends -Ivendor/glfw/include -Ivendor/glfw/deps -Wall -Wextra -Wpedantic -Werror -DIMGUI_API= -DIMGUI_IMPL_OPENGL_LOADER_GLAD -DGLFW_INCLUDE_NONE -DVECTMA_USE_OPENGL
+CFLAGS = -std=c11 -Iinclude -I. -Ivendor -Ivendor/imgui -Ivendor/imgui/backends -Ivendor/glfw/include -Ivendor/glfw/deps -Wall -Wextra -DIMGUI_IMPL_OPENGL_LOADER_GLAD
 
 # OS Detection
 ifeq ($(OS),Windows_NT)
     PLATFORM = Windows
     EXE_EXT = .exe
+    GLFW_PLATFORM_DEFS = -D_GLFW_WIN32 -D_GLFW_WGL -DUNICODE
+    GLFW_PLATFORM_SRCS = vendor/glfw/src/win32_init.c vendor/glfw/src/win32_joystick.c vendor/glfw/src/win32_monitor.c vendor/glfw/src/win32_thread.c vendor/glfw/src/win32_time.c vendor/glfw/src/win32_window.c vendor/glfw/src/wgl_context.c
+    PLATFORM_LIBS = -lgdi32 -lopengl32
 else
     PLATFORM = Linux
     EXE_EXT =
+    GLFW_PLATFORM_DEFS = -D_GLFW_X11 -D_GLFW_GLX
+    GLFW_PLATFORM_SRCS = vendor/glfw/src/x11_init.c vendor/glfw/src/x11_monitor.c vendor/glfw/src/x11_window.c vendor/glfw/src/xkb_unicode.c vendor/glfw/src/posix_module.c vendor/glfw/src/posix_thread.c vendor/glfw/src/posix_time.c vendor/glfw/src/glx_context.c vendor/glfw/src/linux_joystick.c
+    PLATFORM_LIBS = -lX11 -lXrandr -lXi -lXxf86vm -lXinerama -lXcursor -ldl -lpthread -lm -lGL
 endif
 
 # Centralized vendor objects
 IMGUI_SRCS = vendor/imgui/imgui.cpp vendor/imgui/imgui_draw.cpp vendor/imgui/imgui_tables.cpp vendor/imgui/imgui_widgets.cpp vendor/imgui/backends/imgui_impl_glfw.cpp vendor/imgui/backends/imgui_impl_opengl3.cpp
-GLFW_SRCS = vendor/glfw/src/context.c vendor/glfw/src/init.c vendor/glfw/src/input.c vendor/glfw/src/monitor.c vendor/glfw/src/vulkan.c vendor/glfw/src/window.c vendor/glfw/src/win32_init.c vendor/glfw/src/win32_joystick.c vendor/glfw/src/win32_monitor.c vendor/glfw/src/win32_thread.c vendor/glfw/src/win32_time.c vendor/glfw/src/win32_window.c vendor/glfw/src/wgl_context.c vendor/glfw/src/egl_context.c vendor/glfw/src/osmesa_context.c
-VENDOR_OBJS = $(IMGUI_SRCS:.cpp=.o) $(GLFW_SRCS:.c=.o)
+GLAD_SRCS = vendor/glfw/deps/glad_gl.c
+GLFW_SRCS = vendor/glfw/src/context.c vendor/glfw/src/init.c vendor/glfw/src/input.c vendor/glfw/src/monitor.c vendor/glfw/src/vulkan.c vendor/glfw/src/window.c vendor/glfw/src/egl_context.c vendor/glfw/src/osmesa_context.c $(GLFW_PLATFORM_SRCS)
+VENDOR_OBJS = $(IMGUI_SRCS:.cpp=.o) $(GLFW_SRCS:.c=.o) $(GLAD_SRCS:.c=.o)
 
 SRC_DIRS = src src/core src/core/spatial src/core/snap src/core/modifiers src/renderer src/ui src/sync src/geometry src/layout src/style
 SRCS = $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))
@@ -41,7 +48,7 @@ SELECTION_TEST_TARGET = test_selection$(EXE_EXT)
 all: $(TARGET)
 
 $(TARGET): $(OBJS) src/main.o
-	$(CXX) $(CXXFLAGS) -o $@ $^ -lgdi32 -lopengl32
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(PLATFORM_LIBS)
 
 src/%.o: src/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
@@ -50,7 +57,7 @@ vendor/%.o: vendor/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 vendor/%.o: vendor/%.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) $(GLFW_PLATFORM_DEFS) -c -o $@ $<
 
 tests/%.o: tests/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<

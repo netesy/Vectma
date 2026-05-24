@@ -7,10 +7,11 @@
 namespace vectma {
 
 void WorkspaceStage::createComponentFromSelection() {
-    if (m_selection.empty()) return;
+    const auto& selection = m_selectionManager.getSelection();
+    if (selection.empty()) return;
 
-    auto master = std::make_unique<MasterComponentNode>("Component " + std::to_string(m_selection.size()));
-    std::vector<CanvasNode*> nodesToMove = m_selection;
+    auto master = std::make_unique<MasterComponentNode>("Component " + std::to_string(selection.size()));
+    std::vector<CanvasNode*> nodesToMove = selection;
 
     for (auto* node : nodesToMove) {
         if (node->getParent()) {

@@ -1,8 +1,8 @@
 #ifdef VECTMA_USE_OPENGL
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
+#include <vendor/glfw/deps/glad/gl.h>
+#include <vendor/glfw/include/GLFW/glfw3.h>
+#include <vendor/imgui/backends/imgui_impl_glfw.h>
+#include <vendor/imgui/backends/imgui_impl_opengl3.h>
 #endif
 
 #include "core/WorkspaceStage.hpp"
@@ -70,7 +70,7 @@ int main() {
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
 
-    if (glewInit() != GLEW_OK) return 1;
+    if (!gladLoadGL(glfwGetProcAddress)) return 1;
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();

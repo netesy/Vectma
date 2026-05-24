@@ -7,10 +7,6 @@
 #include "core/CompoundShapeNode.hpp"
 #include "core/modifiers/DashGeneratorModifier.hpp"
 
-#ifdef VECTMA_USE_OPENGL
-#include <GL/glew.h>
-#endif
-
 #ifdef VECTMA_USE_SKIA
 #include "include/core/SkCanvas.h"
 #include "include/core/SkPaint.h"
