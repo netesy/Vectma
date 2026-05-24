@@ -1,10 +1,10 @@
 # Vectma Core Migration Progress
 
 ## Architectural Mapping
-- [x] `GObject` -> `CanvasNode` (Core polymorphic base)
-- [x] `GScene` -> `SceneGraph` (Composite structural layer tree)
-- [x] `GEditor` -> `WorkspaceStage` (State coordinator)
-- [x] `GPaintCanvas` -> `RenderPipeline` (Graphics hardware abstraction)
+- [x]  `CanvasNode` (Core polymorphic base)
+- [x]  `SceneGraph` (Composite structural layer tree)
+- [x]  `WorkspaceStage` (State coordinator)
+- [x]  `RenderPipeline` (Graphics hardware abstraction)
 
 ## Implementation Status
 
