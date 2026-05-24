@@ -9,6 +9,8 @@
 ## Implementation Status
 
 - [x] **Smart Layout Engine** (Phase 24)
+- [x] **Infinite Canvas & Waypoints** (Phase 25)
+- [x] **Global Token Engine & Theme Switching** (Phase 26)
 
 ### Core Engine
 - [x] Directory Infrastructure
@@ -55,6 +57,8 @@
 - [x] **Vector Network Topology Tests**
 - [x] **Compound Shape Boolean Consistency Tests**
 - [x] **Component Inheritance & Override Integrity Tests**
+- [x] **Design Token Resolution & Aliasing Tests**
+- [x] **Multi-Theme Reactive Invalidation Tests**
 
 ---
-**Core Native Engineering Migration Roadmap: Phases 1-24 COMPLETE**
+**Core Native Engineering Migration Roadmap: Phases 1-26 COMPLETE**

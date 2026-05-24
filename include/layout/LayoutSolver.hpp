@@ -2,6 +2,8 @@
 
 #include <vector>
 #include <memory>
+#include <string>
+#include <optional>
 
 namespace vectma {
 
@@ -37,6 +39,7 @@ struct LayoutProperties {
     LayoutDirection direction = LayoutDirection::Horizontal;
     Padding padding;
     float gap = 0.0f;
+    std::optional<std::string> gapTokenPath;
     LayoutAlignment mainAxisAlign = LayoutAlignment::Start;
     LayoutAlignment counterAxisAlign = LayoutAlignment::Start;
 };

@@ -32,10 +32,10 @@
 - [x] Device preset library (Mobile, Web, Print)
 - [x] Viewport navigation history and waypoints
 
-## Phase 26: Cross-Node Bulk Style Syncing, Global Color/Typography Variables & Token Aliasing
-- [ ] Global design token registry
-- [ ] Style aliasing and dependency propagation
-- [ ] Bulk property selection and mass-mutation
+## Phase 26: Cross-Node Bulk Style Syncing, Global Color/Typography Variables & Token Aliasing [DONE]
+- [x] Global design token registry
+- [x] Style aliasing and dependency propagation
+- [x] Bulk property selection and mass-mutation
 
 ## Phase 27: Multi-Selection Smart Distribution, Relative Spacer Guides & Tidy-Up Grid Alignments
 - [ ] Distribution algorithms (Linear, Grid)

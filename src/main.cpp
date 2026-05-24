@@ -9,8 +9,11 @@
 #include "core/SceneGraph.hpp"
 #include "core/RectNode.hpp"
 #include "core/EllipseNode.hpp"
+#include "core/PathNode.hpp"
+#include "core/modifiers/CornerRoundingModifier.hpp"
 #include "renderer/RenderPipeline.hpp"
 #include "ui/EditorUI.hpp"
+#include "style/TokenRegistry.hpp"
 
 #ifdef VECTMA_USE_SKIA
 #include "renderer/SkiaRenderPipeline.hpp"
@@ -31,9 +34,29 @@ static void glfw_error_callback(int error, const char* description) {
 void seed_scene(std::shared_ptr<vectma::SceneGraph> scene) {
     scene->addChild(std::make_unique<vectma::RectNode>(100, 100, 200, 150));
     scene->addChild(std::make_unique<vectma::EllipseNode>(500, 300, 80, 100));
+
+    auto path = std::make_unique<vectma::PathNode>();
+    // Add a simple square path
+    path->addAnchor({{700, 100}, {700, 100}, {700, 100}});
+    path->addAnchor({{900, 100}, {900, 100}, {900, 100}});
+    path->addAnchor({{900, 300}, {900, 300}, {900, 300}});
+    path->addAnchor({{700, 300}, {700, 300}, {700, 300}});
+    path->setClosed(true);
+    path->addModifier(std::make_unique<vectma::CornerRoundingModifier>(0.0f));
+    scene->addChild(std::move(path));
+}
+
+void init_tokens() {
+    auto& tr = vectma::TokenRegistry::getInstance();
+    tr.registerColorToken("color.primary", vectma::GColor::FromHex("#ddb7ff"), vectma::GColor::FromHex("#b76dff"));
+    tr.registerColorToken("color.bg", vectma::GColor::FromHex("#131313"), vectma::GColor::FromHex("#0e0e0e"));
+    tr.registerDimensionToken("spacing.gutter", 12.0, 16.0);
+    tr.registerRadiusToken("radius.card", 8.0, 12.0);
 }
 
 int main() {
+    init_tokens();
+
 #ifdef VECTMA_USE_OPENGL
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit()) return 1;
@@ -42,7 +65,7 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Vectma Core", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "Vectma Studio", NULL, NULL);
     if (window == NULL) return 1;
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
@@ -64,10 +87,14 @@ int main() {
         workspace->setScene(scene);
         seed_scene(scene);
 
+        // Bind theme change to scene invalidation
+        vectma::TokenRegistry::getInstance().setOnChangeCallback([&](){
+            vectma::MarkSceneDirty(scene.get());
+        });
+
         std::unique_ptr<vectma::RenderPipeline> renderer;
 
 #ifdef VECTMA_USE_SKIA
-        // In a real app, this surface would be backed by the OpenGL context
         auto surface = SkSurfaces::Raster(SkImageInfo::MakeN32Premul(1280, 720));
         renderer = std::make_unique<vectma::SkiaRenderPipeline>(surface->getCanvas());
 #else

@@ -12,8 +12,10 @@ CanvasNode::CanvasNode() {
     m_blendMode.update(BlendMode::Normal, ts);
     m_fillType.update(FillType::Solid, ts);
     m_fillColor.update(GColor::White(), ts);
+    m_fillColor.tokenPath = std::nullopt;
     m_strokeAlignment.update(StrokeAlignment::Center, ts);
     m_strokeWidth.update(1.0, ts);
+    m_strokeWidth.tokenPath = std::nullopt;
     m_layoutDirty = true;
 }
 

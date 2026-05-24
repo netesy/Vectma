@@ -16,7 +16,7 @@ endif
 VENDOR_SRCS = vendor/imgui/imgui.cpp
 VENDOR_OBJS = $(VENDOR_SRCS:.cpp=.o)
 
-SRC_DIRS = src src/core src/core/spatial src/core/snap src/core/modifiers src/renderer src/ui src/sync src/geometry src/layout
+SRC_DIRS = src src/core src/core/spatial src/core/snap src/core/modifiers src/renderer src/ui src/sync src/geometry src/layout src/style
 SRCS = $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))
 OBJS = $(SRCS:.cpp=.o) $(VENDOR_OBJS)
 
@@ -30,6 +30,7 @@ GEOM_TEST_TARGET = test_geometry$(EXE_EXT)
 COMP_TEST_TARGET = test_components$(EXE_EXT)
 LAYOUT_TEST_TARGET = test_layout$(EXE_EXT)
 CANVAS_TEST_TARGET = test_canvas$(EXE_EXT)
+TOKEN_TEST_TARGET = test_tokens$(EXE_EXT)
 
 .PHONY: all clean run test
 
@@ -51,9 +52,9 @@ tests/%.o: tests/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 clean:
-	rm -f $(OBJS) src/main.o $(TARGET) tests/*.o $(TEST_TARGET) $(SYNC_TEST_TARGET) $(GEOM_TEST_TARGET) $(BOOL_TEST_TARGET) $(COMP_TEST_TARGET) $(LAYOUT_TEST_TARGET) $(CANVAS_TEST_TARGET)
+	rm -f $(OBJS) src/main.o $(TARGET) tests/*.o $(TEST_TARGET) $(SYNC_TEST_TARGET) $(GEOM_TEST_TARGET) $(BOOL_TEST_TARGET) $(COMP_TEST_TARGET) $(LAYOUT_TEST_TARGET) $(CANVAS_TEST_TARGET) $(TOKEN_TEST_TARGET)
 
-test: $(TEST_TARGET) $(SYNC_TEST_TARGET) $(GEOM_TEST_TARGET) $(BOOL_TEST_TARGET) $(COMP_TEST_TARGET) $(LAYOUT_TEST_TARGET) $(CANVAS_TEST_TARGET)
+test: $(TEST_TARGET) $(SYNC_TEST_TARGET) $(GEOM_TEST_TARGET) $(BOOL_TEST_TARGET) $(COMP_TEST_TARGET) $(LAYOUT_TEST_TARGET) $(CANVAS_TEST_TARGET) $(TOKEN_TEST_TARGET)
 	./$(TEST_TARGET)
 	./$(SYNC_TEST_TARGET)
 	./$(GEOM_TEST_TARGET)
@@ -61,6 +62,7 @@ test: $(TEST_TARGET) $(SYNC_TEST_TARGET) $(GEOM_TEST_TARGET) $(BOOL_TEST_TARGET)
 	./$(COMP_TEST_TARGET)
 	./$(LAYOUT_TEST_TARGET)
 	./$(CANVAS_TEST_TARGET)
+	./$(TOKEN_TEST_TARGET)
 
 $(TEST_TARGET): tests/test_core.o $(CORE_OBJS) $(VENDOR_OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
@@ -81,4 +83,7 @@ $(LAYOUT_TEST_TARGET): tests/test_layout.o $(CORE_OBJS) $(VENDOR_OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 $(CANVAS_TEST_TARGET): tests/test_canvas.o $(CORE_OBJS) $(VENDOR_OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
+$(TOKEN_TEST_TARGET): tests/test_tokens.o $(CORE_OBJS) $(VENDOR_OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^

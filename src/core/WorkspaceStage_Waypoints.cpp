@@ -1,4 +1,5 @@
 #include "core/WorkspaceStage.hpp"
+#include "layout/LayoutSolver.hpp"
 #include <cmath>
 
 namespace vectma {
@@ -21,6 +22,12 @@ void WorkspaceStage::jumpToWaypoint(int slot) {
 }
 
 void WorkspaceStage::tick(double dt) {
+    // Phase 26: Reactive Layout Invalidation
+    if (m_scene && m_scene->isLayoutDirty()) {
+        LayoutSolver::ResolveConstraints(m_scene.get());
+        m_scene->clearLayoutDirty();
+    }
+
     if (!m_isAnimating) return;
 
     m_animationTime += dt;
@@ -41,7 +48,6 @@ void WorkspaceStage::tick(double dt) {
 }
 
 void WorkspaceStage::updateViewMatrixFromCenter(double cx, double cy, double zoom) {
-    // T_viewport_center * S_zoom * T_minus_canvas_center
     GTransform m = GTransform::Translation(m_viewportWidth / 2.0, m_viewportHeight / 2.0)
                  .multiply(GTransform(zoom, 0, 0, zoom, 0, 0))
                  .multiply(GTransform::Translation(-cx, -cy));

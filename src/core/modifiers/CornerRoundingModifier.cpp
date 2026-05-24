@@ -1,4 +1,5 @@
 #include "core/modifiers/CornerRoundingModifier.hpp"
+#include "style/TokenRegistry.hpp"
 #include <cmath>
 #include <vector>
 
@@ -7,16 +8,30 @@ namespace vectma {
 CornerRoundingModifier::CornerRoundingModifier(float radius)
     : m_radius(radius) {}
 
+float CornerRoundingModifier::getRadius() const {
+    if (m_radiusTokenPath) {
+        return (float)TokenRegistry::getInstance().resolveAs<double>(*m_radiusTokenPath);
+    }
+    return m_radius;
+}
+
 void CornerRoundingModifier::setRadius(float radius) {
-    if (m_radius != radius) {
+    if (m_radius != radius || m_radiusTokenPath) {
         m_radius = radius;
+        m_radiusTokenPath = std::nullopt;
         markDirty();
     }
 }
 
+void CornerRoundingModifier::setRadiusToken(const std::string& path) {
+    m_radiusTokenPath = path;
+    markDirty();
+}
+
 std::unique_ptr<PathData> CornerRoundingModifier::apply(const PathData& input) const {
     auto output = std::make_unique<PathData>();
-    if (m_radius <= 0.0f) {
+    float radius = getRadius();
+    if (radius <= 0.0f) {
         *output = input;
         clearDirty();
         return output;
@@ -58,7 +73,7 @@ std::unique_ptr<PathData> CornerRoundingModifier::apply(const PathData& input) c
                 continue;
             }
 
-            double actualRadius = std::min((double)m_radius, std::min(d1 * 0.5, d2 * 0.5));
+            double actualRadius = std::min((double)radius, std::min(d1 * 0.5, d2 * 0.5));
             Point2D start(p2.x + (v1x / d1) * actualRadius, p2.y + (v1y / d1) * actualRadius);
             Point2D end(p2.x + (v2x / d2) * actualRadius, p2.y + (v2y / d2) * actualRadius);
 

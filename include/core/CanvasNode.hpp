@@ -10,6 +10,7 @@
 #include "core/Geometry.hpp"
 #include "sync/CRDTTypes.hpp"
 #include "layout/LayoutSolver.hpp"
+#include "style/TokenRegistry.hpp"
 
 namespace vectma {
 
@@ -61,17 +62,25 @@ public:
     void setGradientConfig(const GradientConfig& config) { m_gradientConfig.update(config, LamportClock::getInstance().tick()); }
     void setGradientConfigRemote(const GradientConfig& config, LamportTimestamp ts) { m_gradientConfig.update(config, ts); }
 
-    GColor getFillColor() const { return m_fillColor.value; }
+    GColor getFillColor() const {
+        if (m_fillColor.tokenPath) return TokenRegistry::getInstance().resolveAs<GColor>(*m_fillColor.tokenPath);
+        return m_fillColor.value;
+    }
     void setFillColor(GColor color) { m_fillColor.update(color, LamportClock::getInstance().tick()); }
     void setFillColorRemote(GColor color, LamportTimestamp ts) { m_fillColor.update(color, ts); }
+    void setFillColorToken(const std::string& path) { m_fillColor.bindToken(path, LamportClock::getInstance().tick()); }
 
     StrokeAlignment getStrokeAlignment() const { return m_strokeAlignment.value; }
     void setStrokeAlignment(StrokeAlignment alignment) { m_strokeAlignment.update(alignment, LamportClock::getInstance().tick()); }
     void setStrokeAlignmentRemote(StrokeAlignment alignment, LamportTimestamp ts) { m_strokeAlignment.update(alignment, ts); }
 
-    double getStrokeWidth() const { return m_strokeWidth.value; }
+    double getStrokeWidth() const {
+        if (m_strokeWidth.tokenPath) return TokenRegistry::getInstance().resolveAs<double>(*m_strokeWidth.tokenPath);
+        return m_strokeWidth.value;
+    }
     void setStrokeWidth(double width) { m_strokeWidth.update(width, LamportClock::getInstance().tick()); markLayoutDirty(); }
     void setStrokeWidthRemote(double width, LamportTimestamp ts) { m_strokeWidth.update(width, ts); markLayoutDirty(); }
+    void setStrokeWidthToken(const std::string& path) { m_strokeWidth.bindToken(path, LamportClock::getInstance().tick()); markLayoutDirty(); }
 
     const LayoutProperties& getLayoutProps() const { return m_layoutProps; }
     void setLayoutProps(const LayoutProperties& props) { m_layoutProps = props; markLayoutDirty(); }

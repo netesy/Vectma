@@ -10,6 +10,8 @@
 #include "core/ComponentInstanceNode.hpp"
 #include "core/SymbolRegistry.hpp"
 #include "core/LocaleManager.hpp"
+#include "style/TokenRegistry.hpp"
+#include "core/modifiers/CornerRoundingModifier.hpp"
 #include <imgui.h>
 #include <vector>
 #include <string>
@@ -21,6 +23,15 @@ void Inspector::render(WorkspaceStage& stage) {
     ImGui::Begin("Inspector");
 
     const auto& selection = stage.getSelection();
+
+    if (ImGui::CollapsingHeader("THEME", ImGuiTreeNodeFlags_DefaultOpen)) {
+        ThemeType currentTheme = TokenRegistry::getInstance().getActiveTheme();
+        const char* themes[] = { "Light", "Dark" };
+        int activeIdx = (currentTheme == ThemeType::Light) ? 0 : 1;
+        if (ImGui::Combo("Active Theme", &activeIdx, themes, 2)) {
+            TokenRegistry::getInstance().switchTheme(activeIdx == 0 ? ThemeType::Light : ThemeType::Dark);
+        }
+    }
 
     if (ImGui::CollapsingHeader("COMPONENTS", ImGuiTreeNodeFlags_DefaultOpen)) {
         if (!selection.empty()) {
@@ -102,6 +113,30 @@ void Inspector::render(WorkspaceStage& stage) {
         float col[4] = { (float)fill.r / 255.0f, (float)fill.g / 255.0f, (float)fill.b / 255.0f, (float)fill.a / 255.0f };
         if (ImGui::ColorEdit4("Fill", col)) {
             node->setFillColor(GColor((uint8_t)(col[0]*255), (uint8_t)(col[1]*255), (uint8_t)(col[2]*255), (uint8_t)(col[3]*255)));
+        }
+
+        ImGui::Separator();
+        ImGui::Text("Token Binding");
+        if (ImGui::Button("Bind color.primary")) node->setFillColorToken("color.primary");
+        ImGui::SameLine();
+        if (ImGui::Button("Bind color.bg")) node->setFillColorToken("color.bg");
+
+        ImGui::Separator();
+        double sw = node->getStrokeWidth();
+        float fsw = (float)sw;
+        if (ImGui::SliderFloat("Stroke Width", &fsw, 0, 100)) node->setStrokeWidth(fsw);
+        if (ImGui::Button("Bind spacing.gutter")) node->setStrokeWidthToken("spacing.gutter");
+    }
+
+    if (auto* pathNode = dynamic_cast<PathNode*>(node)) {
+        if (ImGui::CollapsingHeader("MODIFIERS", ImGuiTreeNodeFlags_DefaultOpen)) {
+            for (auto& modifier : const_cast<std::vector<std::unique_ptr<Modifier>>&>(pathNode->getModifierStack())) {
+                if (auto* rounding = dynamic_cast<CornerRoundingModifier*>(modifier.get())) {
+                    float r = rounding->getRadius();
+                    if (ImGui::SliderFloat("Corner Radius", &r, 0, 100)) rounding->setRadius(r);
+                    if (ImGui::Button("Bind radius.card")) rounding->setRadiusToken("radius.card");
+                }
+            }
         }
     }
 

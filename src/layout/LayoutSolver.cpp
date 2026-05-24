@@ -1,7 +1,9 @@
 #include "layout/LayoutSolver.hpp"
 #include "core/CanvasNode.hpp"
+#include "style/TokenRegistry.hpp"
 #include <algorithm>
 #include <vector>
+#include <iostream>
 
 namespace vectma {
 
@@ -37,6 +39,15 @@ void LayoutSolver::measureNode(CanvasNode* node) {
         return;
     }
 
+    float gap = props.gap;
+    if (props.gapTokenPath) {
+        try {
+            gap = (float)TokenRegistry::getInstance().resolveAs<double>(*props.gapTokenPath);
+        } catch (const std::exception& e) {
+            std::cerr << "LayoutSolver Error resolving gap token: " << e.what() << std::endl;
+        }
+    }
+
     float totalMain = 0;
     float maxCounter = 0;
     int visibleCount = 0;
@@ -57,7 +68,7 @@ void LayoutSolver::measureNode(CanvasNode* node) {
         }
     }
 
-    if (visibleCount > 1) totalMain += (visibleCount - 1) * props.gap;
+    if (visibleCount > 1) totalMain += (visibleCount - 1) * gap;
 
     float hPad = props.padding.left + props.padding.right;
     float vPad = props.padding.top + props.padding.bottom;
@@ -80,6 +91,15 @@ void LayoutSolver::layoutNode(CanvasNode* node, float availW, float availH) {
     const auto& props = node->getLayoutProps();
     if (!props.enabled) return;
 
+    float gap = props.gap;
+    if (props.gapTokenPath) {
+        try {
+            gap = (float)TokenRegistry::getInstance().resolveAs<double>(*props.gapTokenPath);
+        } catch (const std::exception& e) {
+            std::cerr << "LayoutSolver Error resolving gap token in layout: " << e.what() << std::endl;
+        }
+    }
+
     float innerW = availW - props.padding.left - props.padding.right;
     float innerH = availH - props.padding.top - props.padding.bottom;
 
@@ -99,7 +119,7 @@ void LayoutSolver::layoutNode(CanvasNode* node, float availW, float availH) {
         }
     }
 
-    if (visibleCount > 1) fixedTotal += (visibleCount - 1) * props.gap;
+    if (visibleCount > 1) fixedTotal += (visibleCount - 1) * gap;
     float remaining = std::max(0.0f, mainSpace - fixedTotal);
     float flexSize = (flexCount > 0) ? (remaining / flexCount) : 0;
 
@@ -130,8 +150,8 @@ void LayoutSolver::layoutNode(CanvasNode* node, float availW, float availH) {
         child->setPositionRemote(posX, posY, ts);
         child->setSizeRemote(targetW, targetH, ts);
 
-        if (props.direction == LayoutDirection::Horizontal) currentX += targetW + props.gap;
-        else currentY += targetH + props.gap;
+        if (props.direction == LayoutDirection::Horizontal) currentX += targetW + gap;
+        else currentY += targetH + gap;
 
         layoutNode(child.get(), targetW, targetH);
     }

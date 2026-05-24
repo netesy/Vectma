@@ -4,6 +4,9 @@
 #include <chrono>
 #include <atomic>
 #include <algorithm>
+#include <string>
+#include <optional>
+#include <variant>
 
 namespace vectma {
 
@@ -21,14 +24,25 @@ struct LamportTimestamp {
 template <typename T>
 struct LWWProperty {
     T value;
+    std::optional<std::string> tokenPath;
     LamportTimestamp lastUpdate;
 
-    LWWProperty() : value(), lastUpdate{0, 0, 0} {}
-    LWWProperty(const T& v, LamportTimestamp t) : value(v), lastUpdate(t) {}
+    LWWProperty() : value(), tokenPath(std::nullopt), lastUpdate{0, 0, 0} {}
+    LWWProperty(const T& v, LamportTimestamp t) : value(v), tokenPath(std::nullopt), lastUpdate(t) {}
 
     bool update(const T& newValue, LamportTimestamp newTimestamp) {
         if (newTimestamp >= lastUpdate) {
             value = newValue;
+            tokenPath = std::nullopt;
+            lastUpdate = newTimestamp;
+            return true;
+        }
+        return false;
+    }
+
+    bool bindToken(const std::string& path, LamportTimestamp newTimestamp) {
+        if (newTimestamp >= lastUpdate) {
+            tokenPath = path;
             lastUpdate = newTimestamp;
             return true;
         }

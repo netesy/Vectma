@@ -52,3 +52,14 @@ private:
 };
 
 } // namespace vectma
+
+namespace vectma {
+    // Phase 26: Style Cascade
+    inline void MarkSceneDirty(CanvasNode* root) {
+        if (!root) return;
+        root->markLayoutDirty();
+        for (const auto& child : root->getChildren()) {
+            MarkSceneDirty(child.get());
+        }
+    }
+}
