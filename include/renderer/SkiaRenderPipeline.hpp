@@ -42,6 +42,7 @@ public:
     void setStrokeStyle(const std::vector<float>& dashPattern, float offset) override;
 
     void drawSnappingGuide(const Point2D& start, const Point2D& end) override;
+    void drawAlignmentGuide(const Point2D& start, const Point2D& end) override;
 
     void pushTransform(const GTransform& transform) override;
     void popTransform() override;
@@ -50,6 +51,10 @@ public:
     void pushOverrideContext(const OverrideMap* overrides) override;
     void popOverrideContext() override;
     void setGlobalOpacity(float opacity) override;
+    void pushOpacity(float opacity) override;
+    void popOpacity() override;
+    void drawInteractionWire(const Point2D& start, const Point2D& end) override;
+    void drawTransition(const CanvasNode& outgoing, const CanvasNode& incoming, TransitionType type, float progress, double width, double height) override;
 
     // Advanced Extensions
     void drawBrushStroke(const std::vector<BrushPoint>& strokeBuffer, const BrushSettings& settings);
@@ -61,7 +66,7 @@ private:
     sk_sp<SkRuntimeEffect> m_brushEffect;
 #endif
     SkCanvas* m_canvas;
-    float m_globalOpacity = 1.0f;
+    std::vector<float> m_opacityStack = {1.0f};
     std::vector<const OverrideMap*> m_overrideStack;
 };
 #endif

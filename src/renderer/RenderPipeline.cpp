@@ -18,7 +18,7 @@
 
 namespace vectma {
 
-void BaselineRenderer::beginFrame() { m_globalOpacity = 1.0f; m_clipStack.clear(); m_transformStack.clear(); }
+void BaselineRenderer::beginFrame() { m_opacityStack = {1.0f}; m_clipStack.clear(); m_transformStack.clear(); }
 void BaselineRenderer::endFrame() {}
 
 void BaselineRenderer::pushTransform(const GTransform& transform) { m_transformStack.push_back(transform); }
@@ -61,10 +61,9 @@ void BaselineRenderer::drawBezierPath(const PathNode& node) {
 
 void BaselineRenderer::drawAnchorOverlay(const BezierAnchor& anchor, bool selected, int activeHandle) { (void)anchor; (void)selected; (void)activeHandle; }
 void BaselineRenderer::renderNode(const CanvasNode& node) {
-    float oldOpacity = m_globalOpacity;
-    m_globalOpacity *= node.getOpacity();
+    pushOpacity(node.getOpacity());
     node.render(*this);
-    m_globalOpacity = oldOpacity;
+    popOpacity();
 }
 std::vector<uint8_t> BaselineRenderer::exportRaster(float) { return {}; }
 void BaselineRenderer::setStrokeStyle(const std::vector<float>&, float) {}
@@ -74,6 +73,16 @@ void BaselineRenderer::pushClipRect(const GRect& rect) { m_clipStack.push_back(r
 void BaselineRenderer::popClipRect() { if (!m_clipStack.empty()) m_clipStack.pop_back(); }
 void BaselineRenderer::pushOverrideContext(const OverrideMap* overrides) { (void)overrides; }
 void BaselineRenderer::popOverrideContext() {}
-void BaselineRenderer::setGlobalOpacity(float opacity) { m_globalOpacity = opacity; }
+void BaselineRenderer::setGlobalOpacity(float opacity) { m_opacityStack.back() = opacity; }
+void BaselineRenderer::pushOpacity(float opacity) { m_opacityStack.push_back(m_opacityStack.back() * opacity); }
+void BaselineRenderer::popOpacity() { if (m_opacityStack.size() > 1) m_opacityStack.pop_back(); }
+
+void BaselineRenderer::drawInteractionWire(const Point2D& start, const Point2D& end) { (void)start; (void)end; }
+
+void BaselineRenderer::drawTransition(const CanvasNode& outgoing, const CanvasNode& incoming, TransitionType type, float progress, double width, double height) {
+    (void)outgoing;
+    (void)type; (void)progress; (void)width; (void)height;
+    incoming.render(*this);
+}
 
 } // namespace vectma

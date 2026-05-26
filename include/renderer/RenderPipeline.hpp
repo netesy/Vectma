@@ -7,6 +7,7 @@
 #include "core/GRect.hpp"
 #include "core/GTransform.hpp"
 #include "core/PropertyOverride.hpp"
+#include "prototype/InteractionGraph.hpp"
 
 namespace vectma {
 
@@ -17,9 +18,6 @@ class PathNode;
 class TextNode;
 struct BezierAnchor;
 
-/**
- * @brief Graphics hardware abstraction interface.
- */
 class RenderPipeline {
 public:
     virtual ~RenderPipeline() = default;
@@ -39,17 +37,12 @@ public:
 
     virtual void renderNode(const CanvasNode& node) = 0;
 
-    // Phase 10: Asset Export
     virtual std::vector<uint8_t> exportRaster(float scale) = 0;
-
-    // Phase 12: Advanced Stroke Support
     virtual void setStrokeStyle(const std::vector<float>& dashPattern, float offset) = 0;
 
-    // Phase 16: Snapping Guides
     virtual void drawSnappingGuide(const Point2D& start, const Point2D& end) = 0;
     virtual void drawAlignmentGuide(const Point2D& start, const Point2D& end) = 0;
 
-    // Phase 18: Clipping and Layer Support
     virtual void pushTransform(const GTransform& transform) = 0;
     virtual void popTransform() = 0;
     virtual void pushClipRect(const GRect& rect) = 0;
@@ -57,6 +50,10 @@ public:
     virtual void pushOverrideContext(const OverrideMap* overrides) = 0;
     virtual void popOverrideContext() = 0;
     virtual void setGlobalOpacity(float opacity) = 0;
+    virtual void pushOpacity(float opacity) = 0;
+    virtual void popOpacity() = 0;
+    virtual void drawInteractionWire(const Point2D& start, const Point2D& end) = 0;
+    virtual void drawTransition(const CanvasNode& outgoing, const CanvasNode& incoming, TransitionType type, float progress, double width, double height) = 0;
 };
 
 class BaselineRenderer : public RenderPipeline {
@@ -90,9 +87,13 @@ public:
     void pushOverrideContext(const OverrideMap* overrides) override;
     void popOverrideContext() override;
     void setGlobalOpacity(float opacity) override;
+    void pushOpacity(float opacity) override;
+    void popOpacity() override;
+    void drawInteractionWire(const Point2D& start, const Point2D& end) override;
+    void drawTransition(const CanvasNode& outgoing, const CanvasNode& incoming, TransitionType type, float progress, double width, double height) override;
 
 private:
-    float m_globalOpacity = 1.0f;
+    std::vector<float> m_opacityStack = {1.0f};
     std::vector<GTransform> m_transformStack;
     std::vector<GRect> m_clipStack;
 };

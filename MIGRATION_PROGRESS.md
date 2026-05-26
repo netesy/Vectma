@@ -12,6 +12,7 @@
 - [x] **Infinite Canvas & Waypoints** (Phase 25)
 - [x] **Global Token Engine & Theme Switching** (Phase 26)
 - [x] **Multi-Selection, Alignment Guides & Smart Distribution** (Phase 27)
+- [x] **Micro-Interaction Animation Graph & Prototyping** (Phase 28)
 
 ### Core Engine
 - [x] Directory Infrastructure
@@ -62,6 +63,8 @@
 - [x] **Multi-Theme Reactive Invalidation Tests**
 - [x] **Multi-Selection Bounds & Distribution Accuracy Tests**
 - [x] **Smart Guide Projection & Snapping Logic Validation**
+- [x] **Interaction Graph Hit-Testing & Transition Tests**
+- [x] **AUI Reactive Property Binding Validation**
 
 ---
-**Core Native Engineering Migration Roadmap: Phases 1-27 COMPLETE**
+**Core Native Engineering Migration Roadmap: Phases 1-28 COMPLETE**

@@ -10,6 +10,7 @@
 #include "geometry/BezierMath.hpp"
 #include "ui/SelectionManager.hpp"
 #include "core/AlignmentEngine.hpp"
+#include "prototype/InteractionGraph.hpp"
 #include <memory>
 #include <vector>
 #include <optional>
@@ -19,7 +20,7 @@ namespace vectma {
 
 class PathNode;
 
-enum class ToolType { Select, Marquee, Rect, Ellipse, Path, Text, Image, Brush, Pen, Artboard };
+enum class ToolType { Select, Marquee, Rect, Ellipse, Path, Text, Image, Brush, Pen, Artboard, Interaction };
 enum class CanvasEditingMode { Normal, PathEdit };
 
 class WorkspaceStage {
@@ -105,6 +106,10 @@ public:
 
     void setViewportSize(double w, double h) { m_viewportWidth = w; m_viewportHeight = h; }
 
+    // Prototyping
+    bool isDrawingWire() const { return m_isDrawingWire; }
+    Point2D getWireTargetPos() const { return m_wireTargetPos; }
+
 private:
     std::shared_ptr<SceneGraph> m_scene;
     SelectionManager m_selectionManager;
@@ -147,6 +152,10 @@ private:
     double m_startCenterX, m_startCenterY, m_startZoom;
     double m_targetCenterX, m_targetCenterY, m_targetZoom;
     double m_viewportWidth = 1920, m_viewportHeight = 1080;
+
+    // Prototyping
+    bool m_isDrawingWire = false;
+    Point2D m_wireTargetPos;
 
     void updateMarquee(const Point2D& currentCanvasPos);
     void performSelection(const GRect& rect);

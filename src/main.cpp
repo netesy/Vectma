@@ -1,8 +1,6 @@
 #ifdef VECTMA_USE_OPENGL
 #include <vendor/glfw/deps/glad/gl.h>
 #include <vendor/glfw/include/GLFW/glfw3.h>
-#include <vendor/imgui/backends/imgui_impl_glfw.h>
-#include <vendor/imgui/backends/imgui_impl_opengl3.h>
 #endif
 
 #include "core/WorkspaceStage.hpp"
@@ -12,7 +10,7 @@
 #include "core/PathNode.hpp"
 #include "core/modifiers/CornerRoundingModifier.hpp"
 #include "renderer/RenderPipeline.hpp"
-#include "ui/EditorUI.hpp"
+#include "ui/WorkspaceWindow.hpp"
 #include "style/TokenRegistry.hpp"
 
 #ifdef VECTMA_USE_SKIA
@@ -21,7 +19,6 @@
 #include "include/core/SkSurface.h"
 #endif
 
-#include <imgui.h>
 #include <iostream>
 #include <memory>
 
@@ -36,7 +33,6 @@ void seed_scene(std::shared_ptr<vectma::SceneGraph> scene) {
     scene->addChild(std::make_unique<vectma::EllipseNode>(500, 300, 80, 100));
 
     auto path = std::make_unique<vectma::PathNode>();
-    // Add a simple square path
     path->addAnchor({{700, 100}, {700, 100}, {700, 100}});
     path->addAnchor({{900, 100}, {900, 100}, {900, 100}});
     path->addAnchor({{900, 300}, {900, 300}, {900, 300}});
@@ -61,7 +57,6 @@ int main() {
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit()) return 1;
 
-    const char* glsl_version = "#version 130";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
@@ -71,14 +66,6 @@ int main() {
     glfwSwapInterval(1);
 
     if (!gladLoadGL(glfwGetProcAddress)) return 1;
-
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init(glsl_version);
-#else
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
 #endif
 
     {
@@ -87,7 +74,6 @@ int main() {
         workspace->setScene(scene);
         seed_scene(scene);
 
-        // Bind theme change to scene invalidation
         vectma::TokenRegistry::getInstance().setOnChangeCallback([&](){
             vectma::MarkSceneDirty(scene.get());
         });
@@ -101,12 +87,11 @@ int main() {
         renderer = std::make_unique<vectma::BaselineRenderer>();
 #endif
 
-        auto ui = std::make_unique<vectma::EditorUI>(*workspace, *renderer);
+        auto ui = std::make_unique<vectma::WorkspaceWindow>(*workspace, *renderer);
 
 #ifdef VECTMA_USE_OPENGL
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
-            ui->render();
 
             int display_w, display_h;
             glfwGetFramebufferSize(window, &display_w, &display_h);
@@ -114,19 +99,14 @@ int main() {
             glClearColor(0.043f, 0.043f, 0.047f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT);
 
-            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+            ui->render();
             glfwSwapBuffers(window);
         }
-
-        ImGui_ImplOpenGL3_Shutdown();
-        ImGui_ImplGlfw_Shutdown();
 #else
-        std::cout << "OpenGL disabled. Running headless core logic." << std::endl;
+        std::cout << "OpenGL disabled. Running AUI headless simulation." << std::endl;
         ui->render();
 #endif
     }
-
-    ImGui::DestroyContext();
 
 #ifdef VECTMA_USE_OPENGL
     glfwDestroyWindow(window);

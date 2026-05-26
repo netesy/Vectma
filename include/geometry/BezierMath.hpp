@@ -98,6 +98,24 @@ public:
         double maxY = std::max({p0.y, p1.y, p2.y, p3.y});
         return GRect(minX, minY, maxX - minX, maxY - minY);
     }
+
+    static double evaluateEasing(const float coefficients[4], double t) {
+        if (t <= 0.0) return 0.0;
+        if (t >= 1.0) return 1.0;
+
+        Point2D p1 = { (double)coefficients[0], (double)coefficients[1] };
+        Point2D p2 = { (double)coefficients[2], (double)coefficients[3] };
+
+        double u = t;
+        for (int i = 0; i < 8; ++i) {
+            double x = 3*std::pow(1-u, 2)*u*p1.x + 3*(1-u)*u*u*p2.x + u*u*u;
+            double dx = 3*std::pow(1-u, 2)*p1.x + 6*(1-u)*u*(p2.x - p1.x) + 3*u*u*(1 - p2.x);
+            if (std::abs(dx) < 1e-6) break;
+            u -= (x - t) / dx;
+        }
+        double y = 3*std::pow(1-u, 2)*u*p1.y + 3*(1-u)*u*u*p2.y + u*u*u;
+        return std::clamp(y, 0.0, 1.0);
+    }
 };
 
 } // namespace geometry

@@ -42,10 +42,10 @@
 - [x] Real-time smart distance guides
 - [x] Grid snapping and layout alignment anchors
 
-## Phase 28: Micro-Interaction Animation Graph, Hotspot Prototyping Wires & Live Preview Player
-- [ ] State-based transition graph
-- [ ] Interaction hotspots and prototyping wires
-- [ ] Headless animation player with Skia interpolation
+## Phase 28: Micro-Interaction Animation Graph, Hotspot Prototyping Wires & Live Preview Player [DONE]
+- [x] State-based transition graph
+- [x] Interaction hotspots and prototyping wires
+- [x] Headless animation player with Skia interpolation
 
 ## Phase 29: Advanced Asset Library Browser, Native SVG/PDF Multi-Format Export Pipelines & Code Gen
 - [ ] Integrated asset management UI
