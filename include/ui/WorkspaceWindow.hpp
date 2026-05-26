@@ -2,6 +2,7 @@
 #include "AUI/AUI.hpp"
 #include "core/WorkspaceStage.hpp"
 #include "renderer/RenderPipeline.hpp"
+#include "ui/ExportHub.hpp"
 
 namespace vectma {
 
@@ -15,6 +16,7 @@ public:
 private:
     WorkspaceStage& m_stage;
     RenderPipeline& m_renderer;
+    std::shared_ptr<ExportHub> m_exportHub;
 
     void setupLayout();
 

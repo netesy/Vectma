@@ -5,6 +5,7 @@
 #include "AUI/Core/AAbstractListModel.hpp"
 #include "AUI/View/AView.hpp"
 #include "AUI/View/AWindow.hpp"
+#include "AUI/View/AModal.hpp"
 #include "AUI/View/AButton.hpp"
 #include "AUI/View/ATextField.hpp"
 #include "AUI/Layout/ALinearLayout.hpp"
