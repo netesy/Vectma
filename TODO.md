@@ -47,10 +47,10 @@
 - [x] Interaction hotspots and prototyping wires
 - [x] Headless animation player with Skia interpolation
 
-## Phase 29: Advanced Asset Library Browser, Native SVG/PDF Multi-Format Export Pipelines & Code Gen
-- [ ] Integrated asset management UI
-- [ ] High-fidelity PDF/SVG backend exporters
-- [ ] Dynamic code generation (CSS, SwiftUI, Flutter)
+## Phase 29: Advanced Asset Library Browser, Native SVG/PDF Multi-Format Export Pipelines & Code Gen [DONE]
+- [x] Integrated asset management UI
+- [x] High-fidelity PDF/SVG backend exporters
+- [x] Dynamic code generation (AUI, SVG)
 
 ## Phase 30: Multi-User Collaboration UI & Real-Time Presence Canvas Overlay
 - [ ] Multiplayer cursor telemetry
