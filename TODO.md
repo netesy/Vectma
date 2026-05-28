@@ -1,58 +1,51 @@
-# Vectma Core Development Roadmap
+# Vectma Development Roadmap & Pipeline Status
 
-## Phase 20: CRDT Collaborative Real-Time Sync [DONE]
-- [x] LWW-Element-Set based SceneGraph convergence
-- [x] Deterministic CRDT identifiers with Lamport Clocks
-- [x] Binary delta frame codec for lightweight structural mutations
-- [x] Non-blocking background network reconciliation engine
+## Phase 21-24: Core Layout & Analytical Systems [COMPLETED]
+- [x] High-performance vector network topologies & path handle metrics
+- [x] Non-destructive live boolean compound shape operations (`SkOp` loops)
+- [x] Two-pass Flexbox-style Auto-Layout solver (`Measure` bottom-up / `Layout` top-down)
+- [x] Spatial integrity crash resolution (Quadtree initialization fixes)
 
-## Phase 21: Production-Grade Vector Pen Tool & Path Editor [DONE]
-- [x] Vector network engine with branching path topology
-- [x] Analytical Bezier math inner loops (distance, intersection)
-- [x] Modal Pen tool interaction state machine
-- [x] Cross-platform build path hardening (Windows/Linux)
+## Phase 25-27: Infinite Canvas & Style Cascades [COMPLETED]
+- [x] Bounded Artboard containers with hardware clip rect masking
+- [x] Camera Workspace Waypoints with smooth cubic bezier easing ($3t^2 - 2t^3$)
+- [x] Centralized Design Token Registry with cycle detection and multi-theme cascading
+- [x] Multi-node selection bounds and high-speed edge alignment snap lines (<1ms for 1000 nodes)
 
-## Phase 22: Non-Destructive Live Boolean Operations & Compound Path Finder [DONE]
-- [x] Adaptive polygon clipping via Skia PathOps
-- [x] Compound path grouping and live evaluation
-- [x] Real-time Boolean preview hierarchy
+## Phase 28: Declarative Workspace Architecture [COMPLETED]
+- [x] Complete surgical removal of immediate-mode Dear ImGui layout dependencies
+- [x] Implementation of custom native Action UI (AUI) reactive framework from scratch
+- [x] Compile-time asset header aggregation pipeline for zero-runtime UI dependencies
+- [x] Stateful interaction hotspot wires and alpha-blended transition interpolators
 
-## Phase 23: Reusable Component Architecture, Nested Instances & Property Overrides [DONE]
-- [x] Component master/instance mapping logic
-- [x] Property override tracking per instance
-- [x] Nested symbol resolution and cyclic dependency detection
+## Phase 29: Advanced Asset Library Browser & Network Streaming [COMPLETED]
+- [x] Non-blocking `AssetFetchEngine` for asynchronous remote JSON asset parsing
+- [x] Live vector icon hydration from unauthenticated open CDN streams (JSDelivr)
+- [x] On-demand Google Fonts binary streaming & injection into Skia font manager
+- [x] Native multi-format document exporting (W3C XML SVG, `SkDocument` PDF, and raw Code Gen)
 
-## Phase 24: Smart Layout Engine (Flexbox-style Auto-Layout & Dynamic Resizing Constraints) [DONE]
-- [x] 1D/2D Flexbox solver for canvas elements
-- [x] Resizing constraints (Fix, Hug, Fill)
-- [x] Relative positioning and auto-spacing
+## Phase 30: Advanced Pathfinder Engine & Destructive Path Expansion [ACTIVE]
+- [ ] Implement analytical terminal flattening loop for composite shape trees
+- [ ] Build native Stroke-to-Path (Outline Stroke) parallel bezier offset engine
+- [ ] Implement Ramer-Douglas-Peucker geometric curve simplification pass
+- [ ] Set up regression suite for multi-contour path self-intersections
 
-## Phase 25: Infinite Canvas Artboard Management, Target Device Presets & Workspace Waypoints [DONE]
-- [x] Dynamic artboard coordinate system
-- [x] Device preset library (Mobile, Web, Print)
-- [x] Viewport navigation history and waypoints
+## Phase 31: Advanced Typography Engine & Complex Wrapping [QUEUED]
+- [ ] Implement Text-on-a-Path matrix transformation tracking arbitrary bezier curves
+- [ ] Build layout layout exclusion zones for wrapping text columns around custom shapes
+- [ ] Refactor `TextNode` string architecture to support localized inline formatting runs
 
-## Phase 26: Cross-Node Bulk Style Syncing, Global Color/Typography Variables & Token Aliasing [DONE]
-- [x] Global design token registry
-- [x] Style aliasing and dependency propagation
-- [x] Bulk property selection and mass-mutation
+## Phase 32: Rich Surface Primitives & Gradient Mesh Warping [QUEUED]
+- [ ] Implement multi-stop Conic/Angular and point-based freeform gradients via Skia shaders
+- [ ] Design editable 2D Mesh Warp Grid for organic vertex color interpolation
+- [ ] Integrate full hardware-accelerated blending filters (Multiply, Screen, Gaussian Blur)
 
-## Phase 27: Multi-Selection Smart Distribution, Relative Spacer Guides & Tidy-Up Grid Alignments [DONE]
-- [x] Distribution algorithms (Linear, Grid)
-- [x] Real-time smart distance guides
-- [x] Grid snapping and layout alignment anchors
+## Phase 33: AI-Assisted Smart Layouts & Vector Auto-Tracer [QUEUED]
+- [ ] Build native local image vectorization engine (Bitmap to vector auto-tracer)
+- [ ] Implement semantic prompt-driven card layout generator tied to the AUI architecture
+- [ ] Build palette clustering extractor tool to auto-generate variables inside the TokenRegistry
 
-## Phase 28: Micro-Interaction Animation Graph, Hotspot Prototyping Wires & Live Preview Player [DONE]
-- [x] State-based transition graph
-- [x] Interaction hotspots and prototyping wires
-- [x] Headless animation player with Skia interpolation
-
-## Phase 29: Advanced Asset Library Browser, Native SVG/PDF Multi-Format Export Pipelines & Code Gen [DONE]
-- [x] Integrated asset management UI
-- [x] High-fidelity PDF/SVG backend exporters
-- [x] Dynamic code generation (AUI, SVG)
-
-## Phase 30: Multi-User Collaboration UI & Real-Time Presence Canvas Overlay
-- [ ] Multiplayer cursor telemetry
-- [ ] Collaborative selection highlighting
-- [ ] Real-time activity stream and conflict HUD
+## Phase 34: Interactive Specification Export & Handoff Runtimes [QUEUED]
+- [ ] Implement self-contained interactive HTML/JS canvas inspect player bundle export
+- [ ] Build automated Asset Sheet multi-format slicing compression zip utility
+- [ ] Finalize production-grade performance profiling across all drawing subsystems

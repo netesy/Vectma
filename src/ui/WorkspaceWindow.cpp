@@ -2,6 +2,8 @@
 #include "ui/ThemeTokens.hpp"
 #include "ui/LayerListModel.hpp"
 #include "core/ArtboardNode.hpp"
+#include "core/CompoundShapeNode.hpp"
+#include "geometry/PathfinderEngine.hpp"
 #include "prototype/InteractionGraph.hpp"
 #include <iostream>
 
@@ -80,6 +82,26 @@ void WorkspaceWindow::setupLayout() {
             } catch(...) {}
         });
         m_rightPanel->addView(xField);
+
+        // Pathfinder Actions
+        if (auto* compound = dynamic_cast<CompoundShapeNode*>(node)) {
+            auto flattenBtn = std::make_shared<aui::AButton>("Flatten Paths");
+            flattenBtn->onClick([this, compound]() {
+                geometry::PathfinderEngine::Flatten(compound);
+                m_stage.clearSelection();
+                setupLayout();
+            });
+            m_rightPanel->addView(flattenBtn);
+        }
+
+        if (node->getStrokeWidth() > 0) {
+            auto outlineBtn = std::make_shared<aui::AButton>("Outline Stroke");
+            outlineBtn->onClick([this, node]() {
+                geometry::PathfinderEngine::ConvertStrokeToPath(node);
+                setupLayout();
+            });
+            m_rightPanel->addView(outlineBtn);
+        }
 
         auto protoLabel = std::make_shared<aui::AButton>("PROTOTYPING");
         m_rightPanel->addView(protoLabel);

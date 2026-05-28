@@ -1,6 +1,7 @@
 #pragma once
 #include "AUI/View/AView.hpp"
 #include <vector>
+#include <memory>
 
 namespace aui {
 
@@ -8,17 +9,9 @@ enum class Orientation { Horizontal, Vertical };
 
 class ALinearLayout : public AView {
 public:
-    ALinearLayout(Orientation orientation) : m_orientation(orientation) {}
-
-    void addView(std::shared_ptr<AView> view) {
-        m_views.push_back(view);
-    }
-
-    void render() override {
-        for (auto& view : m_views) {
-            view->render();
-        }
-    }
+    ALinearLayout(Orientation orientation);
+    void addView(std::shared_ptr<AView> view);
+    void render() override;
 
 protected:
     Orientation m_orientation;
@@ -27,12 +20,12 @@ protected:
 
 class AHorizontalLayout : public ALinearLayout {
 public:
-    AHorizontalLayout() : ALinearLayout(Orientation::Horizontal) {}
+    AHorizontalLayout();
 };
 
 class AVerticalLayout : public ALinearLayout {
 public:
-    AVerticalLayout() : ALinearLayout(Orientation::Vertical) {}
+    AVerticalLayout();
 };
 
 } // namespace aui

@@ -8,13 +8,13 @@ namespace aui {
 
 class AView {
 public:
-    virtual ~AView() = default;
-    virtual void render() {} // Not pure virtual anymore to allow make_shared<AView>
+    virtual ~AView();
+    virtual void render();
 
-    void setStyle(const std::string& style) { m_style = style; }
-    virtual void onMouseDown(float x, float y) { (void)x; (void)y; }
-    virtual void onMouseMove(float x, float y) { (void)x; (void)y; }
-    virtual void onMouseUp() { }
+    void setStyle(const std::string& style);
+    virtual void onMouseDown(float x, float y);
+    virtual void onMouseMove(float x, float y);
+    virtual void onMouseUp();
 
 protected:
     std::string m_style;
