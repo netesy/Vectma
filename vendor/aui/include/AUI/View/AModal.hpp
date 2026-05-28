@@ -5,9 +5,9 @@ namespace aui {
 
 class AModal : public AView {
 public:
-    virtual void open() { m_isOpen = true; }
-    virtual void close() { m_isOpen = false; }
-    bool isOpen() const { return m_isOpen; }
+    virtual void open();
+    virtual void close();
+    bool isOpen() const;
 
 protected:
     bool m_isOpen = false;

@@ -7,14 +7,11 @@ namespace aui {
 
 class ATextField : public AView {
 public:
-    ATextField(const std::string& text = "") : m_text(text) {}
-
-    void setText(const std::string& text) { m_text = text; if(m_onChanged) m_onChanged(text); }
-    const std::string& getText() const { return m_text; }
-
-    void onChanged(std::function<void(const std::string&)> callback) { m_onChanged = callback; }
-
-    void render() override {}
+    ATextField(const std::string& text = "");
+    void setText(const std::string& text);
+    const std::string& getText() const;
+    void onChanged(std::function<void(const std::string&)> callback);
+    void render() override;
 
 private:
     std::string m_text;
