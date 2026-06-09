@@ -1,0 +1,167 @@
+﻿/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+#include "AAbstractSocket.h"
+
+
+#include "Exceptions.h"
+#include "AUI/Common/AString.h"
+#include "AUI/IO/AEOFException.h"
+#include "AUI/IO/AIOException.h"
+#include "AUI/Thread/AThread.h"
+#include "AUI/Platform/ErrorToException.h"
+
+
+#if AUI_PLATFORM_WIN
+#include <ws2tcpip.h>
+#include <windows.h>
+#include <AUI/Logging/ALogger.h>
+
+void aui_wsa_init()
+{
+	class WSA
+	{
+	private:
+		WSADATA wsa;
+
+	public:
+		WSA()
+		{
+			if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
+				throw AIOException((AString("Failed. Error code: ") + AString::number(WSAGetLastError())).c_str());
+			}
+		}
+		~WSA()
+		{
+			WSACleanup();
+		}
+	};
+	static WSA wsa;
+}
+#else
+
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <cstring>
+#include <netdb.h>
+#include <AUI/Logging/ALogger.h>
+
+#endif
+
+void AAbstractSocket::init()
+{
+#if AUI_PLATFORM_WIN
+	aui_wsa_init();
+	if ((mHandle = createSocket()) == INVALID_SOCKET) {
+		throw AIOException(
+			(AString("Failed to create ASocket. Error code: ") + AString::number(WSAGetLastError())).c_str());
+	}
+#else
+	if ((mHandle = createSocket()) < 0)
+	{
+		throw AIOException("Failed to create ASocket.");
+	}
+#endif
+
+	static const int buflen = 1 << 24;
+	if (setsockopt(mHandle, SOL_SOCKET, SO_RCVBUF, (char*)& buflen, sizeof(buflen)) < 0 ||
+		setsockopt(mHandle, SOL_SOCKET, SO_SNDBUF, (char*)& buflen, sizeof(buflen)) < 0)
+		throw AIOException(
+		(AString("Failed to setsockopt:") + getErrorString()).c_str());
+}
+
+AString AAbstractSocket::getErrorString()
+{
+#if AUI_PLATFORM_WIN
+	int error = WSAGetLastError();
+	return aui::impl::formatSystemError(error).description;
+#else
+	return strerror(errno);
+#endif
+}
+
+void AAbstractSocket::handleError(const AString& message, int code)
+{
+	AString msg = message + ": " + getErrorString();
+#if AUI_PLATFORM_WIN
+	switch (WSAGetLastError()) {
+	case WSAEINTR:
+		throw AThread::Interrupted();
+	case WSAECONNRESET:
+		throw AEOFException();
+	default:
+		throw SocketException(msg);
+	}
+#else
+    switch (code) {
+        case EINTR:
+            throw AThread::Interrupted();
+        case ECONNRESET:
+            throw AEOFException();
+        default:
+            throw SocketException(msg);
+    }
+#endif
+}
+
+void AAbstractSocket::bind(uint16_t bindingPort)
+{
+	mSelfAddress = AInet4Address(0u, bindingPort);
+	auto addr = mSelfAddress.addr();
+	for (unsigned i = 5; i >= 0; --i) {
+        const int res = ::bind(getHandle(), reinterpret_cast<const sockaddr*>(&addr), sizeof(sockaddr_in));
+        if (res < 0) {
+            if (i == 0) {
+                ALogger::err("failed to bind to port: " + AString::number(bindingPort) + ", giving up.");
+                handleError("failed to bind to port: " + AString::number(bindingPort), res);
+            } else {
+                ALogger::err("failed to bind to port: " + AString::number(bindingPort) + ", trying again");
+                AThread::sleep(std::chrono::seconds(3));
+            }
+        } else {
+            break;
+        }
+    }
+}
+
+AAbstractSocket::AAbstractSocket()
+{
+}
+
+
+AAbstractSocket::~AAbstractSocket()
+{
+	if (mHandle)
+		close();
+}
+
+void AAbstractSocket::close()
+{
+	if (mHandle) {
+#if AUI_PLATFORM_WIN
+		closesocket(mHandle);
+#else
+		shutdown(mHandle, 2);
+#endif
+		mHandle = 0;
+	}
+}
+
+
+void AAbstractSocket::setTimeout(int secs) {
+	struct timeval tv;
+
+	tv.tv_sec = secs * 1000;
+	tv.tv_usec = 0;
+	if (setsockopt(getHandle(), SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&tv), sizeof(tv)) < 0) {
+		throw AIOException(AString("setsockopt error ") + getErrorString());
+	}
+}

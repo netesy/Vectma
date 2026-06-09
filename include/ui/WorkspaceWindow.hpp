@@ -1,10 +1,13 @@
 #pragma once
-#include "AUI/AUI.hpp"
-#include "core/WorkspaceStage.hpp"
-#include "renderer/RenderPipeline.hpp"
-#include "ui/ExportHub.hpp"
+#include <AUI/Views.h>
+#include <AUI/AWindow.h>
+#include <memory>
 
 namespace vectma {
+
+class WorkspaceStage;
+class RenderPipeline;
+class ExportHub;
 
 class WorkspaceWindow : public aui::AWindow {
 public:

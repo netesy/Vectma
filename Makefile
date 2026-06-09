@@ -3,7 +3,7 @@
 CXX = g++
 CC = gcc
 # Default flags with GUI support
-CXXFLAGS = -std=c++20 -Iinclude -I. -Ivendor -Ivendor/aui/include -Ivendor/glfw/include -Ivendor/glfw/deps -Wall -Wextra -Wpedantic -Werror -DGLFW_INCLUDE_NONE -DVECTMA_USE_OPENGL
+CXXFLAGS = -std=c++20 -Iinclude -I. -Ivendor -Ivendor/aui/include -Ivendor/glfw/include -Ivendor/glfw/deps -Ivendor/glm -Ivendor/fmt -Wall -Wextra -Wpedantic -Werror -Wno-unknown-pragmas -DGLFW_INCLUDE_NONE -DVECTMA_USE_OPENGL -DAUI_STATIC -DAUI_PLATFORM_WIN -DFMT_HEADER_ONLY
 CFLAGS = -std=c11 -Iinclude -I. -Ivendor -Ivendor/aui/include -Ivendor/glfw/include -Ivendor/glfw/deps -Wall -Wextra
 
 # OS Detection
@@ -24,7 +24,7 @@ endif
 # Centralized vendor objects
 GLAD_SRCS = vendor/glfw/deps/glad_gl.c
 GLFW_SRCS = vendor/glfw/src/context.c vendor/glfw/src/init.c vendor/glfw/src/input.c vendor/glfw/src/monitor.c vendor/glfw/src/vulkan.c vendor/glfw/src/window.c vendor/glfw/src/egl_context.c vendor/glfw/src/osmesa_context.c $(GLFW_PLATFORM_SRCS)
-AUI_SRCS = $(wildcard vendor/aui/src/*.cpp)
+AUI_SRCS = $(wildcard vendor/aui/include/AUI/**/*.cpp)
 VENDOR_OBJS = $(GLFW_SRCS:.c=.o) $(GLAD_SRCS:.c=.o) $(AUI_SRCS:.cpp=.o)
 
 SRC_DIRS = src src/core src/core/spatial src/core/snap src/core/modifiers src/renderer src/ui src/sync src/geometry src/layout src/style src/prototype src/network src/export
@@ -34,6 +34,8 @@ OBJS = $(SRCS:.cpp=.o) $(VENDOR_OBJS)
 TARGET = vectma$(EXE_EXT)
 
 CORE_OBJS = $(filter-out src/main.o, $(SRCS:.cpp=.o))
+
+# Test targets
 TEST_TARGET = test_runner
 SYNC_TEST_TARGET = test_sync
 BOOL_TEST_TARGET = test_boolean
@@ -46,19 +48,13 @@ SELECTION_TEST_TARGET = test_selection
 PROTOTYPE_TEST_TARGET = test_prototype
 ASSETS_TEST_TARGET = test_assets
 
-.PHONY: all clean run test auic headless
+.PHONY: all clean run test headless
 
-all: auic $(TARGET)
+all: $(TARGET)
 
-# Headless build (special target) - No GUI libs
 headless: CXXFLAGS = -std=c++20 -Iinclude -I. -Ivendor -Ivendor/aui/include -Wall -Wextra -Wpedantic -Werror
 headless: $(CORE_OBJS) src/main.o
 	$(CXX) $(CXXFLAGS) -o vectma_headless $(CORE_OBJS) src/main.o -lpthread -lm -ldl
-
-auic:
-	@echo "Processing AUI assets..."
-	@mkdir -p build/assets
-	@touch build/assets/compiled_assets.h
 
 $(TARGET): $(OBJS) src/main.o
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(PLATFORM_LIBS)

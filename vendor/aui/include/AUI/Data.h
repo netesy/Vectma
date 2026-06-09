@@ -1,0 +1,31 @@
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+#pragma once
+#pragma warning(disable: 4251)
+
+#include "AUI/api.h"
+#include "AUI/Autumn/Autumn.h"
+#include "AUI/Common/SharedPtrTypes.h"
+
+class ASqlDatabase;
+
+namespace Autumn
+{
+	namespace detail
+	{
+		template<>
+		API_AUI_DATA _<ASqlDatabase>& threadLocalStorage();
+	}
+}
+
+
+typedef unsigned id_t;

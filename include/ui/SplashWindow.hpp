@@ -1,5 +1,7 @@
 #pragma once
-#include "AUI/AUI.hpp"
+#include <AUI/Views.h>
+#include <AUI/AWindow.h>
+#include <memory>
 
 namespace vectma {
 

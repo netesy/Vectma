@@ -1,0 +1,37 @@
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+//
+// Created by Alex2772 on 1/24/2022.
+//
+
+#include "ASoftwareEmbedAuiWrap.h"
+
+#include <AUI/Software/SoftwareRenderer.h>
+
+#if AUI_PLATFORM_LINUX
+#include <AUI/Platform/linux/x11/SoftwareRenderingContextX11.h>
+#endif
+
+ASoftwareEmbedAuiWrap::ASoftwareEmbedAuiWrap() {
+#if AUI_PLATFORM_LINUX
+    windowInit(aui::ptr::manage_unique(mContext = new SoftwareRenderingContextX11));
+#else
+    windowInit(aui::ptr::manage_unique(mContext = new SoftwareRenderingContext));
+#endif
+}
+
+AImage ASoftwareEmbedAuiWrap::render(ARenderContext context) {
+    windowMakeCurrent();
+    AThread::processMessages();
+    windowRender();
+    return mContext->makeScreenshot();
+}
