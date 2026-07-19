@@ -1,7 +1,12 @@
 #pragma once
 
 #include <cmath>
+
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
 #include <xmmintrin.h>
+#define VECTMA_SSE_SUPPORTED 1
+#endif
+
 #include "core/GPoint.hpp"
 
 namespace vectma {
@@ -71,6 +76,7 @@ struct GTransform {
 
     // Vectorized mapping of 4 points in parallel using SSE instructions
     static void map4(const GTransform& t, const GPoint points[4], GPoint results[4]) {
+#if VECTMA_SSE_SUPPORTED
         __m128 px = _mm_setr_ps(static_cast<float>(points[0].x), static_cast<float>(points[1].x), static_cast<float>(points[2].x), static_cast<float>(points[3].x));
         __m128 py = _mm_setr_ps(static_cast<float>(points[0].y), static_cast<float>(points[1].y), static_cast<float>(points[2].y), static_cast<float>(points[3].y));
 
@@ -95,6 +101,12 @@ struct GTransform {
             results[i].x = tempx[i];
             results[i].y = tempy[i];
         }
+#else
+        // Fully correct, auto-vectorizable scalar fallback path on non-x86 architectures
+        for (int i = 0; i < 4; ++i) {
+            results[i] = t.map(points[i]);
+        }
+#endif
     }
 };
 

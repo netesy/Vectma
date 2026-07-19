@@ -1,7 +1,11 @@
 #pragma once
 
 #include <algorithm>
+
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
 #include <xmmintrin.h>
+#define VECTMA_SSE_SUPPORTED 1
+#endif
 
 namespace vectma {
 
@@ -32,6 +36,7 @@ struct GRect {
     // High-performance vectorized bounds culling:
     // Performs parallel intersection tests for 4 GRect bounds against a target viewport query
     static void intersect4(const GRect rects[4], const GRect& query, bool results[4]) {
+#if VECTMA_SSE_SUPPORTED
         // Load four x coordinates
         __m128 rx = _mm_setr_ps(static_cast<float>(rects[0].x), static_cast<float>(rects[1].x), static_cast<float>(rects[2].x), static_cast<float>(rects[3].x));
         __m128 ry = _mm_setr_ps(static_cast<float>(rects[0].y), static_cast<float>(rects[1].y), static_cast<float>(rects[2].y), static_cast<float>(rects[3].y));
@@ -69,6 +74,14 @@ struct GRect {
         for (int i = 0; i < 4; ++i) {
             results[i] = (temp[i] != 0.0f);
         }
+#else
+        // Fully correct, auto-vectorizable scalar fallback path on non-x86 architectures
+        for (int i = 0; i < 4; ++i) {
+            const auto& r = rects[i];
+            results[i] = std::max(r.x, query.x) < std::min(r.x + r.width, query.x + query.width) &&
+                         std::max(r.y, query.y) < std::min(r.y + r.height, query.y + query.height);
+        }
+#endif
     }
 };
 

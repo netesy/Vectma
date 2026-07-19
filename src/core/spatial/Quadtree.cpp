@@ -102,14 +102,25 @@ void Quadtree::queryRecursive(size_t nodeIndex, const GRect& range, std::vector<
 
     if (current.isDivided) {
         int childStart = current.childStartIndex;
+        GRect childRects[4];
+        bool activeChildren[4] = {false, false, false, false};
+
         for (int i = 0; i < 4; ++i) {
             size_t childIdx = childStart + i;
             if (childIdx < m_treeNodes.size()) {
-                const auto& cb = m_treeNodes[childIdx].bounds;
-                if (std::max(cb.x, range.x) < std::min(cb.x + cb.width, range.x + range.width) &&
-                    std::max(cb.y, range.y) < std::min(cb.y + cb.height, range.y + range.height)) {
-                    queryRecursive(childIdx, range, results);
-                }
+                childRects[i] = m_treeNodes[childIdx].bounds;
+                activeChildren[i] = true;
+            } else {
+                childRects[i] = GRect(0, 0, 0, 0);
+            }
+        }
+
+        bool intersectResults[4] = {false, false, false, false};
+        GRect::intersect4(childRects, range, intersectResults);
+
+        for (int i = 0; i < 4; ++i) {
+            if (activeChildren[i] && intersectResults[i]) {
+                queryRecursive(childStart + i, range, results);
             }
         }
     }

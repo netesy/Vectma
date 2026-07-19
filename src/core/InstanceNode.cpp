@@ -4,7 +4,7 @@
 namespace vectma {
 
 InstanceNode::InstanceNode(SymbolID symbolId) : m_symbolId(symbolId) {
-    m_nodeType = NodeType::ComponentInstance;
+    m_nodeType = NodeType::SymbolInstance;
 }
 
 void InstanceNode::render(RenderPipeline& pipeline) const {

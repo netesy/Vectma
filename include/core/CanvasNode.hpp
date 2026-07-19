@@ -26,6 +26,7 @@ enum class NodeType {
     Image,
     Compound,
     ComponentInstance,
+    SymbolInstance,
     MasterComponent,
     Layer,
     Artboard

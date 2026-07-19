@@ -6,6 +6,7 @@
 #include "core/ImageNode.hpp"
 #include "core/CompoundShapeNode.hpp"
 #include "core/ComponentInstanceNode.hpp"
+#include "core/InstanceNode.hpp"
 #include "core/MasterComponentNode.hpp"
 #include "core/LayerNode.hpp"
 #include "core/ArtboardNode.hpp"
@@ -95,6 +96,9 @@ void BaselineRenderer::renderNode(const CanvasNode& node) {
             break;
         case NodeType::ComponentInstance:
             static_cast<const ComponentInstanceNode&>(node).render(*this);
+            break;
+        case NodeType::SymbolInstance:
+            static_cast<const InstanceNode&>(node).render(*this);
             break;
         case NodeType::MasterComponent:
             static_cast<const MasterComponentNode&>(node).render(*this);
