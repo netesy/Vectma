@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <xmmintrin.h>
 #include "core/GPoint.hpp"
 
 namespace vectma {
@@ -66,6 +67,34 @@ struct GTransform {
             a * p.x + c * p.y + e,
             b * p.x + d * p.y + f
         );
+    }
+
+    // Vectorized mapping of 4 points in parallel using SSE instructions
+    static void map4(const GTransform& t, const GPoint points[4], GPoint results[4]) {
+        __m128 px = _mm_setr_ps(static_cast<float>(points[0].x), static_cast<float>(points[1].x), static_cast<float>(points[2].x), static_cast<float>(points[3].x));
+        __m128 py = _mm_setr_ps(static_cast<float>(points[0].y), static_cast<float>(points[1].y), static_cast<float>(points[2].y), static_cast<float>(points[3].y));
+
+        __m128 ta = _mm_set1_ps(static_cast<float>(t.a));
+        __m128 tb = _mm_set1_ps(static_cast<float>(t.b));
+        __m128 tc = _mm_set1_ps(static_cast<float>(t.c));
+        __m128 td = _mm_set1_ps(static_cast<float>(t.d));
+        __m128 te = _mm_set1_ps(static_cast<float>(t.e));
+        __m128 tf = _mm_set1_ps(static_cast<float>(t.f));
+
+        // rx = ta * px + tc * py + te
+        __m128 rx = _mm_add_ps(_mm_add_ps(_mm_mul_ps(ta, px), _mm_mul_ps(tc, py)), te);
+        // ry = tb * px + td * py + tf
+        __m128 ry = _mm_add_ps(_mm_add_ps(_mm_mul_ps(tb, px), _mm_mul_ps(td, py)), tf);
+
+        float tempx[4];
+        float tempy[4];
+        _mm_storeu_ps(tempx, rx);
+        _mm_storeu_ps(tempy, ry);
+
+        for (int i = 0; i < 4; ++i) {
+            results[i].x = tempx[i];
+            results[i].y = tempy[i];
+        }
     }
 };
 
