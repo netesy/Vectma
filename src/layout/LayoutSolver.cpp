@@ -1,5 +1,6 @@
 #include "layout/LayoutSolver.hpp"
 #include "core/CanvasNode.hpp"
+#include "core/SceneGraph.hpp"
 #include "style/TokenRegistry.hpp"
 #include <algorithm>
 #include <vector>
@@ -18,6 +19,12 @@ void LayoutSolver::ResolveConstraints(CanvasNode* root) {
     if (root->getVerticalSizing() != SizingRule::HugContents) startH = (float)root->getHeight();
 
     layoutNode(root, startW, startH);
+
+    // After resolving layout, sync the calculated layout attributes into the contiguous LayoutSoACache
+    SceneGraph* sg = dynamic_cast<SceneGraph*>(root);
+    if (sg) {
+        sg->updateSoACache();
+    }
 }
 
 void LayoutSolver::measureNode(CanvasNode* node) {

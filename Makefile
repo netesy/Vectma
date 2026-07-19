@@ -33,7 +33,7 @@ OBJS = $(SRCS:.cpp=.o) $(VENDOR_OBJS)
 
 TARGET = vectma$(EXE_EXT)
 
-CORE_OBJS = $(filter-out src/main.o, $(SRCS:.cpp=.o))
+CORE_OBJS = $(filter-out src/main.o src/ui/ExportHub.o src/ui/SplashWindow.o src/ui/WelcomeWindow.o src/ui/WorkspaceWindow.o, $(SRCS:.cpp=.o))
 
 # Test targets
 TEST_TARGET = test_runner

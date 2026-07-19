@@ -155,4 +155,19 @@ std::string SceneGraph::toSVG() const {
     return svg;
 }
 
+void SceneGraph::updateSoACache() const {
+    m_soaCache.clear();
+    for (const auto& child : m_children) {
+        populateSoACacheRecursive(child.get());
+    }
+}
+
+void SceneGraph::populateSoACacheRecursive(const CanvasNode* node) const {
+    if (!node) return;
+    m_soaCache.push(node->getId(), node->getX(), node->getY(), node->getWidth(), node->getHeight(), node->getFillColor(), node->isVisible(), node->computeBoundingBox());
+    for (const auto& child : node->getChildren()) {
+        populateSoACacheRecursive(child.get());
+    }
+}
+
 } // namespace vectma

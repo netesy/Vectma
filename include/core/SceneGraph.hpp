@@ -11,6 +11,39 @@ namespace vectma {
  * @brief Composite structural layer tree.
  * Replaces the legacy GScene.
  */
+struct LayoutSoACache {
+    std::vector<NodeId> nodeIds;
+    std::vector<double> x;
+    std::vector<double> y;
+    std::vector<double> w;
+    std::vector<double> h;
+    std::vector<GColor> colors;
+    std::vector<bool> visibility;
+    std::vector<GRect> bounds;
+
+    void clear() {
+        nodeIds.clear();
+        x.clear();
+        y.clear();
+        w.clear();
+        h.clear();
+        colors.clear();
+        visibility.clear();
+        bounds.clear();
+    }
+
+    void push(NodeId id, double nx, double ny, double nw, double nh, const GColor& col, bool vis, const GRect& bbox) {
+        nodeIds.push_back(id);
+        x.push_back(nx);
+        y.push_back(ny);
+        w.push_back(nw);
+        h.push_back(nh);
+        colors.push_back(col);
+        visibility.push_back(vis);
+        bounds.push_back(bbox);
+    }
+};
+
 class SceneGraph : public CanvasNode {
 public:
     SceneGraph();
@@ -47,8 +80,15 @@ public:
     void rebuildIndex();
     std::vector<CanvasNode*> queryVisible(const GRect& viewport) const;
 
+    // High-performance DOD cache controls
+    const LayoutSoACache& getLayoutSoACache() const { return m_soaCache; }
+    void updateSoACache() const;
+
 private:
     std::unique_ptr<Quadtree> m_spatialIndex;
+    mutable LayoutSoACache m_soaCache;
+
+    void populateSoACacheRecursive(const CanvasNode* node) const;
 };
 
 } // namespace vectma
