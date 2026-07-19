@@ -4,55 +4,21 @@
 namespace vectma {
 
 Quadtree::Quadtree(const GRect& bounds, size_t capacity, int maxDepth)
-    : m_bounds(bounds), m_capacity(capacity), m_maxDepth(maxDepth), m_depth(0), m_isDivided(false) {}
+    : m_bounds(bounds), m_capacity(capacity), m_maxDepth(maxDepth) {
+    clear();
+}
+
+void Quadtree::clear() {
+    m_treeNodes.clear();
+    m_treeNodes.push_back({m_bounds, {}, -1, false});
+}
 
 void Quadtree::insert(CanvasNode* node) {
-    if (!node) return;
-
-    GRect bbox = node->computeBoundingBox();
-
-    // Check if the node's bbox intersects this quadtree node's bounds
-    bool intersects = std::max(bbox.x, m_bounds.x) < std::min(bbox.x + bbox.width, m_bounds.x + m_bounds.width) &&
-                      std::max(bbox.y, m_bounds.y) < std::min(bbox.y + bbox.height, m_bounds.y + m_bounds.height);
-
-    if (!intersects && m_depth != 0) return; // Root takes everything that falls out for safety
-
-    if (m_nodes.size() < m_capacity || m_depth >= m_maxDepth) {
-        m_nodes.push_back(node);
-        return;
-    }
-
-    if (!m_isDivided) {
-        subdivide();
-    }
-
-    bool insertedIntoChild = false;
-    for (auto& child : m_children) {
-        if (child) {
-            GRect cb = child->m_bounds;
-            if (std::max(bbox.x, cb.x) < std::min(bbox.x + bbox.width, cb.x + cb.width) &&
-                std::max(bbox.y, cb.y) < std::min(bbox.y + bbox.height, cb.y + cb.height)) {
-                child->insert(node);
-                insertedIntoChild = true;
-                break;
-            }
-        }
-    }
-
-    if (!insertedIntoChild) {
-        m_nodes.push_back(node);
-    }
+    insertRecursive(0, node, 0);
 }
 
 void Quadtree::remove(CanvasNode* node) {
-    auto it = std::find(m_nodes.begin(), m_nodes.end(), node);
-    if (it != m_nodes.end()) {
-        m_nodes.erase(it);
-    } else if (m_isDivided) {
-        for (auto& child : m_children) {
-            if (child) child->remove(node);
-        }
-    }
+    removeRecursive(0, node);
 }
 
 void Quadtree::update(CanvasNode* node) {
@@ -60,54 +26,111 @@ void Quadtree::update(CanvasNode* node) {
     insert(node);
 }
 
-void Quadtree::clear() {
-    m_nodes.clear();
-    for (auto& child : m_children) {
-        if (child) child->clear();
-        child.reset();
-    }
-    m_isDivided = false;
+std::vector<CanvasNode*> Quadtree::query(const GRect& range) const {
+    std::vector<CanvasNode*> results;
+    queryRecursive(0, range, results);
+    return results;
 }
 
-std::vector<CanvasNode*> Quadtree::query(const GRect& range) const {
-    std::vector<CanvasNode*> result;
+void Quadtree::insertRecursive(size_t nodeIndex, CanvasNode* node, int depth) {
+    if (!node || nodeIndex >= m_treeNodes.size()) return;
 
-    for (auto node : m_nodes) {
-        GRect bbox = node->computeBoundingBox();
-        if (std::max(bbox.x, range.x) < std::min(bbox.x + bbox.width, range.x + range.width) &&
-            std::max(bbox.y, range.y) < std::min(bbox.y + bbox.height, range.y + range.height)) {
-             result.push_back(node);
-        }
+    GRect bbox = node->computeBoundingBox();
+    const auto& currentBounds = m_treeNodes[nodeIndex].bounds;
+
+    bool intersects = std::max(bbox.x, currentBounds.x) < std::min(bbox.x + bbox.width, currentBounds.x + currentBounds.width) &&
+                      std::max(bbox.y, currentBounds.y) < std::min(bbox.y + bbox.height, currentBounds.y + currentBounds.height);
+
+    if (!intersects && depth != 0) return; // Root takes everything that falls out for safety
+
+    // If we have capacity or are at max depth, insert here
+    if (m_treeNodes[nodeIndex].nodes.size() < m_capacity || depth >= m_maxDepth) {
+        m_treeNodes[nodeIndex].nodes.push_back(node);
+        return;
     }
 
-    if (m_isDivided) {
-        for (auto& child : m_children) {
-            if (child) {
-                if (std::max(child->m_bounds.x, range.x) < std::min(child->m_bounds.x + child->m_bounds.width, range.x + range.width) &&
-                    std::max(child->m_bounds.y, range.y) < std::min(child->m_bounds.y + child->m_bounds.height, range.y + range.height)) {
-                    auto childResult = child->query(range);
-                    result.insert(result.end(), childResult.begin(), childResult.end());
-                }
+    if (!m_treeNodes[nodeIndex].isDivided) {
+        subdivide(nodeIndex);
+    }
+
+    bool insertedIntoChild = false;
+    int childStart = m_treeNodes[nodeIndex].childStartIndex;
+    for (int i = 0; i < 4; ++i) {
+        size_t childIdx = childStart + i;
+        if (childIdx < m_treeNodes.size()) {
+            const auto& cb = m_treeNodes[childIdx].bounds;
+            if (std::max(bbox.x, cb.x) < std::min(bbox.x + bbox.width, cb.x + cb.width) &&
+                std::max(bbox.y, cb.y) < std::min(bbox.y + bbox.height, cb.y + cb.height)) {
+                insertRecursive(childIdx, node, depth + 1);
+                insertedIntoChild = true;
+                break;
             }
         }
     }
 
-    return result;
+    if (!insertedIntoChild) {
+        m_treeNodes[nodeIndex].nodes.push_back(node);
+    }
 }
 
-void Quadtree::subdivide() {
-    double hw = m_bounds.width / 2.0;
-    double hh = m_bounds.height / 2.0;
+void Quadtree::removeRecursive(size_t nodeIndex, CanvasNode* node) {
+    if (nodeIndex >= m_treeNodes.size()) return;
 
-    m_children[0] = std::make_unique<Quadtree>(GRect(m_bounds.x, m_bounds.y, hw, hh), m_capacity, m_maxDepth);
-    m_children[1] = std::make_unique<Quadtree>(GRect(m_bounds.x + hw, m_bounds.y, hw, hh), m_capacity, m_maxDepth);
-    m_children[2] = std::make_unique<Quadtree>(GRect(m_bounds.x, m_bounds.y + hh, hw, hh), m_capacity, m_maxDepth);
-    m_children[3] = std::make_unique<Quadtree>(GRect(m_bounds.x + hw, m_bounds.y + hh, hw, hh), m_capacity, m_maxDepth);
-
-    for (auto& child : m_children) {
-        child->m_depth = m_depth + 1;
+    auto& current = m_treeNodes[nodeIndex];
+    auto it = std::find(current.nodes.begin(), current.nodes.end(), node);
+    if (it != current.nodes.end()) {
+        current.nodes.erase(it);
+    } else if (current.isDivided) {
+        int childStart = current.childStartIndex;
+        for (int i = 0; i < 4; ++i) {
+            removeRecursive(childStart + i, node);
+        }
     }
-    m_isDivided = true;
+}
+
+void Quadtree::queryRecursive(size_t nodeIndex, const GRect& range, std::vector<CanvasNode*>& results) const {
+    if (nodeIndex >= m_treeNodes.size()) return;
+
+    const auto& current = m_treeNodes[nodeIndex];
+    for (auto node : current.nodes) {
+        GRect bbox = node->computeBoundingBox();
+        if (std::max(bbox.x, range.x) < std::min(bbox.x + bbox.width, range.x + range.width) &&
+            std::max(bbox.y, range.y) < std::min(bbox.y + bbox.height, range.y + range.height)) {
+             results.push_back(node);
+        }
+    }
+
+    if (current.isDivided) {
+        int childStart = current.childStartIndex;
+        for (int i = 0; i < 4; ++i) {
+            size_t childIdx = childStart + i;
+            if (childIdx < m_treeNodes.size()) {
+                const auto& cb = m_treeNodes[childIdx].bounds;
+                if (std::max(cb.x, range.x) < std::min(cb.x + cb.width, range.x + range.width) &&
+                    std::max(cb.y, range.y) < std::min(cb.y + cb.height, range.y + range.height)) {
+                    queryRecursive(childIdx, range, results);
+                }
+            }
+        }
+    }
+}
+
+void Quadtree::subdivide(size_t nodeIndex) {
+    // Avoid holding reference to vector element since push_back can reallocate vector
+    GRect bounds = m_treeNodes[nodeIndex].bounds;
+    int childStartIndex = static_cast<int>(m_treeNodes.size());
+
+    double hw = bounds.width / 2.0;
+    double hh = bounds.height / 2.0;
+
+    m_treeNodes.push_back({GRect(bounds.x, bounds.y, hw, hh), {}, -1, false});
+    m_treeNodes.push_back({GRect(bounds.x + hw, bounds.y, hw, hh), {}, -1, false});
+    m_treeNodes.push_back({GRect(bounds.x, bounds.y + hh, hw, hh), {}, -1, false});
+    m_treeNodes.push_back({GRect(bounds.x + hw, bounds.y + hh, hw, hh), {}, -1, false});
+
+    // Write back index and flag safely
+    m_treeNodes[nodeIndex].childStartIndex = childStartIndex;
+    m_treeNodes[nodeIndex].isDivided = true;
 }
 
 } // namespace vectma

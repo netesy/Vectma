@@ -1,7 +1,11 @@
 #include "core/modifiers/CornerRoundingModifier.hpp"
 #include "style/TokenRegistry.hpp"
+#include "core/LinearAllocator.hpp"
 #include <cmath>
 #include <vector>
+
+// Thread-local pre-allocated cache vectors to eliminate transient heap allocations completely
+thread_local std::vector<vectma::BezierAnchor> tl_roundedCache;
 
 namespace vectma {
 
@@ -30,6 +34,7 @@ void CornerRoundingModifier::setRadiusToken(const std::string& path) {
 
 std::unique_ptr<PathData> CornerRoundingModifier::apply(const PathData& input) const {
     auto output = std::make_unique<PathData>();
+
     float radius = getRadius();
     if (radius <= 0.0f) {
         *output = input;
@@ -43,7 +48,7 @@ std::unique_ptr<PathData> CornerRoundingModifier::apply(const PathData& input) c
             continue;
         }
 
-        std::vector<BezierAnchor> rounded;
+        tl_roundedCache.clear();
         const auto& anchors = contour.anchors;
         size_t count = anchors.size();
 
@@ -52,7 +57,7 @@ std::unique_ptr<PathData> CornerRoundingModifier::apply(const PathData& input) c
             size_t next = (i == count - 1) ? (contour.isClosed ? 0 : count - 1) : i + 1;
 
             if (prev == i || next == i) {
-                rounded.push_back(anchors[i]);
+                tl_roundedCache.push_back(anchors[i]);
                 continue;
             }
 
@@ -69,7 +74,7 @@ std::unique_ptr<PathData> CornerRoundingModifier::apply(const PathData& input) c
             double d2 = std::sqrt(v2x * v2x + v2y * v2y);
 
             if (d1 < 1e-6 || d2 < 1e-6) {
-                rounded.push_back(anchors[i]);
+                tl_roundedCache.push_back(anchors[i]);
                 continue;
             }
 
@@ -77,10 +82,10 @@ std::unique_ptr<PathData> CornerRoundingModifier::apply(const PathData& input) c
             Point2D start(p2.x + (v1x / d1) * actualRadius, p2.y + (v1y / d1) * actualRadius);
             Point2D end(p2.x + (v2x / d2) * actualRadius, p2.y + (v2y / d2) * actualRadius);
 
-            rounded.emplace_back(start, start, start);
-            rounded.emplace_back(end, end, end);
+            tl_roundedCache.emplace_back(start, start, start);
+            tl_roundedCache.emplace_back(end, end, end);
         }
-        output->contours.emplace_back(rounded, contour.isClosed);
+        output->contours.emplace_back(tl_roundedCache, contour.isClosed);
     }
 
     clearDirty();

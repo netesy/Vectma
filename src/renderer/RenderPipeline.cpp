@@ -6,6 +6,7 @@
 #include "core/ImageNode.hpp"
 #include "core/CompoundShapeNode.hpp"
 #include "core/modifiers/DashGeneratorModifier.hpp"
+#include "core/LinearAllocator.hpp"
 
 #ifdef VECTMA_USE_SKIA
 #include "include/core/SkCanvas.h"
@@ -18,7 +19,13 @@
 
 namespace vectma {
 
-void BaselineRenderer::beginFrame() { m_opacityStack = {1.0f}; m_clipStack.clear(); m_transformStack.clear(); }
+void BaselineRenderer::beginFrame() {
+    m_opacityStack = {1.0f};
+    m_clipStack.clear();
+    m_transformStack.clear();
+    // Reclaim all scratchpad arena memory at the start of each frame
+    LinearAllocator::getThreadLocal().reset();
+}
 void BaselineRenderer::endFrame() {}
 
 void BaselineRenderer::pushTransform(const GTransform& transform) { m_transformStack.push_back(transform); }

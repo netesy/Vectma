@@ -6,6 +6,13 @@
 
 namespace vectma {
 
+struct FlatQuadNode {
+    GRect bounds;
+    std::vector<CanvasNode*> nodes;
+    int childStartIndex = -1; // -1 if leaf, otherwise index of the first of 4 children
+    bool isDivided = false;
+};
+
 class Quadtree {
 public:
     Quadtree(const GRect& bounds, size_t capacity = 10, int maxDepth = 5);
@@ -21,14 +28,14 @@ private:
     GRect m_bounds;
     size_t m_capacity;
     int m_maxDepth;
-    int m_depth;
 
-    std::vector<CanvasNode*> m_nodes;
-    std::unique_ptr<Quadtree> m_children[4];
-    bool m_isDivided = false;
+    // High-performance DOD contiguous flat node pool
+    mutable std::vector<FlatQuadNode> m_treeNodes;
 
-    void subdivide();
-    int getChildIndex(const GRect& bbox) const;
+    void insertRecursive(size_t nodeIndex, CanvasNode* node, int depth);
+    void removeRecursive(size_t nodeIndex, CanvasNode* node);
+    void queryRecursive(size_t nodeIndex, const GRect& range, std::vector<CanvasNode*>& results) const;
+    void subdivide(size_t nodeIndex);
 };
 
 } // namespace vectma
