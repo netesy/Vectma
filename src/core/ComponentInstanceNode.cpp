@@ -4,7 +4,9 @@
 
 namespace vectma {
 
-ComponentInstanceNode::ComponentInstanceNode(MasterComponentNode* master) : m_master(master) {}
+ComponentInstanceNode::ComponentInstanceNode(MasterComponentNode* master) : m_master(master) {
+    m_nodeType = NodeType::ComponentInstance;
+}
 
 void ComponentInstanceNode::render(RenderPipeline& pipeline) const {
     if (!m_master || !isVisible()) return;

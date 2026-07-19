@@ -3,7 +3,9 @@
 
 namespace vectma {
 
-InstanceNode::InstanceNode(SymbolID symbolId) : m_symbolId(symbolId) {}
+InstanceNode::InstanceNode(SymbolID symbolId) : m_symbolId(symbolId) {
+    m_nodeType = NodeType::ComponentInstance;
+}
 
 void InstanceNode::render(RenderPipeline& pipeline) const {
     CanvasNode* root = SymbolRegistry::getInstance().getSymbolRoot(m_symbolId);

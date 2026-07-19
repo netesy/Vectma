@@ -4,6 +4,7 @@
 namespace vectma {
 
 MasterComponentNode::MasterComponentNode(const std::string& name) : CanvasNode() {
+    m_nodeType = NodeType::MasterComponent;
     m_name.update(name, {0, 0, 0});
 }
 

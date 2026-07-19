@@ -16,10 +16,27 @@ namespace vectma {
 
 class RenderPipeline;
 
+enum class NodeType {
+    Base,
+    SceneGraph,
+    Rect,
+    Ellipse,
+    Path,
+    Text,
+    Image,
+    Compound,
+    ComponentInstance,
+    MasterComponent,
+    Layer,
+    Artboard
+};
+
 class CanvasNode {
 public:
     CanvasNode();
     virtual ~CanvasNode();
+
+    NodeType getNodeType() const { return m_nodeType; }
 
     CanvasNode(const CanvasNode&) = delete;
     CanvasNode& operator=(const CanvasNode&) = delete;
@@ -119,6 +136,7 @@ public:
     static void CloneBaseProperties(const CanvasNode& src, CanvasNode& dst);
 
 protected:
+    NodeType m_nodeType = NodeType::Base;
     CanvasNode* m_parent = nullptr;
     std::vector<std::unique_ptr<CanvasNode>> m_children;
     LWWProperty<NodeId> m_id;

@@ -5,6 +5,7 @@
 namespace vectma {
 
 EllipseNode::EllipseNode(double cx, double cy, double rx, double ry) : CanvasNode() {
+    m_nodeType = NodeType::Ellipse;
     LamportTimestamp ts{0, 0, 0};
     m_cx.update(cx, ts);
     m_cy.update(cy, ts);

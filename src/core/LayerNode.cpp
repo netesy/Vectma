@@ -4,6 +4,7 @@
 namespace vectma {
 
 LayerNode::LayerNode(const std::string& name) : CanvasNode() {
+    m_nodeType = NodeType::Layer;
     m_name.update(name, {0, 0, 0});
 }
 

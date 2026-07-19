@@ -5,6 +5,7 @@
 namespace vectma {
 
 ArtboardNode::ArtboardNode(const std::string& name, const GRect& bounds) : CanvasNode() {
+    m_nodeType = NodeType::Artboard;
     LamportTimestamp ts{0, 0, 0};
     m_name.update(name, ts);
     m_bounds.update(bounds, ts);

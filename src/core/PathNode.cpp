@@ -8,11 +8,13 @@
 namespace vectma {
 
 PathNode::PathNode() {
+    m_nodeType = NodeType::Path;
     LamportTimestamp ts{0, 0, 0};
     m_id.update({0, 0, 0}, ts);
 }
 
 PathNode::PathNode(const std::vector<BezierAnchor>& anchors) {
+    m_nodeType = NodeType::Path;
     LamportTimestamp ts{0, 0, 0};
     m_id.update({0, 0, 0}, ts);
     for (size_t i = 0; i < anchors.size(); ++i) {
@@ -26,6 +28,7 @@ PathNode::PathNode(const std::vector<BezierAnchor>& anchors) {
 }
 
 PathNode::PathNode(const geometry::PathTopology& topology) : m_topology(topology) {
+    m_nodeType = NodeType::Path;
     LamportTimestamp ts{0, 0, 0};
     m_id.update({0, 0, 0}, ts);
 }

@@ -4,6 +4,7 @@
 namespace vectma {
 
 TextNode::TextNode(const std::string& text, double x, double y) {
+    m_nodeType = NodeType::Text;
     LamportTimestamp ts{0, 0, 0};
     m_text.update(text, ts);
     m_x.update(x, ts);

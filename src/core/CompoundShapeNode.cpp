@@ -4,6 +4,7 @@
 namespace vectma {
 
 CompoundShapeNode::CompoundShapeNode(BooleanOpType op) : CanvasNode() {
+    m_nodeType = NodeType::Compound;
     m_opType.update(op, LamportClock::getInstance().tick());
 }
 

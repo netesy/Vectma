@@ -5,6 +5,7 @@ namespace vectma {
 
 ImageNode::ImageNode(const std::vector<uint8_t>& data, double x, double y, double w, double h)
     : CanvasNode(), m_rawData(data) {
+    m_nodeType = NodeType::Image;
     LamportTimestamp ts{0, 0, 0};
     m_x.update(x, ts);
     m_y.update(y, ts);

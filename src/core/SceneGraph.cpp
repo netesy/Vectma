@@ -6,6 +6,7 @@
 namespace vectma {
 
 SceneGraph::SceneGraph() {
+    m_nodeType = NodeType::SceneGraph;
     m_spatialIndex = std::make_unique<Quadtree>(GRect(-10000, -10000, 20000, 20000));
 }
 

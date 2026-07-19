@@ -5,6 +5,11 @@
 #include "core/TextNode.hpp"
 #include "core/ImageNode.hpp"
 #include "core/CompoundShapeNode.hpp"
+#include "core/ComponentInstanceNode.hpp"
+#include "core/MasterComponentNode.hpp"
+#include "core/LayerNode.hpp"
+#include "core/ArtboardNode.hpp"
+#include "core/SceneGraph.hpp"
 #include "core/modifiers/DashGeneratorModifier.hpp"
 #include "core/LinearAllocator.hpp"
 
@@ -69,7 +74,44 @@ void BaselineRenderer::drawBezierPath(const PathNode& node) {
 void BaselineRenderer::drawAnchorOverlay(const BezierAnchor& anchor, bool selected, int activeHandle) { (void)anchor; (void)selected; (void)activeHandle; }
 void BaselineRenderer::renderNode(const CanvasNode& node) {
     pushOpacity(node.getOpacity());
-    node.render(*this);
+    switch (node.getNodeType()) {
+        case NodeType::Rect:
+            static_cast<const RectNode&>(node).render(*this);
+            break;
+        case NodeType::Ellipse:
+            static_cast<const EllipseNode&>(node).render(*this);
+            break;
+        case NodeType::Path:
+            static_cast<const PathNode&>(node).render(*this);
+            break;
+        case NodeType::Text:
+            static_cast<const TextNode&>(node).render(*this);
+            break;
+        case NodeType::Image:
+            static_cast<const ImageNode&>(node).render(*this);
+            break;
+        case NodeType::Compound:
+            static_cast<const CompoundShapeNode&>(node).render(*this);
+            break;
+        case NodeType::ComponentInstance:
+            static_cast<const ComponentInstanceNode&>(node).render(*this);
+            break;
+        case NodeType::MasterComponent:
+            static_cast<const MasterComponentNode&>(node).render(*this);
+            break;
+        case NodeType::Layer:
+            static_cast<const LayerNode&>(node).render(*this);
+            break;
+        case NodeType::Artboard:
+            static_cast<const ArtboardNode&>(node).render(*this);
+            break;
+        case NodeType::SceneGraph:
+            static_cast<const SceneGraph&>(node).render(*this);
+            break;
+        default:
+            node.render(*this);
+            break;
+    }
     popOpacity();
 }
 std::vector<uint8_t> BaselineRenderer::exportRaster(float) { return {}; }
