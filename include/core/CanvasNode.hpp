@@ -109,9 +109,21 @@ public:
     SizingRule getVerticalSizing() const { return m_vSizing; }
     void setVerticalSizing(SizingRule rule) { m_vSizing = rule; markLayoutDirty(); }
 
+    static constexpr uint32_t DIRTY_NONE      = 0;
+    static constexpr uint32_t DIRTY_GEOMETRY  = 1 << 0;
+    static constexpr uint32_t DIRTY_STYLING   = 1 << 1;
+    static constexpr uint32_t DIRTY_LAYOUT    = 1 << 2;
+    static constexpr uint32_t DIRTY_SUBTREE   = 1 << 3;
+    static constexpr uint32_t DIRTY_ALL       = 0xFFFFFFFF;
+
     void markLayoutDirty();
-    bool isLayoutDirty() const { return m_layoutDirty; }
-    void clearLayoutDirty() { m_layoutDirty = false; }
+    bool isLayoutDirty() const { return (m_dirtyMask & DIRTY_LAYOUT) != 0; }
+    void clearLayoutDirty() { m_dirtyMask &= ~DIRTY_LAYOUT; }
+
+    uint32_t getDirtyMask() const { return m_dirtyMask; }
+    void addDirtyFlags(uint32_t flags) { m_dirtyMask |= flags; }
+    void clearDirtyFlags(uint32_t flags) { m_dirtyMask &= ~flags; }
+    bool hasDirtyFlags(uint32_t flags) const { return (m_dirtyMask & flags) != 0; }
 
     virtual double getX() const { return 0; }
     virtual double getY() const { return 0; }
@@ -154,7 +166,7 @@ protected:
     LayoutProperties m_layoutProps;
     SizingRule m_hSizing = SizingRule::Fixed;
     SizingRule m_vSizing = SizingRule::Fixed;
-    bool m_layoutDirty = true;
+    uint32_t m_dirtyMask = DIRTY_ALL;
 };
 
 } // namespace vectma

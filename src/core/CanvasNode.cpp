@@ -16,7 +16,7 @@ CanvasNode::CanvasNode() {
     m_strokeAlignment.update(StrokeAlignment::Center, ts);
     m_strokeWidth.update(1.0, ts);
     m_strokeWidth.tokenPath = std::nullopt;
-    m_layoutDirty = true;
+    m_dirtyMask = DIRTY_ALL;
 }
 
 CanvasNode::~CanvasNode() = default;
@@ -47,7 +47,7 @@ const std::vector<std::unique_ptr<CanvasNode>>& CanvasNode::getChildren() const 
 std::vector<std::unique_ptr<CanvasNode>>& CanvasNode::getChildrenMutable() { return m_children; }
 
 void CanvasNode::markLayoutDirty() {
-    m_layoutDirty = true;
+    m_dirtyMask |= (DIRTY_LAYOUT | DIRTY_GEOMETRY);
     if (m_parent) m_parent->markLayoutDirty();
 }
 
